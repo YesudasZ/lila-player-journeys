@@ -17,7 +17,7 @@ Five agents each received the definitions of one topic's metrics, without the va
 | coordinates | pyarrow | 43 | 0 |
 | **Total** | | **175** | **0** |
 
-The profiler has since grown to 216 metrics. The 41 newer ones were not part of this run. The cleaning counts among them (88, 190, 173 + 33, 1,227, 1,175) were measured independently by the cleaning skeptic below and agree.
+The profiler has since grown to 231 metrics. The 56 newer ones were not part of this run. The cleaning counts among them (88, 190, 173 + 33, 1,227, 1,175) were measured independently by the cleaning skeptic below and agree.
 
 Earlier, a plan reviewer decoded all 1,243 files with its own Parquet reader written against the standard library, a third implementation, and reported the same headline numbers (782 / 444 / 17 files by id kind and movement event, 1,505 and 1,420 duplicate rows, 88,826 rows after the first two cleaning rules).
 

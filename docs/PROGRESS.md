@@ -94,5 +94,5 @@ Not available yet: data rebuild (`make data`, Phase 2); dev server and `npm run 
 - There is no git remote yet. Nothing is pushed; the work exists only on this machine (task 1.11 waits for the user).
 - No CI yet (planned in Phase 2).
 - The README's map constants may be 1.5 to 2% too large in x on two maps (open question 5). The proof images use the README constants.
-- 41 of the profiler's metrics were added after the blind cross-check and were not re-derived by it (the cleaning counts among them were confirmed by a skeptic).
+- 56 of the profiler's 231 metrics were added after the blind cross-check and were not re-derived by it (the cleaning counts among them were confirmed by a skeptic).
 - The cross-check's scratch files (DuckDB environment, agents' scripts, shuffled overlays) sit in a temporary folder that a reboot can clear. Nothing in the repo depends on them.
