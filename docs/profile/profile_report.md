@@ -268,6 +268,21 @@ Each value is listed with the exact definition used to compute it.
 | `identical_rows_left_after_cleaning_Loot` | 1,197 | Of those surplus rows, the ones whose event is Loot. |
 | `identical_rows_left_directly_after_twin` | 1,175 | Of those surplus rows, the ones identical to the row directly before them in (raw ts, file order). |
 | `matches_in_several_day_folders_after_cleaning` | 0 | match_ids left with files in more than one day folder after rules 1 to 4. |
+| `matches_after_cleaning_in_February_10` | 284 | Distinct match_ids with at least one file in February_10/ after rules 1 to 4. |
+| `matches_after_cleaning_in_February_11` | 201 | Distinct match_ids with at least one file in February_11/ after rules 1 to 4. |
+| `matches_after_cleaning_in_February_12` | 162 | Distinct match_ids with at least one file in February_12/ after rules 1 to 4. |
+| `matches_after_cleaning_in_February_13` | 112 | Distinct match_ids with at least one file in February_13/ after rules 1 to 4. |
+| `matches_after_cleaning_in_February_14` | 37 | Distinct match_ids with at least one file in February_14/ after rules 1 to 4. |
+| `rows_after_cleaning_human_BotKill` | 2,236 | Rows left after rules 1 to 4 whose event is BotKill, in files with Position rows. |
+| `rows_after_cleaning_human_BotKilled` | 401 | Rows left after rules 1 to 4 whose event is BotKilled, in files with Position rows. |
+| `rows_after_cleaning_human_Killed` | 3 | Rows left after rules 1 to 4 whose event is Killed, in files with Position rows. |
+| `rows_after_cleaning_human_KilledByStorm` | 39 | Rows left after rules 1 to 4 whose event is KilledByStorm, in files with Position rows. |
+| `rows_after_cleaning_human_Loot` | 12,829 | Rows left after rules 1 to 4 whose event is Loot, in files with Position rows. |
+| `rows_after_cleaning_bot_BotKill` | 170 | Rows left after rules 1 to 4 whose event is BotKill, in files with BotPosition rows. |
+| `rows_after_cleaning_bot_BotKilled` | 296 | Rows left after rules 1 to 4 whose event is BotKilled, in files with BotPosition rows. |
+| `rows_after_cleaning_bot_Killed` | 0 | Rows left after rules 1 to 4 whose event is Killed, in files with BotPosition rows. |
+| `rows_after_cleaning_bot_KilledByStorm` | 0 | Rows left after rules 1 to 4 whose event is KilledByStorm, in files with BotPosition rows. |
+| `rows_after_cleaning_bot_Loot` | 0 | Rows left after rules 1 to 4 whose event is Loot, in files with BotPosition rows. |
 
 ## Details
 

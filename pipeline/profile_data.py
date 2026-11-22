@@ -637,6 +637,11 @@ def cleaning_preview(rows: pd.DataFrame, files: pd.DataFrame, m: Metrics) -> dic
         m.add(topic, f"identical_rows_left_after_cleaning_{event}", count, f"Of those surplus rows, the ones whose event is {event}.")
     m.add(topic, "identical_rows_left_directly_after_twin", directly_after_twin.sum(), "Of those surplus rows, the ones identical to the row directly before them in (raw ts, file order).")
     m.add(topic, "matches_in_several_day_folders_after_cleaning", (clean.groupby("match_id")["day"].nunique() > 1).sum(), "match_ids left with files in more than one day folder after rules 1 to 4.")
+    for day, count in clean.groupby("day")["match_id"].nunique().items():
+        m.add(topic, f"matches_after_cleaning_in_{day}", count, f"Distinct match_ids with at least one file in {day}/ after rules 1 to 4.")
+    for who in ("human", "bot"):
+        for event in ("BotKill", "BotKilled", "Killed", "KilledByStorm", "Loot"):
+            m.add(topic, f"rows_after_cleaning_{who}_{event}", ((actor == who) & (clean["event"] == event)).sum(), f"Rows left after rules 1 to 4 whose event is {event}, in files with {'Position' if who == 'human' else 'BotPosition'} rows.")
 
     first_death = death_rows.drop_duplicates("file").set_index("file")["event"]
     journeys = files.loc[clean["file"].unique()]

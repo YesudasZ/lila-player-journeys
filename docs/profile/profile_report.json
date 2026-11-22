@@ -952,6 +952,66 @@
       "matches_in_several_day_folders_after_cleaning": {
         "value": 0,
         "definition": "match_ids left with files in more than one day folder after rules 1 to 4."
+      },
+      "matches_after_cleaning_in_February_10": {
+        "value": 284,
+        "definition": "Distinct match_ids with at least one file in February_10/ after rules 1 to 4."
+      },
+      "matches_after_cleaning_in_February_11": {
+        "value": 201,
+        "definition": "Distinct match_ids with at least one file in February_11/ after rules 1 to 4."
+      },
+      "matches_after_cleaning_in_February_12": {
+        "value": 162,
+        "definition": "Distinct match_ids with at least one file in February_12/ after rules 1 to 4."
+      },
+      "matches_after_cleaning_in_February_13": {
+        "value": 112,
+        "definition": "Distinct match_ids with at least one file in February_13/ after rules 1 to 4."
+      },
+      "matches_after_cleaning_in_February_14": {
+        "value": 37,
+        "definition": "Distinct match_ids with at least one file in February_14/ after rules 1 to 4."
+      },
+      "rows_after_cleaning_human_BotKill": {
+        "value": 2236,
+        "definition": "Rows left after rules 1 to 4 whose event is BotKill, in files with Position rows."
+      },
+      "rows_after_cleaning_human_BotKilled": {
+        "value": 401,
+        "definition": "Rows left after rules 1 to 4 whose event is BotKilled, in files with Position rows."
+      },
+      "rows_after_cleaning_human_Killed": {
+        "value": 3,
+        "definition": "Rows left after rules 1 to 4 whose event is Killed, in files with Position rows."
+      },
+      "rows_after_cleaning_human_KilledByStorm": {
+        "value": 39,
+        "definition": "Rows left after rules 1 to 4 whose event is KilledByStorm, in files with Position rows."
+      },
+      "rows_after_cleaning_human_Loot": {
+        "value": 12829,
+        "definition": "Rows left after rules 1 to 4 whose event is Loot, in files with Position rows."
+      },
+      "rows_after_cleaning_bot_BotKill": {
+        "value": 170,
+        "definition": "Rows left after rules 1 to 4 whose event is BotKill, in files with BotPosition rows."
+      },
+      "rows_after_cleaning_bot_BotKilled": {
+        "value": 296,
+        "definition": "Rows left after rules 1 to 4 whose event is BotKilled, in files with BotPosition rows."
+      },
+      "rows_after_cleaning_bot_Killed": {
+        "value": 0,
+        "definition": "Rows left after rules 1 to 4 whose event is Killed, in files with BotPosition rows."
+      },
+      "rows_after_cleaning_bot_KilledByStorm": {
+        "value": 0,
+        "definition": "Rows left after rules 1 to 4 whose event is KilledByStorm, in files with BotPosition rows."
+      },
+      "rows_after_cleaning_bot_Loot": {
+        "value": 0,
+        "definition": "Rows left after rules 1 to 4 whose event is Loot, in files with BotPosition rows."
       }
     }
   },

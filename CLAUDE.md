@@ -54,7 +54,7 @@ Run pipeline modules as `.venv/bin/python -m pipeline.<module>` from the repo ro
 6. Raw data and the PDF stay out of git. No secrets. Ask before `git push`, `gh repo create`, installing a dependency, deleting files or deploying.
 7. Coordinate mapping lives in one tested function per language. The per-map constants exist only in `pipeline/maps.py`; the app gets them through the manifest.
 8. Do not copy code from other people's public solutions to this assignment.
-9. Player ids are production data: never print or commit full user UUIDs. Use the first eight characters.
+9. Player ids are production data: never print, commit or publish a full user UUID. A player's public id is the first eight characters of the UUID and a match's public id the first eight of its match id (both unique in this dataset; the build checks it). Bot numbers are not personal and are used as they are.
 10. Update `docs/PROGRESS.md` after **every** completed sub-step, not only at phase end. Keep its "Exactly where I stopped" section current at all times.
 11. Commit early and often with clear messages, for example `phase-3: add MapCanvas zoom/pan (WIP)`. Put `WIP:` in the message when a step is unfinished, and never leave uncommitted work for long. Local commits need no permission; ask before `git push`.
 12. Never leave the working tree broken without a note under "Known issues" in `docs/PROGRESS.md`.
@@ -62,19 +62,22 @@ Run pipeline modules as `.venv/bin/python -m pipeline.<module>` from the repo ro
 14. At each phase end: set the status to "DONE (awaiting my review)", record the commit hash, run the checks, then stop.
 15. Do not repeat research, profiling or file reads whose results are already recorded in `docs/DATA_NOTES.md`, `docs/PLAN.md` or `docs/PROGRESS.md`. Use the recorded results.
 
-## Verified data facts (details and evidence: `docs/DATA_NOTES.md`)
+## Data facts (evidence, row by row: `docs/DATA_NOTES.md`; independent check: `docs/profile/crosscheck.md`)
 
-- 1,243 Parquet files (no extension), 89,104 rows, 796 matches, 3 maps. One file is one journey: one player or bot in one match.
+Measured unless marked as an assumption (A1 to A8 in DATA_NOTES.md).
+
+- 1,243 Parquet files (no extension), 89,104 rows, 796 matches, 3 maps. One file is one journey, one player or bot in one match; one journey is stored twice.
 - `ts` is **Unix seconds** in a `timestamp[ms]` column. Read the raw int64; never let a library convert it.
 - `event` is bytes; decode as UTF-8. Eight values: Position, BotPosition, Kill, Killed, BotKill, BotKilled, KilledByStorm, Loot.
-- **Human or bot is decided per journey by its movement event** (Position = human, BotPosition = bot), not by the user_id format. 17 numeric-id journeys are human; id 1429 appears in both roles.
+- **Human or bot is decided per journey by its movement event** (Position = human, BotPosition = bot), not by the user_id format. 17 journeys have Position rows under a numeric id; those ids are per-map placeholders (1429, 1379, 1402), not players. They are treated as anonymous humans (assumption A1): drawn, flagged, left out of player counts and survival rates. Key actors by match and id, never by id alone.
 - Events are logged from the file owner's side at the owner's own position: `*Kill` = the owner killed, `*Killed` = the owner died. In bot files `BotKilled` is the bot's death.
-- 743 of 796 matches contain a single file. Only 52 matches have bot journeys. Player-versus-player is absent in practice (3 Kill rows, each twinned with a Killed row in the same file).
-- Position is sampled every 5 s **only while the player moves**; a longer gap means standing still.
-- Cleaning: drop the one journey stored twice, drop the second half of the three files written twice, drop Position rows after a death. Keep repeated Loot/BotKill rows (real repeated events).
-- No extraction event exists. A human journey without a death row counts as "survived".
-- Mapping is exactly the README's: `u = (x - origin_x) / scale`, `v = (z - origin_z) / scale`, pixel `(u * W, (1 - v) * H)`. Minimaps are 4320x4320, 2160x2158 and 9000x9000, not 1024x1024. All rows land inside the image.
-- Day folders are UTC days. The date filter uses the folder name.
+- 743 of 796 matches contain a single file. Only 52 matches have bot journeys. No player-versus-player kill is verifiable: the 3 Kill rows each mirror a Killed row of the same file.
+- Position is recorded about every 5 s and not while the player stands still. Across a longer gap the player is taken to hold still, then move in the last 5 s (assumption A6).
+- **Cleaning, four rules in order** (expected removals from the profiler's `cleaning` topic): keep one copy of the journey stored twice, the one filed with most of its match (88 rows); keep the first half of the three files written twice (190); drop a Kill row mirrored by a Killed row (3); drop movement rows after a death row in (`ts`, file order) (206). 88,617 rows and 1,242 journeys remain. Repeated Loot and BotKill rows are kept.
+- Always sort by (`ts`, row order in the file): `ts` has one-second resolution.
+- No extraction or match-end event exists. A human journey without a death row is "no death recorded". Match length is not in the data: the measurable quantity is the observed span of the recorded files.
+- Mapping uses the README's formula and constants: `u = (x - origin_x) / scale`, `v = (z - origin_z) / scale`, pixel `(u * W, (1 - v) * H)`. Orientation is proven; scale and origin are right to about 1 to 2% of the map width (assumption A8). Minimaps are 4320x4320, 2160x2158 and 9000x9000, not 1024x1024. All rows land inside the image. `y` is elevation and is kept in the app's data.
+- Day folders are UTC days, by time of writing. The date filter uses the folder name.
 
 ## Coding conventions
 
