@@ -1,0 +1,31 @@
+# Raw inputs: the assignment PDF and the telemetry zip never go into git
+_inbox/
+data/raw/
+*.zip
+*.parquet
+*.nakama-0
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Node (web app arrives in Phase 3)
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Playwright artifacts
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Environment and local tool settings
+.env
+.env.*
+.claude/settings.local.json
+
+# OS noise
+.DS_Store

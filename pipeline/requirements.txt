@@ -1,0 +1,6 @@
+# Offline data pipeline. Tested on Python 3.14; needs Python 3.12 or newer.
+pyarrow==26.0.1
+pandas==3.1.1
+numpy==2.5.5
+pillow==13.0.0
+pytest==9.2.0
