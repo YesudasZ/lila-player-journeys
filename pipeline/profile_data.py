@@ -392,6 +392,8 @@ def matches(rows: pd.DataFrame, files: pd.DataFrame, m: Metrics) -> dict[str, ob
     m.add(topic, "matches_with_BotPosition_files", (per_match["bot_journeys"] > 0).sum(), "match_ids with at least one file containing BotPosition rows.")
     m.add(topic, "journeys", len(journeys), "Distinct (user_id, match_id) pairs.")
     m.add(topic, "journeys_in_several_files", (journeys > 1).sum(), "Distinct (user_id, match_id) pairs that occur in more than one file.")
+    single_file_matches = per_match.index[per_match["files"] == 1]
+    m.add(topic, "BotKill_rows_in_single_file_matches", flat.loc[flat["match_id"].isin(single_file_matches), "BotKill"].sum(), "BotKill rows in matches that have exactly one file in the dataset.")
 
     split = []
     for (user_id, match_id), _ in journeys[journeys > 1].items():
@@ -516,6 +518,8 @@ def combat(rows: pd.DataFrame, files: pd.DataFrame, m: Metrics) -> dict[str, obj
 
     m.add(topic, "files_with_Kill_or_Killed", rows.loc[rows["event"].isin(["Kill", "Killed"]), "file"].nunique(), "Files containing at least one Kill or Killed row.")
     m.add(topic, "Kill_rows_with_Killed_twin_in_same_file", len(twins), "Kill rows for which a Killed row exists in the same file with identical raw ts, x, y and z.")
+    humans_in_match = files[files["actor"] == "human"].groupby("match_id")["user_id"].nunique()
+    m.add(topic, "Kill_twins_in_matches_with_several_Position_users", (twins["file"].map(files["match_id"]).map(humans_in_match) > 1).sum(), "Kill rows with such a twin whose match has more than one distinct user_id with Position rows.")
 
     movement = rows[rows["event"].isin(MOVEMENT_EVENTS)].sort_values("ts")[["file", "ts", "x", "z"]]
     others = rows[~rows["event"].isin(MOVEMENT_EVENTS)].sort_values("ts")[["file", "ts", "x", "z", "event"]]

@@ -103,6 +103,7 @@ Each value is listed with the exact definition used to compute it.
 | `distinct_user_ids_with_BotPosition` | 92 | Distinct user_ids of any format that have at least one file containing BotPosition rows. |
 | `files_with_Kill_or_Killed` | 3 | Files containing at least one Kill or Killed row. |
 | `Kill_rows_with_Killed_twin_in_same_file` | 3 | Kill rows for which a Killed row exists in the same file with identical raw ts, x, y and z. |
+| `Kill_twins_in_matches_with_several_Position_users` | 0 | Kill rows with such a twin whose match has more than one distinct user_id with Position rows. |
 
 ### Time
 
@@ -160,6 +161,7 @@ Each value is listed with the exact definition used to compute it.
 | `matches_with_BotPosition_files` | 52 | match_ids with at least one file containing BotPosition rows. |
 | `journeys` | 1,242 | Distinct (user_id, match_id) pairs. |
 | `journeys_in_several_files` | 1 | Distinct (user_id, match_id) pairs that occur in more than one file. |
+| `BotKill_rows_in_single_file_matches` | 2,119 | BotKill rows in matches that have exactly one file in the dataset. |
 | `duplicate_rows_within_file` | 1,420 | Rows that repeat an earlier row of the same file on all eight columns. Surplus copies only: a row present three times counts twice. |
 | `duplicate_rows_within_file_BotKill` | 34 | Of those surplus rows, the ones whose event is BotKill. |
 | `duplicate_rows_within_file_BotKilled` | 2 | Of those surplus rows, the ones whose event is BotKilled. |

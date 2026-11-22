@@ -364,6 +364,10 @@
       "Kill_rows_with_Killed_twin_in_same_file": {
         "value": 3,
         "definition": "Kill rows for which a Killed row exists in the same file with identical raw ts, x, y and z."
+      },
+      "Kill_twins_in_matches_with_several_Position_users": {
+        "value": 0,
+        "definition": "Kill rows with such a twin whose match has more than one distinct user_id with Position rows."
       }
     },
     "time": {
@@ -556,6 +560,10 @@
       "journeys_in_several_files": {
         "value": 1,
         "definition": "Distinct (user_id, match_id) pairs that occur in more than one file."
+      },
+      "BotKill_rows_in_single_file_matches": {
+        "value": 2119,
+        "definition": "BotKill rows in matches that have exactly one file in the dataset."
       },
       "duplicate_rows_within_file": {
         "value": 1420,
