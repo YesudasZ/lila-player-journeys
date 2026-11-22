@@ -8,6 +8,12 @@ Source: "Lila Product Engineer Written Test", 6-page PDF (kept out of git). Ever
 
 Status key: ☐ not started · ◐ in progress · ☑ done and verified.
 
+## What is provided
+
+- `player_data.zip`: 5 days of production gameplay data from LILA BLACK.
+- One minimap image for each of the game's 3 maps.
+- A README explaining the data format, schema and coordinate system. The brief's instruction: read it carefully before starting.
+
 ## Core requirements (all "must have")
 
 | # | Requirement | How this project meets it | Phase | Status |
@@ -25,7 +31,7 @@ Status key: ☐ not started · ◐ in progress · ☑ done and verified.
 
 | # | Left open | Our choice |
 |---|---|---|
-| N1 | Tech stack | Python pipeline, then Vite + React + TypeScript + Tailwind + Zustand on Canvas 2D |
+| N1 | Tech stack: "pick what lets you move fast and deliver something polished" | Python pipeline, then Vite + React + TypeScript + Tailwind + Zustand on Canvas 2D |
 | N2 | Design and UX (no mockups given) | Designed for Level Designers: map first, plain language, sensible defaults |
 | N3 | Architecture of pipeline, frontend, hosting | Offline preprocessing to static files, single-page app, static hosting |
 
@@ -34,7 +40,7 @@ Status key: ☐ not started · ◐ in progress · ☑ done and verified.
 | # | Guideline | What it means here |
 |---|---|---|
 | G1 | Responses should be clear, concise and well thought out | Short docs, tables, real numbers |
-| G2 | AI tools are allowed and expected | Built with Claude Code; the README says so |
+| G2 | AI tools are allowed and expected. The test is whether you can use the right tools to ship something that works, not whether you can write code from scratch | Built with Claude Code; the README says so. What counts is a working, hosted tool |
 | G3 | Attention to detail: coordinate mapping, bytes encoding, bot detection, timestamps | Each has a measured answer in DATA_NOTES.md and a test |
 | G4 | Quality over quantity: four polished features beat ten half-working ones | Fixed scope; nothing ships half-done |
 | G5 | Document assumptions and do not get blocked | DATA_NOTES.md now, the assumptions table in ARCHITECTURE.md later |
@@ -58,10 +64,10 @@ One GitHub repository link that contains everything. Links to documents or drive
 | # | Item | Detail | Status |
 |---|---|---|---|
 | S1 | Source code | All of it, in the repo | ◐ |
-| S2 | Working deployment | A deployed URL the reviewers can open | ☐ |
+| S2 | Working deployment | A deployed URL, written in the repo (top of the README), that the reviewers can open and use | ☐ |
 | S3 | README | Tech stack, setup steps, environment variables | ☐ stub only |
 | S4 | ARCHITECTURE.md, one page | (a) what it is built with and why; (b) data flow from parquet to screen; (c) how game coordinates are mapped to the minimap, walked through; (d) assumptions where the data was ambiguous; (e) major trade-offs, a simple table is fine | ☐ |
-| S5 | INSIGHTS.md, three insights learned with the tool | For each: (a) what caught the eye; (b) evidence: a pattern or statistic; (c) is it actionable, which metrics move, what to do; (d) why a Level Designer should care | ☐ |
+| S5 | INSIGHTS.md, three things learned about the game, using the tool we built | For each: (a) what caught the eye; (b) evidence: a pattern or statistic; (c) is it actionable, which metrics move, what to do; (d) why a Level Designer should care | ☐ |
 
 ## Their pre-submission checklist
 
@@ -71,7 +77,7 @@ One GitHub repository link that contains everything. Links to documents or drive
 | C2 | Player paths render correctly on the minimap | ☐ |
 | C3 | Humans can be told apart from bots visually | ☐ |
 | C4 | Kill, death, loot and storm events are marked | ☐ |
-| C5 | Filtering by map, date and match works | ☐ |
+| C5 | Filtering by map/date/match works | ☐ |
 | C6 | Timeline or playback shows match progression | ☐ |
 | C7 | Heatmaps show kill zones, death zones and traffic | ☐ |
 | C8 | Architecture doc covers the coordinate mapping approach | ☐ |
@@ -85,6 +91,6 @@ One GitHub repository link that contains everything. Links to documents or drive
 | I1 | R7 says kill zones, death zones **or** traffic; C7 says kill zones, death zones **and** traffic | Build all three |
 | I2 | R5 says map, date **and/or** match; C5 says map/date/match | Build all three filters |
 | I3 | C10 asks for a walkthrough that the "what to submit" section never defines | A Walkthrough section in the README: numbered steps, each with a deep link and a screenshot, plus a short GIF or MP4 committed in the repo (no external links) |
-| I4 | The brief says the README contains everything needed to understand the data; three of the README's statements do not match the files | Measured data wins; every difference is recorded in DATA_NOTES.md |
+| I4 | The brief says the README contains everything needed to understand the data; four of the README's statements do not match the files (the timestamp unit, the minimap size, the human/bot rule, the share of position rows) | Measured data wins; every difference is recorded in DATA_NOTES.md |
 | I5 | The brief calls the game an extraction shooter; the dataset README opens with "battle-royale style" | Treat it as an extraction shooter with a storm. The data has no extraction event, so "survived" is inferred from the absence of a death |
 | I6 | S4 demands one page but asks for five topics including a walk-through of the hardest part | Tables and one diagram; depth lives in DATA_NOTES.md, which ARCHITECTURE.md links to |
