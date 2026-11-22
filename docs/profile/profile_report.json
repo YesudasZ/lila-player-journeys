@@ -1,0 +1,1769 @@
+{
+  "readme_check": [
+    {
+      "claim": "Total files",
+      "readme": 1243,
+      "data": 1243,
+      "holds": "yes"
+    },
+    {
+      "claim": "Files per day folder",
+      "readme": {
+        "February_10": 437,
+        "February_11": 293,
+        "February_12": 268,
+        "February_13": 166,
+        "February_14": 79
+      },
+      "data": {
+        "February_10": 437,
+        "February_11": 293,
+        "February_12": 268,
+        "February_13": 166,
+        "February_14": 79
+      },
+      "holds": "yes"
+    },
+    {
+      "claim": "Total event rows",
+      "readme": "~89,000",
+      "data": 89104,
+      "holds": "yes"
+    },
+    {
+      "claim": "Unique matches",
+      "readme": 796,
+      "data": 796,
+      "holds": "yes"
+    },
+    {
+      "claim": "Unique players",
+      "readme": 339,
+      "data": "339 distinct user_ids, but only 248 of them ever have Position rows; 92 have BotPosition rows (1 id has both)",
+      "holds": "partly"
+    },
+    {
+      "claim": "Event types",
+      "readme": 8,
+      "data": 8,
+      "holds": "yes"
+    },
+    {
+      "claim": "Position events are ~85%+ of rows",
+      "readme": ">= 85%",
+      "data": "82.0% (Position + BotPosition)",
+      "holds": "no"
+    },
+    {
+      "claim": "Minimap images are 1024x1024",
+      "readme": "1024x1024",
+      "data": {
+        "AmbroseValley": "4320x4320",
+        "GrandRift": "2160x2158",
+        "Lockdown": "9000x9000"
+      },
+      "holds": "no"
+    },
+    {
+      "claim": "ts is milliseconds elapsed within the match",
+      "readme": "match-relative ms",
+      "data": "raw values 1770681535 to 1771081300 are Unix seconds (2026-02-09 23:58:55 UTC to 2026-02-14 15:01:40 UTC); a file spans 306 raw units at the median",
+      "holds": "no"
+    },
+    {
+      "claim": "UUID user_id = human, numeric user_id = bot",
+      "readme": "no exceptions",
+      "data": "17 files with a numeric user_id contain Position rows",
+      "holds": "no"
+    }
+  ],
+  "metrics": {
+    "files_schema": {
+      "files_total": {
+        "value": 1243,
+        "definition": "Regular files inside the February_* day folders."
+      },
+      "files_February_10": {
+        "value": 437,
+        "definition": "Regular files inside February_10/."
+      },
+      "files_February_11": {
+        "value": 293,
+        "definition": "Regular files inside February_11/."
+      },
+      "files_February_12": {
+        "value": 268,
+        "definition": "Regular files inside February_12/."
+      },
+      "files_February_13": {
+        "value": 166,
+        "definition": "Regular files inside February_13/."
+      },
+      "files_February_14": {
+        "value": 79,
+        "definition": "Regular files inside February_14/."
+      },
+      "files_named_nakama0": {
+        "value": 1243,
+        "definition": "Files whose name ends in .nakama-0."
+      },
+      "files_named_parquet": {
+        "value": 0,
+        "definition": "Files whose name ends in .parquet."
+      },
+      "files_par1_magic": {
+        "value": 1243,
+        "definition": "Files whose first four and last four bytes are both PAR1, the Parquet magic number."
+      },
+      "files_unreadable": {
+        "value": 0,
+        "definition": "Files that a Parquet reader fails to open or read."
+      },
+      "rows_total": {
+        "value": 89104,
+        "definition": "Rows summed over all files."
+      },
+      "rows_February_10": {
+        "value": 33687,
+        "definition": "Rows summed over the files in February_10/."
+      },
+      "rows_February_11": {
+        "value": 21235,
+        "definition": "Rows summed over the files in February_11/."
+      },
+      "rows_February_12": {
+        "value": 18429,
+        "definition": "Rows summed over the files in February_12/."
+      },
+      "rows_February_13": {
+        "value": 11106,
+        "definition": "Rows summed over the files in February_13/."
+      },
+      "rows_February_14": {
+        "value": 4647,
+        "definition": "Rows summed over the files in February_14/."
+      },
+      "rows_per_file_min": {
+        "value": 2,
+        "definition": "Smallest row count of any file."
+      },
+      "rows_per_file_median": {
+        "value": 61.0,
+        "definition": "Median row count per file."
+      },
+      "rows_per_file_max": {
+        "value": 294,
+        "definition": "Largest row count of any file."
+      },
+      "distinct_schemas": {
+        "value": 1,
+        "definition": "Distinct combinations of column names, column types and nullability across files."
+      },
+      "null_values_total": {
+        "value": 0,
+        "definition": "Null values summed over the eight data columns of all files."
+      },
+      "distinct_event_values": {
+        "value": 8,
+        "definition": "Distinct values of the event column after decoding its bytes as UTF-8."
+      },
+      "event_values_not_utf8": {
+        "value": 0,
+        "definition": "Rows whose event bytes are not valid UTF-8."
+      },
+      "files_name_differs_from_columns": {
+        "value": 0,
+        "definition": "Files whose name is not exactly '<user_id>_<match_id>' built from the file's own first row (the match_id column already ends in .nakama-0)."
+      },
+      "files_with_several_user_ids": {
+        "value": 0,
+        "definition": "Files containing more than one distinct user_id."
+      },
+      "files_with_several_match_ids": {
+        "value": 0,
+        "definition": "Files containing more than one distinct match_id."
+      },
+      "files_with_several_map_ids": {
+        "value": 0,
+        "definition": "Files containing more than one distinct map_id."
+      },
+      "match_ids_without_nakama_suffix": {
+        "value": 0,
+        "definition": "Distinct match_id values that do not end in .nakama-0."
+      },
+      "distinct_map_ids": {
+        "value": 3,
+        "definition": "Distinct values of the map_id column."
+      }
+    },
+    "actors_events": {
+      "rows_event_BotKill": {
+        "value": 2415,
+        "definition": "Rows whose event is BotKill."
+      },
+      "rows_event_BotKilled": {
+        "value": 700,
+        "definition": "Rows whose event is BotKilled."
+      },
+      "rows_event_BotPosition": {
+        "value": 21712,
+        "definition": "Rows whose event is BotPosition."
+      },
+      "rows_event_Kill": {
+        "value": 3,
+        "definition": "Rows whose event is Kill."
+      },
+      "rows_event_Killed": {
+        "value": 3,
+        "definition": "Rows whose event is Killed."
+      },
+      "rows_event_KilledByStorm": {
+        "value": 39,
+        "definition": "Rows whose event is KilledByStorm."
+      },
+      "rows_event_Loot": {
+        "value": 12885,
+        "definition": "Rows whose event is Loot."
+      },
+      "rows_event_Position": {
+        "value": 51347,
+        "definition": "Rows whose event is Position."
+      },
+      "rows_numeric_BotKill": {
+        "value": 183,
+        "definition": "Rows whose event is BotKill and whose user_id is numeric (uuid = lowercase 8-4-4-4-12 hexadecimal, numeric = ASCII digits only)."
+      },
+      "rows_numeric_BotKilled": {
+        "value": 297,
+        "definition": "Rows whose event is BotKilled and whose user_id is numeric (uuid = lowercase 8-4-4-4-12 hexadecimal, numeric = ASCII digits only)."
+      },
+      "rows_numeric_BotPosition": {
+        "value": 21712,
+        "definition": "Rows whose event is BotPosition and whose user_id is numeric (uuid = lowercase 8-4-4-4-12 hexadecimal, numeric = ASCII digits only)."
+      },
+      "rows_numeric_Kill": {
+        "value": 0,
+        "definition": "Rows whose event is Kill and whose user_id is numeric (uuid = lowercase 8-4-4-4-12 hexadecimal, numeric = ASCII digits only)."
+      },
+      "rows_numeric_Killed": {
+        "value": 0,
+        "definition": "Rows whose event is Killed and whose user_id is numeric (uuid = lowercase 8-4-4-4-12 hexadecimal, numeric = ASCII digits only)."
+      },
+      "rows_numeric_KilledByStorm": {
+        "value": 0,
+        "definition": "Rows whose event is KilledByStorm and whose user_id is numeric (uuid = lowercase 8-4-4-4-12 hexadecimal, numeric = ASCII digits only)."
+      },
+      "rows_numeric_Loot": {
+        "value": 115,
+        "definition": "Rows whose event is Loot and whose user_id is numeric (uuid = lowercase 8-4-4-4-12 hexadecimal, numeric = ASCII digits only)."
+      },
+      "rows_numeric_Position": {
+        "value": 636,
+        "definition": "Rows whose event is Position and whose user_id is numeric (uuid = lowercase 8-4-4-4-12 hexadecimal, numeric = ASCII digits only)."
+      },
+      "rows_uuid_BotKill": {
+        "value": 2232,
+        "definition": "Rows whose event is BotKill and whose user_id is uuid (uuid = lowercase 8-4-4-4-12 hexadecimal, numeric = ASCII digits only)."
+      },
+      "rows_uuid_BotKilled": {
+        "value": 403,
+        "definition": "Rows whose event is BotKilled and whose user_id is uuid (uuid = lowercase 8-4-4-4-12 hexadecimal, numeric = ASCII digits only)."
+      },
+      "rows_uuid_BotPosition": {
+        "value": 0,
+        "definition": "Rows whose event is BotPosition and whose user_id is uuid (uuid = lowercase 8-4-4-4-12 hexadecimal, numeric = ASCII digits only)."
+      },
+      "rows_uuid_Kill": {
+        "value": 3,
+        "definition": "Rows whose event is Kill and whose user_id is uuid (uuid = lowercase 8-4-4-4-12 hexadecimal, numeric = ASCII digits only)."
+      },
+      "rows_uuid_Killed": {
+        "value": 3,
+        "definition": "Rows whose event is Killed and whose user_id is uuid (uuid = lowercase 8-4-4-4-12 hexadecimal, numeric = ASCII digits only)."
+      },
+      "rows_uuid_KilledByStorm": {
+        "value": 39,
+        "definition": "Rows whose event is KilledByStorm and whose user_id is uuid (uuid = lowercase 8-4-4-4-12 hexadecimal, numeric = ASCII digits only)."
+      },
+      "rows_uuid_Loot": {
+        "value": 12770,
+        "definition": "Rows whose event is Loot and whose user_id is uuid (uuid = lowercase 8-4-4-4-12 hexadecimal, numeric = ASCII digits only)."
+      },
+      "rows_uuid_Position": {
+        "value": 50711,
+        "definition": "Rows whose event is Position and whose user_id is uuid (uuid = lowercase 8-4-4-4-12 hexadecimal, numeric = ASCII digits only)."
+      },
+      "distinct_user_ids": {
+        "value": 339,
+        "definition": "Distinct user_id values."
+      },
+      "distinct_uuid_user_ids": {
+        "value": 245,
+        "definition": "Distinct user_id values of kind uuid (uuid = lowercase 8-4-4-4-12 hexadecimal, numeric = ASCII digits only, other = anything else)."
+      },
+      "distinct_numeric_user_ids": {
+        "value": 94,
+        "definition": "Distinct user_id values of kind numeric (uuid = lowercase 8-4-4-4-12 hexadecimal, numeric = ASCII digits only, other = anything else)."
+      },
+      "distinct_other_user_ids": {
+        "value": 0,
+        "definition": "Distinct user_id values of kind other (uuid = lowercase 8-4-4-4-12 hexadecimal, numeric = ASCII digits only, other = anything else)."
+      },
+      "files_uuid": {
+        "value": 782,
+        "definition": "Files whose user_id is uuid."
+      },
+      "files_numeric": {
+        "value": 461,
+        "definition": "Files whose user_id is numeric."
+      },
+      "files_with_Position_and_BotPosition": {
+        "value": 0,
+        "definition": "Files containing both Position and BotPosition rows."
+      },
+      "files_without_movement_rows": {
+        "value": 0,
+        "definition": "Files containing neither Position nor BotPosition rows."
+      },
+      "files_uuid_with_BotPosition": {
+        "value": 0,
+        "definition": "Files with a UUID user_id that contain at least one BotPosition row."
+      },
+      "files_numeric_with_Position": {
+        "value": 17,
+        "definition": "Files with a numeric user_id that contain at least one Position row."
+      },
+      "files_numeric_with_BotPosition": {
+        "value": 444,
+        "definition": "Files with a numeric user_id that contain at least one BotPosition row."
+      },
+      "numeric_user_ids_with_Position": {
+        "value": 3,
+        "definition": "Distinct numeric user_ids that have at least one file containing Position rows."
+      },
+      "numeric_user_ids_in_both_roles": {
+        "value": 1,
+        "definition": "Distinct numeric user_ids that have Position rows in one file and BotPosition rows in another."
+      },
+      "rows_Loot_in_files_with_BotPosition": {
+        "value": 0,
+        "definition": "Loot rows inside files that contain BotPosition rows."
+      },
+      "distinct_user_ids_with_Position": {
+        "value": 248,
+        "definition": "Distinct user_ids of any format that have at least one file containing Position rows."
+      },
+      "distinct_user_ids_with_BotPosition": {
+        "value": 92,
+        "definition": "Distinct user_ids of any format that have at least one file containing BotPosition rows."
+      },
+      "files_with_Kill_or_Killed": {
+        "value": 3,
+        "definition": "Files containing at least one Kill or Killed row."
+      },
+      "Kill_rows_with_Killed_twin_in_same_file": {
+        "value": 3,
+        "definition": "Kill rows for which a Killed row exists in the same file with identical raw ts, x, y and z."
+      }
+    },
+    "time": {
+      "raw_ts_min": {
+        "value": 1770681535,
+        "definition": "Smallest integer stored in the ts column (the raw int64, no unit conversion)."
+      },
+      "raw_ts_max": {
+        "value": 1771081300,
+        "definition": "Largest integer stored in the ts column (the raw int64, no unit conversion)."
+      },
+      "file_span_median": {
+        "value": 306.0,
+        "definition": "Median over files of (largest raw ts - smallest raw ts) within the file."
+      },
+      "file_span_max": {
+        "value": 890,
+        "definition": "Maximum over files of (largest raw ts - smallest raw ts) within the file."
+      },
+      "match_span_median": {
+        "value": 382.0,
+        "definition": "Median over match_ids of (largest raw ts - smallest raw ts) across all rows of the match."
+      },
+      "match_span_max": {
+        "value": 890,
+        "definition": "Maximum over match_ids of (largest raw ts - smallest raw ts) across all rows of the match."
+      },
+      "rows_ts_goes_backwards": {
+        "value": 3,
+        "definition": "Rows whose raw ts is smaller than the raw ts of the previous row of the same file, in file order."
+      },
+      "files_ts_goes_backwards": {
+        "value": 3,
+        "definition": "Files containing at least one row whose raw ts is smaller than that of the previous row."
+      },
+      "movement_gaps_total": {
+        "value": 71816,
+        "definition": "Consecutive pairs of movement rows (Position or BotPosition) within a file, in file order."
+      },
+      "movement_gap_mode": {
+        "value": 5.0,
+        "definition": "Most common raw ts difference between the two rows of such a pair."
+      },
+      "movement_gaps_equal_5": {
+        "value": 62421,
+        "definition": "Such pairs whose raw ts difference is exactly 5."
+      },
+      "movement_gap_median": {
+        "value": 5.0,
+        "definition": "Median raw ts difference over such pairs."
+      },
+      "files_first_row_date_differs_from_folder_utc": {
+        "value": 11,
+        "definition": "Files where the calendar date of the file's smallest raw ts, read as Unix seconds in UTC, is not the date in its folder name."
+      },
+      "files_last_row_date_differs_from_folder_utc": {
+        "value": 8,
+        "definition": "Files where the calendar date of the file's largest raw ts, read as Unix seconds in UTC, is not the date in its folder name."
+      },
+      "files_first_row_date_differs_from_folder_ist": {
+        "value": 178,
+        "definition": "Files where the calendar date of the file's smallest raw ts, read as Unix seconds in UTC+05:30, is not the date in its folder name."
+      },
+      "files_last_row_date_differs_from_folder_ist": {
+        "value": 190,
+        "definition": "Files where the calendar date of the file's largest raw ts, read as Unix seconds in UTC+05:30, is not the date in its folder name."
+      },
+      "matches_in_several_day_folders": {
+        "value": 1,
+        "definition": "match_ids that have files in more than one day folder."
+      },
+      "files_written_twice": {
+        "value": 3,
+        "definition": "Files with an even row count whose second half repeats the first half exactly, row for row, on all eight columns."
+      },
+      "median_speed_Position": {
+        "value": 2.2546,
+        "definition": "Median of horizontal distance sqrt(dx^2 + dz^2) divided by raw ts difference, over consecutive Position rows of a file sorted by (ts, file order); pairs with zero ts difference excluded."
+      },
+      "max_speed_Position": {
+        "value": 12.6521,
+        "definition": "Maximum of the same ratio over consecutive Position rows."
+      },
+      "median_speed_BotPosition": {
+        "value": 3.0343,
+        "definition": "Median of horizontal distance sqrt(dx^2 + dz^2) divided by raw ts difference, over consecutive BotPosition rows of a file sorted by (ts, file order); pairs with zero ts difference excluded."
+      },
+      "max_speed_BotPosition": {
+        "value": 5.0008,
+        "definition": "Maximum of the same ratio over consecutive BotPosition rows."
+      },
+      "movement_pairs_gap_5_moving_under_half_unit": {
+        "value": 91,
+        "definition": "Consecutive movement rows of a file sorted by (ts, file order) whose raw ts difference is exactly 5 and whose horizontal distance is below 0.5."
+      },
+      "Position_pairs_gap_over_6": {
+        "value": 6461,
+        "definition": "Consecutive Position rows of a file sorted by (ts, file order) whose raw ts difference is greater than 6."
+      },
+      "Position_gap_sum_in_gaps_over_6": {
+        "value": 94921.0,
+        "definition": "Sum of the raw ts differences of those pairs."
+      },
+      "Position_gap_sum": {
+        "value": 315851.0,
+        "definition": "Sum of the raw ts differences over all consecutive Position rows of a file sorted by (ts, file order)."
+      },
+      "rows_same_ts_as_previous_row": {
+        "value": 3738,
+        "definition": "Rows whose raw ts equals the raw ts of the previous row of the same file, in file order."
+      }
+    },
+    "matches_quality": {
+      "distinct_matches": {
+        "value": 796,
+        "definition": "Distinct match_id values."
+      },
+      "matches_AmbroseValley": {
+        "value": 566,
+        "definition": "Distinct match_ids whose map_id is AmbroseValley."
+      },
+      "matches_GrandRift": {
+        "value": 59,
+        "definition": "Distinct match_ids whose map_id is GrandRift."
+      },
+      "matches_Lockdown": {
+        "value": 171,
+        "definition": "Distinct match_ids whose map_id is Lockdown."
+      },
+      "matches_in_February_10": {
+        "value": 285,
+        "definition": "Distinct match_ids with at least one file in February_10/."
+      },
+      "matches_in_February_11": {
+        "value": 201,
+        "definition": "Distinct match_ids with at least one file in February_11/."
+      },
+      "matches_in_February_12": {
+        "value": 162,
+        "definition": "Distinct match_ids with at least one file in February_12/."
+      },
+      "matches_in_February_13": {
+        "value": 112,
+        "definition": "Distinct match_ids with at least one file in February_13/."
+      },
+      "matches_in_February_14": {
+        "value": 37,
+        "definition": "Distinct match_ids with at least one file in February_14/."
+      },
+      "matches_single_file": {
+        "value": 743,
+        "definition": "match_ids that have exactly one file in the dataset."
+      },
+      "matches_max_files": {
+        "value": 16,
+        "definition": "Largest number of files sharing one match_id."
+      },
+      "matches_with_0_uuid_users": {
+        "value": 16,
+        "definition": "match_ids with exactly 0 distinct UUID user_ids."
+      },
+      "matches_with_1_uuid_users": {
+        "value": 779,
+        "definition": "match_ids with exactly 1 distinct UUID user_ids."
+      },
+      "matches_with_2_uuid_users": {
+        "value": 1,
+        "definition": "match_ids with exactly 2 distinct UUID user_ids."
+      },
+      "matches_with_1_Position_users": {
+        "value": 794,
+        "definition": "match_ids with exactly 1 distinct user_ids whose file contains Position rows."
+      },
+      "matches_with_2_Position_users": {
+        "value": 2,
+        "definition": "match_ids with exactly 2 distinct user_ids whose file contains Position rows."
+      },
+      "matches_with_numeric_id_files": {
+        "value": 52,
+        "definition": "match_ids with at least one file whose user_id is numeric."
+      },
+      "matches_with_BotPosition_files": {
+        "value": 52,
+        "definition": "match_ids with at least one file containing BotPosition rows."
+      },
+      "journeys": {
+        "value": 1242,
+        "definition": "Distinct (user_id, match_id) pairs."
+      },
+      "journeys_in_several_files": {
+        "value": 1,
+        "definition": "Distinct (user_id, match_id) pairs that occur in more than one file."
+      },
+      "duplicate_rows_within_file": {
+        "value": 1420,
+        "definition": "Rows that repeat an earlier row of the same file on all eight columns. Surplus copies only: a row present three times counts twice."
+      },
+      "duplicate_rows_within_file_BotKill": {
+        "value": 34,
+        "definition": "Of those surplus rows, the ones whose event is BotKill."
+      },
+      "duplicate_rows_within_file_BotKilled": {
+        "value": 2,
+        "definition": "Of those surplus rows, the ones whose event is BotKilled."
+      },
+      "duplicate_rows_within_file_Loot": {
+        "value": 1237,
+        "definition": "Of those surplus rows, the ones whose event is Loot."
+      },
+      "duplicate_rows_within_file_Position": {
+        "value": 147,
+        "definition": "Of those surplus rows, the ones whose event is Position."
+      },
+      "duplicate_rows_whole_dataset": {
+        "value": 1505,
+        "definition": "Rows that repeat an earlier row anywhere in the dataset on all eight columns (surplus copies only)."
+      },
+      "files_with_death_row": {
+        "value": 740,
+        "definition": "Files containing at least one row whose event is Killed, BotKilled or KilledByStorm."
+      },
+      "files_with_several_death_rows": {
+        "value": 2,
+        "definition": "Files containing more than one such row."
+      },
+      "rows_after_first_death": {
+        "value": 177,
+        "definition": "Rows whose raw ts is strictly greater than the smallest raw ts of a death row (Killed, BotKilled, KilledByStorm) in the same file."
+      },
+      "rows_after_first_death_BotKill": {
+        "value": 2,
+        "definition": "Of those rows, the ones whose event is BotKill."
+      },
+      "rows_after_first_death_Position": {
+        "value": 175,
+        "definition": "Of those rows, the ones whose event is Position."
+      },
+      "rows_after_first_death_max_gap": {
+        "value": 6.0,
+        "definition": "Largest (row raw ts - first death raw ts) among those rows."
+      },
+      "death_row_max_gap_to_file_end": {
+        "value": 6,
+        "definition": "Largest (file's largest raw ts - death row's raw ts) over all death rows."
+      },
+      "death_row_max_gap_after_last_movement_row": {
+        "value": 454,
+        "definition": "Largest (death row's raw ts - largest raw ts of a movement row at or before it in the same file) over all death rows."
+      }
+    },
+    "coordinates": {
+      "AmbroseValley_x_min": {
+        "value": -324.967,
+        "definition": "Smallest x among rows whose map_id is AmbroseValley."
+      },
+      "AmbroseValley_x_max": {
+        "value": 301.7873,
+        "definition": "Largest x among rows whose map_id is AmbroseValley."
+      },
+      "AmbroseValley_y_min": {
+        "value": 100.0,
+        "definition": "Smallest y among rows whose map_id is AmbroseValley."
+      },
+      "AmbroseValley_y_max": {
+        "value": 162.6662,
+        "definition": "Largest y among rows whose map_id is AmbroseValley."
+      },
+      "AmbroseValley_z_min": {
+        "value": -380.0071,
+        "definition": "Smallest z among rows whose map_id is AmbroseValley."
+      },
+      "AmbroseValley_z_max": {
+        "value": 360.7577,
+        "definition": "Largest z among rows whose map_id is AmbroseValley."
+      },
+      "AmbroseValley_rows_outside_image": {
+        "value": 0,
+        "definition": "Rows of AmbroseValley whose u or v lies outside [0, 1], with u = (x - origin_x) / scale and v = (z - origin_z) / scale from the README table."
+      },
+      "AmbroseValley_u_min": {
+        "value": 0.05,
+        "definition": "Smallest u among rows of AmbroseValley (README formula)."
+      },
+      "AmbroseValley_u_max": {
+        "value": 0.7464,
+        "definition": "Largest u among rows of AmbroseValley (README formula)."
+      },
+      "AmbroseValley_v_min": {
+        "value": 0.1033,
+        "definition": "Smallest v among rows of AmbroseValley (README formula)."
+      },
+      "AmbroseValley_v_max": {
+        "value": 0.9264,
+        "definition": "Largest v among rows of AmbroseValley (README formula)."
+      },
+      "AmbroseValley_minimap_width": {
+        "value": 4320,
+        "definition": "Pixel width of minimaps/AmbroseValley_Minimap.png."
+      },
+      "AmbroseValley_minimap_height": {
+        "value": 4320,
+        "definition": "Pixel height of minimaps/AmbroseValley_Minimap.png."
+      },
+      "GrandRift_x_min": {
+        "value": -225.9038,
+        "definition": "Smallest x among rows whose map_id is GrandRift."
+      },
+      "GrandRift_x_max": {
+        "value": 256.6164,
+        "definition": "Largest x among rows whose map_id is GrandRift."
+      },
+      "GrandRift_y_min": {
+        "value": 8.1387,
+        "definition": "Smallest y among rows whose map_id is GrandRift."
+      },
+      "GrandRift_y_max": {
+        "value": 46.8561,
+        "definition": "Largest y among rows whose map_id is GrandRift."
+      },
+      "GrandRift_z_min": {
+        "value": -194.0048,
+        "definition": "Smallest z among rows whose map_id is GrandRift."
+      },
+      "GrandRift_z_max": {
+        "value": 170.1127,
+        "definition": "Largest z among rows whose map_id is GrandRift."
+      },
+      "GrandRift_rows_outside_image": {
+        "value": 0,
+        "definition": "Rows of GrandRift whose u or v lies outside [0, 1], with u = (x - origin_x) / scale and v = (z - origin_z) / scale from the README table."
+      },
+      "GrandRift_u_min": {
+        "value": 0.1103,
+        "definition": "Smallest u among rows of GrandRift (README formula)."
+      },
+      "GrandRift_u_max": {
+        "value": 0.9408,
+        "definition": "Largest u among rows of GrandRift (README formula)."
+      },
+      "GrandRift_v_min": {
+        "value": 0.1652,
+        "definition": "Smallest v among rows of GrandRift (README formula)."
+      },
+      "GrandRift_v_max": {
+        "value": 0.7919,
+        "definition": "Largest v among rows of GrandRift (README formula)."
+      },
+      "GrandRift_minimap_width": {
+        "value": 2160,
+        "definition": "Pixel width of minimaps/GrandRift_Minimap.png."
+      },
+      "GrandRift_minimap_height": {
+        "value": 2158,
+        "definition": "Pixel height of minimaps/GrandRift_Minimap.png."
+      },
+      "Lockdown_x_min": {
+        "value": -406.6295,
+        "definition": "Smallest x among rows whose map_id is Lockdown."
+      },
+      "Lockdown_x_max": {
+        "value": 348.3561,
+        "definition": "Largest x among rows whose map_id is Lockdown."
+      },
+      "Lockdown_y_min": {
+        "value": 32.5843,
+        "definition": "Smallest y among rows whose map_id is Lockdown."
+      },
+      "Lockdown_y_max": {
+        "value": 70.5541,
+        "definition": "Largest y among rows whose map_id is Lockdown."
+      },
+      "Lockdown_z_min": {
+        "value": -285.1046,
+        "definition": "Smallest z among rows whose map_id is Lockdown."
+      },
+      "Lockdown_z_max": {
+        "value": 329.2379,
+        "definition": "Largest z among rows whose map_id is Lockdown."
+      },
+      "Lockdown_rows_outside_image": {
+        "value": 0,
+        "definition": "Rows of Lockdown whose u or v lies outside [0, 1], with u = (x - origin_x) / scale and v = (z - origin_z) / scale from the README table."
+      },
+      "Lockdown_u_min": {
+        "value": 0.0934,
+        "definition": "Smallest u among rows of Lockdown (README formula)."
+      },
+      "Lockdown_u_max": {
+        "value": 0.8484,
+        "definition": "Largest u among rows of Lockdown (README formula)."
+      },
+      "Lockdown_v_min": {
+        "value": 0.2149,
+        "definition": "Smallest v among rows of Lockdown (README formula)."
+      },
+      "Lockdown_v_max": {
+        "value": 0.8292,
+        "definition": "Largest v among rows of Lockdown (README formula)."
+      },
+      "Lockdown_minimap_width": {
+        "value": 9000,
+        "definition": "Pixel width of minimaps/Lockdown_Minimap.jpg."
+      },
+      "Lockdown_minimap_height": {
+        "value": 9000,
+        "definition": "Pixel height of minimaps/Lockdown_Minimap.jpg."
+      },
+      "rows_with_nan_or_infinite_coordinate": {
+        "value": 0,
+        "definition": "Rows where x, y or z is NaN or infinite."
+      },
+      "rows_at_x0_z0": {
+        "value": 0,
+        "definition": "Rows where x and z are both exactly 0."
+      },
+      "readme_example_pixel_x": {
+        "value": 78,
+        "definition": "README worked example (AmbroseValley, x=-301.45, z=-355.55, 1024 px image): pixel_x = u * 1024, rounded to the nearest integer."
+      },
+      "readme_example_pixel_y": {
+        "value": 890,
+        "definition": "Same example: pixel_y = (1 - v) * 1024, rounded to the nearest integer."
+      }
+    }
+  },
+  "details": {
+    "inventory": {
+      "per_day_folder": [
+        {
+          "day": "February_10",
+          "files": 437,
+          "megabytes": 2.9914,
+          "rows": 33687
+        },
+        {
+          "day": "February_11",
+          "files": 293,
+          "megabytes": 1.9926,
+          "rows": 21235
+        },
+        {
+          "day": "February_12",
+          "files": 268,
+          "megabytes": 1.7839,
+          "rows": 18429
+        },
+        {
+          "day": "February_13",
+          "files": 166,
+          "megabytes": 1.1038,
+          "rows": 11106
+        },
+        {
+          "day": "February_14",
+          "files": 79,
+          "megabytes": 0.4995,
+          "rows": 4647
+        }
+      ],
+      "unreadable_files": []
+    },
+    "schema": {
+      "arrow_schema": [
+        {
+          "files": 1243,
+          "columns": "user_id: string not null; match_id: string not null; map_id: string not null; x: float not null; y: float not null; z: float not null; ts: timestamp[ms] not null; event: binary not null"
+        }
+      ],
+      "parquet_writer": {
+        "parquet-go version latest": 1243
+      },
+      "ts_parquet_logical_type": {
+        "Timestamp(isAdjustedToUTC=false, timeUnit=milliseconds, is_from_converted_type=false, force_set_converted_type=false)": 1243
+      },
+      "nulls_per_column": {
+        "user_id": 0,
+        "match_id": 0,
+        "map_id": 0,
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "ts": 0,
+        "event": 0
+      },
+      "event_values": [
+        "BotKill",
+        "BotKilled",
+        "BotPosition",
+        "Kill",
+        "Killed",
+        "KilledByStorm",
+        "Loot",
+        "Position"
+      ],
+      "event_values_not_in_readme": []
+    },
+    "naming": {
+      "map_ids": [
+        "AmbroseValley",
+        "GrandRift",
+        "Lockdown"
+      ]
+    },
+    "events": {
+      "share_of_rows": {
+        "Position": 0.5763,
+        "BotPosition": 0.2437,
+        "Loot": 0.1446,
+        "BotKill": 0.0271,
+        "BotKilled": 0.0079,
+        "KilledByStorm": 0.0004,
+        "Kill": 0.0,
+        "Killed": 0.0
+      },
+      "movement_share_of_rows": 0.8199,
+      "rows_by_map_and_event": [
+        {
+          "map_id": "AmbroseValley",
+          "BotKill": 1797,
+          "BotKilled": 486,
+          "BotPosition": 12565,
+          "Kill": 2,
+          "Killed": 2,
+          "KilledByStorm": 17,
+          "Loot": 9955,
+          "Position": 36189
+        },
+        {
+          "map_id": "GrandRift",
+          "BotKill": 192,
+          "BotKilled": 46,
+          "BotPosition": 1988,
+          "Kill": 1,
+          "Killed": 1,
+          "KilledByStorm": 5,
+          "Loot": 880,
+          "Position": 3740
+        },
+        {
+          "map_id": "Lockdown",
+          "BotKill": 426,
+          "BotKilled": 168,
+          "BotPosition": 7159,
+          "Kill": 0,
+          "Killed": 0,
+          "KilledByStorm": 17,
+          "Loot": 2050,
+          "Position": 11418
+        }
+      ],
+      "rows_by_id_kind_and_event": [
+        {
+          "id_kind": "numeric",
+          "BotKill": 183,
+          "BotKilled": 297,
+          "BotPosition": 21712,
+          "Kill": 0,
+          "Killed": 0,
+          "KilledByStorm": 0,
+          "Loot": 115,
+          "Position": 636
+        },
+        {
+          "id_kind": "uuid",
+          "BotKill": 2232,
+          "BotKilled": 403,
+          "BotPosition": 0,
+          "Kill": 3,
+          "Killed": 3,
+          "KilledByStorm": 39,
+          "Loot": 12770,
+          "Position": 50711
+        }
+      ]
+    },
+    "actors": {
+      "numeric_ids_with_Position_files": [
+        {
+          "user_id": "1379",
+          "files_with_Position": 2,
+          "files_with_BotPosition": 0
+        },
+        {
+          "user_id": "1402",
+          "files_with_Position": 1,
+          "files_with_BotPosition": 0
+        },
+        {
+          "user_id": "1429",
+          "files_with_Position": 14,
+          "files_with_BotPosition": 3
+        }
+      ],
+      "their_Position_files": [
+        {
+          "file": "February_10/1429_41d4555d",
+          "map_id": "AmbroseValley",
+          "rows": 72,
+          "Position": 67,
+          "Loot": 4,
+          "BotKill": 0,
+          "BotKilled": 1,
+          "uuid_users_in_match": 0
+        },
+        {
+          "file": "February_10/1429_50192a5f",
+          "map_id": "AmbroseValley",
+          "rows": 10,
+          "Position": 8,
+          "Loot": 2,
+          "BotKill": 0,
+          "BotKilled": 0,
+          "uuid_users_in_match": 0
+        },
+        {
+          "file": "February_10/1429_56e214f3",
+          "map_id": "AmbroseValley",
+          "rows": 71,
+          "Position": 58,
+          "Loot": 13,
+          "BotKill": 0,
+          "BotKilled": 0,
+          "uuid_users_in_match": 0
+        },
+        {
+          "file": "February_10/1429_5def8d6b",
+          "map_id": "AmbroseValley",
+          "rows": 55,
+          "Position": 40,
+          "Loot": 14,
+          "BotKill": 1,
+          "BotKilled": 0,
+          "uuid_users_in_match": 0
+        },
+        {
+          "file": "February_11/1429_159f75f9",
+          "map_id": "AmbroseValley",
+          "rows": 22,
+          "Position": 21,
+          "Loot": 1,
+          "BotKill": 0,
+          "BotKilled": 0,
+          "uuid_users_in_match": 0
+        },
+        {
+          "file": "February_11/1429_a81cca92",
+          "map_id": "AmbroseValley",
+          "rows": 31,
+          "Position": 26,
+          "Loot": 5,
+          "BotKill": 0,
+          "BotKilled": 0,
+          "uuid_users_in_match": 0
+        },
+        {
+          "file": "February_12/1402_6edefa1c",
+          "map_id": "Lockdown",
+          "rows": 26,
+          "Position": 26,
+          "Loot": 0,
+          "BotKill": 0,
+          "BotKilled": 0,
+          "uuid_users_in_match": 0
+        },
+        {
+          "file": "February_12/1429_8a1e376c",
+          "map_id": "AmbroseValley",
+          "rows": 4,
+          "Position": 4,
+          "Loot": 0,
+          "BotKill": 0,
+          "BotKilled": 0,
+          "uuid_users_in_match": 0
+        },
+        {
+          "file": "February_12/1429_de5aa1ae",
+          "map_id": "AmbroseValley",
+          "rows": 152,
+          "Position": 120,
+          "Loot": 28,
+          "BotKill": 4,
+          "BotKilled": 0,
+          "uuid_users_in_match": 0
+        },
+        {
+          "file": "February_12/1429_ec57f6ca",
+          "map_id": "AmbroseValley",
+          "rows": 51,
+          "Position": 42,
+          "Loot": 7,
+          "BotKill": 2,
+          "BotKilled": 0,
+          "uuid_users_in_match": 0
+        },
+        {
+          "file": "February_12/1429_fbbc5d02",
+          "map_id": "AmbroseValley",
+          "rows": 34,
+          "Position": 27,
+          "Loot": 7,
+          "BotKill": 0,
+          "BotKilled": 0,
+          "uuid_users_in_match": 1
+        },
+        {
+          "file": "February_13/1429_16f9df84",
+          "map_id": "AmbroseValley",
+          "rows": 85,
+          "Position": 72,
+          "Loot": 13,
+          "BotKill": 0,
+          "BotKilled": 0,
+          "uuid_users_in_match": 0
+        },
+        {
+          "file": "February_13/1429_8bb25783",
+          "map_id": "AmbroseValley",
+          "rows": 2,
+          "Position": 2,
+          "Loot": 0,
+          "BotKill": 0,
+          "BotKilled": 0,
+          "uuid_users_in_match": 0
+        },
+        {
+          "file": "February_14/1379_14a40253",
+          "map_id": "GrandRift",
+          "rows": 7,
+          "Position": 6,
+          "Loot": 1,
+          "BotKill": 0,
+          "BotKilled": 0,
+          "uuid_users_in_match": 0
+        },
+        {
+          "file": "February_14/1379_2cc08f74",
+          "map_id": "GrandRift",
+          "rows": 20,
+          "Position": 17,
+          "Loot": 3,
+          "BotKill": 0,
+          "BotKilled": 0,
+          "uuid_users_in_match": 0
+        },
+        {
+          "file": "February_14/1429_3731eba6",
+          "map_id": "AmbroseValley",
+          "rows": 29,
+          "Position": 26,
+          "Loot": 2,
+          "BotKill": 1,
+          "BotKilled": 0,
+          "uuid_users_in_match": 0
+        },
+        {
+          "file": "February_14/1429_6eb15857",
+          "map_id": "AmbroseValley",
+          "rows": 94,
+          "Position": 74,
+          "Loot": 15,
+          "BotKill": 5,
+          "BotKilled": 0,
+          "uuid_users_in_match": 0
+        }
+      ],
+      "files_by_actor_from_movement_event": {
+        "human": 799,
+        "bot": 444
+      },
+      "files_by_id_kind_and_actor": [
+        {
+          "id_kind": "numeric",
+          "bot": 444,
+          "human": 17
+        },
+        {
+          "id_kind": "uuid",
+          "bot": 0,
+          "human": 782
+        }
+      ]
+    },
+    "timestamps": {
+      "raw_range_read_as_unix_seconds": {
+        "first": "2026-02-09 23:58:55 UTC",
+        "last": "2026-02-14 15:01:40 UTC"
+      },
+      "raw_range_read_as_milliseconds": {
+        "first": "1970-01-21 11:51:21.535000",
+        "last": "1970-01-21 11:58:01.300000"
+      },
+      "file_span": {
+        "if_seconds": {
+          "min": 13,
+          "p25": 176.0,
+          "median": 306.0,
+          "p75": 503.0,
+          "max": 890
+        },
+        "if_milliseconds_in_seconds": {
+          "min": 0.013,
+          "p25": 0.176,
+          "median": 0.306,
+          "p75": 0.503,
+          "max": 0.89
+        }
+      },
+      "match_span": {
+        "if_seconds": {
+          "min": 13,
+          "p25": 234.75,
+          "median": 382.0,
+          "p75": 595.0,
+          "max": 890
+        },
+        "if_milliseconds_in_seconds": {
+          "min": 0.013,
+          "p25": 0.2347,
+          "median": 0.382,
+          "p75": 0.595,
+          "max": 0.89
+        }
+      },
+      "movement_gap_top_values": {
+        "5.0": 62421,
+        "10.0": 4423,
+        "6.0": 1844,
+        "15.0": 1292,
+        "20.0": 561,
+        "11.0": 276
+      },
+      "movement_gap_share_equal_5": 0.8692,
+      "speed_world_units_per_raw_ts_unit": [
+        {
+          "movement": "BotPosition rows",
+          "pairs": 21268,
+          "median": 3.0343,
+          "p99": 4.9268,
+          "max": 5.0008,
+          "share_above_5": 0.0,
+          "median_first_gap": 5.0
+        },
+        {
+          "movement": "Position rows, numeric id",
+          "pairs": 619,
+          "median": 2.4246,
+          "p99": 6.7262,
+          "max": 9.3063,
+          "share_above_5": 0.1486,
+          "median_first_gap": 20.0
+        },
+        {
+          "movement": "Position rows, uuid id",
+          "pairs": 49782,
+          "median": 2.2531,
+          "p99": 6.4694,
+          "max": 12.6521,
+          "share_above_5": 0.1436,
+          "median_first_gap": 20.0
+        }
+      ],
+      "sampling_skips_while_standing_still": {
+        "share_of_gap_5_pairs_moving_under_half_unit": 0.0015,
+        "share_of_Position_pairs_with_gap_over_6": 0.1278,
+        "share_of_Position_time_inside_gaps_over_6": 0.3005
+      },
+      "rows_where_ts_goes_backwards": [
+        {
+          "file": "February_10/688cb2e4_0954f788",
+          "file_rows": 8,
+          "row": 4,
+          "event": "Position",
+          "jump": -32.0,
+          "file_written_twice": true
+        },
+        {
+          "file": "February_10/94d042cb_d3a3297e",
+          "file_rows": 294,
+          "row": 147,
+          "event": "Position",
+          "jump": -729.0,
+          "file_written_twice": true
+        },
+        {
+          "file": "February_11/db454a35_fc797a67",
+          "file_rows": 78,
+          "row": 39,
+          "event": "Position",
+          "jump": -186.0,
+          "file_written_twice": true
+        }
+      ],
+      "files_whose_date_differs_from_folder": {
+        "UTC": {
+          "first_row": 11,
+          "last_row": 8
+        },
+        "UTC+05:30": {
+          "first_row": 178,
+          "last_row": 190
+        }
+      },
+      "utc_offset_hours_that_best_matches_folders": {
+        "offset": 0.0,
+        "files_matching": 1232,
+        "files": 1243
+      },
+      "per_folder_range_utc": [
+        {
+          "folder": "February_10",
+          "first": "2026-02-09 23:58:55 UTC",
+          "last": "2026-02-10 23:56:37 UTC"
+        },
+        {
+          "folder": "February_11",
+          "first": "2026-02-10 23:51:05 UTC",
+          "last": "2026-02-11 23:36:45 UTC"
+        },
+        {
+          "folder": "February_12",
+          "first": "2026-02-12 00:10:33 UTC",
+          "last": "2026-02-12 22:14:44 UTC"
+        },
+        {
+          "folder": "February_13",
+          "first": "2026-02-13 00:17:49 UTC",
+          "last": "2026-02-13 21:48:15 UTC"
+        },
+        {
+          "folder": "February_14",
+          "first": "2026-02-14 00:00:28 UTC",
+          "last": "2026-02-14 15:01:40 UTC"
+        }
+      ]
+    },
+    "matches": {
+      "files_per_match": {
+        "1": 743,
+        "2": 1,
+        "5": 2,
+        "7": 23,
+        "8": 9,
+        "12": 4,
+        "14": 4,
+        "15": 9,
+        "16": 1
+      },
+      "bot_journeys_per_match": {
+        "0": 744,
+        "4": 2,
+        "6": 24,
+        "7": 8,
+        "11": 4,
+        "13": 4,
+        "14": 10
+      },
+      "human_files_in_matches_that_have_bot_files_by_id_kind": {
+        "uuid": 37,
+        "numeric": 17
+      },
+      "seconds_from_match_start_to_first_row_in_matches_with_bot_files": {
+        "bot": {
+          "min": 0,
+          "p25": 5.0,
+          "median": 5.0,
+          "p75": 5.0,
+          "max": 5
+        },
+        "human": {
+          "min": 0,
+          "p25": 0.0,
+          "median": 0.0,
+          "p75": 0.0,
+          "max": 0
+        }
+      },
+      "share_of_matches_with_one_file": 0.9334,
+      "matches_by_map_and_folder": [
+        {
+          "map_id": "AmbroseValley",
+          "February_10": 200,
+          "February_11": 138,
+          "February_12": 127,
+          "February_13": 78,
+          "February_14": 24
+        },
+        {
+          "map_id": "GrandRift",
+          "February_10": 24,
+          "February_11": 13,
+          "February_12": 9,
+          "February_13": 5,
+          "February_14": 8
+        },
+        {
+          "map_id": "Lockdown",
+          "February_10": 61,
+          "February_11": 50,
+          "February_12": 26,
+          "February_13": 29,
+          "February_14": 5
+        }
+      ],
+      "duration_seconds_by_map": {
+        "AmbroseValley": {
+          "min": 13,
+          "p25": 237.75,
+          "median": 361.5,
+          "p75": 582.75,
+          "max": 890
+        },
+        "GrandRift": {
+          "min": 30,
+          "p25": 244.5,
+          "median": 422.0,
+          "p75": 575.5,
+          "max": 732
+        },
+        "Lockdown": {
+          "min": 32,
+          "p25": 223.5,
+          "median": 448.0,
+          "p75": 611.0,
+          "max": 825
+        }
+      },
+      "busiest_matches": [
+        {
+          "match_id": "fbbc5d02",
+          "map_id": "AmbroseValley",
+          "day": "February_12",
+          "files": 16,
+          "human_journeys": 2,
+          "bot_journeys": 14,
+          "rows": 1015,
+          "duration": 523
+        },
+        {
+          "match_id": "d0a38c30",
+          "map_id": "Lockdown",
+          "day": "February_12",
+          "files": 15,
+          "human_journeys": 1,
+          "bot_journeys": 14,
+          "rows": 1216,
+          "duration": 734
+        },
+        {
+          "match_id": "de5aa1ae",
+          "map_id": "AmbroseValley",
+          "day": "February_12",
+          "files": 15,
+          "human_journeys": 1,
+          "bot_journeys": 14,
+          "rows": 1124,
+          "duration": 759
+        },
+        {
+          "match_id": "b971c686",
+          "map_id": "AmbroseValley",
+          "day": "February_10",
+          "files": 15,
+          "human_journeys": 1,
+          "bot_journeys": 14,
+          "rows": 1052,
+          "duration": 729
+        },
+        {
+          "match_id": "ed07a212",
+          "map_id": "Lockdown",
+          "day": "February_11",
+          "files": 15,
+          "human_journeys": 1,
+          "bot_journeys": 14,
+          "rows": 975,
+          "duration": 535
+        },
+        {
+          "match_id": "41d4555d",
+          "map_id": "AmbroseValley",
+          "day": "February_10",
+          "files": 15,
+          "human_journeys": 1,
+          "bot_journeys": 14,
+          "rows": 932,
+          "duration": 523
+        },
+        {
+          "match_id": "ff73c97b",
+          "map_id": "AmbroseValley",
+          "day": "February_10",
+          "files": 15,
+          "human_journeys": 1,
+          "bot_journeys": 14,
+          "rows": 921,
+          "duration": 699
+        },
+        {
+          "match_id": "6eb15857",
+          "map_id": "AmbroseValley",
+          "day": "February_14",
+          "files": 15,
+          "human_journeys": 1,
+          "bot_journeys": 14,
+          "rows": 871,
+          "duration": 498
+        },
+        {
+          "match_id": "4681f54e",
+          "map_id": "Lockdown",
+          "day": "February_12",
+          "files": 15,
+          "human_journeys": 1,
+          "bot_journeys": 14,
+          "rows": 850,
+          "duration": 510
+        },
+        {
+          "match_id": "ec57f6ca",
+          "map_id": "AmbroseValley",
+          "day": "February_12",
+          "files": 15,
+          "human_journeys": 1,
+          "bot_journeys": 14,
+          "rows": 752,
+          "duration": 341
+        }
+      ],
+      "journeys_split_across_files": [
+        {
+          "journey": "cfa03e9f_ac049b28",
+          "folders": [
+            "February_10",
+            "February_11"
+          ],
+          "rows_per_copy": [
+            88,
+            88
+          ],
+          "copies_identical": true,
+          "first_row_utc": "2026-02-10 23:51:05 UTC"
+        }
+      ],
+      "matches_per_uuid_user": {
+        "min": 1,
+        "p25": 1.0,
+        "median": 2.0,
+        "p75": 3.0,
+        "max": 49
+      }
+    },
+    "duplicates": {
+      "within_file_by_event": {
+        "Loot": 1237,
+        "Position": 147,
+        "BotKill": 34,
+        "BotKilled": 2
+      },
+      "within_file_in_the_files_whose_ts_goes_backwards": {
+        "Position": 147,
+        "Loot": 39,
+        "BotKill": 4,
+        "BotKilled": 2
+      },
+      "within_file_in_all_other_files": {
+        "Loot": 1198,
+        "BotKill": 30
+      },
+      "within_file_copies_directly_after_their_twin": {
+        "rows": 1180,
+        "share": 0.831
+      },
+      "extra_copies_only_found_across_files": 85,
+      "loot_rows_per_identical_file_ts_position": {
+        "1": 10547,
+        "2": 1010,
+        "3": 65,
+        "4": 18,
+        "5": 1,
+        "6": 3,
+        "7": 4
+      },
+      "rows_sharing_file_ts_event_but_not_position": {
+        "Loot": 136,
+        "BotKill": 27
+      }
+    },
+    "deaths": {
+      "death_rows_by_actor_and_event": [
+        {
+          "actor": "bot",
+          "BotKilled": 296,
+          "Killed": 0,
+          "KilledByStorm": 0
+        },
+        {
+          "actor": "human",
+          "BotKilled": 404,
+          "Killed": 3,
+          "KilledByStorm": 39
+        }
+      ],
+      "files_by_actor_and_fate": [
+        {
+          "actor": "bot",
+          "BotKilled": 296,
+          "Killed": 0,
+          "KilledByStorm": 0,
+          "no death row": 148
+        },
+        {
+          "actor": "human",
+          "BotKilled": 402,
+          "Killed": 3,
+          "KilledByStorm": 39,
+          "no death row": 355
+        }
+      ],
+      "rows_after_first_death_by_actor": {
+        "human": 177
+      },
+      "non_movement_rows_after_first_death": [
+        {
+          "file": "February_10/5a225352_b5ed9b5b",
+          "event": "BotKill",
+          "seconds_after_death": 3.0
+        },
+        {
+          "file": "February_14/6539f536_de7378ae",
+          "event": "BotKill",
+          "seconds_after_death": 5.0
+        }
+      ],
+      "seconds_after_death": {
+        "min": 1.0,
+        "p25": 1.0,
+        "median": 2.0,
+        "p75": 3.0,
+        "max": 6.0
+      },
+      "rows_in_the_same_second_as_the_death_but_later_in_file_order": {
+        "Position": 34
+      },
+      "seconds_from_last_movement_row_to_death_row": {
+        "min": 0,
+        "p25": 1.0,
+        "median": 3.0,
+        "p75": 5.0,
+        "max": 454,
+        "p99": 69.26
+      },
+      "storm_deaths_seconds_into_match_by_map": {
+        "AmbroseValley": {
+          "deaths": 17,
+          "min": 669,
+          "p25": 710.0,
+          "median": 730.0,
+          "p75": 771.0,
+          "max": 887
+        },
+        "GrandRift": {
+          "deaths": 5,
+          "min": 683,
+          "p25": 712.0,
+          "median": 716.0,
+          "p75": 725.0,
+          "max": 732
+        },
+        "Lockdown": {
+          "deaths": 17,
+          "min": 655,
+          "p25": 736.0,
+          "median": 761.0,
+          "p75": 800.0,
+          "max": 824
+        }
+      }
+    },
+    "combat": {
+      "Kill_and_Killed_twins": {
+        "twins": 3,
+        "max_seconds_from_twin_to_end_of_file": 2
+      },
+      "kills_paired_with_deaths_in_another_file": {
+        "human BotKill -> bot BotKilled": {
+          "kill_rows": 2245,
+          "death_rows": 296,
+          "kill_rows_with_a_death_within_1s": 35,
+          "median_distance_between_the_two_rows": 12.3941,
+          "pairs_at_identical_position": 0
+        },
+        "bot BotKill -> human BotKilled": {
+          "kill_rows": 170,
+          "death_rows": 404,
+          "kill_rows_with_a_death_within_1s": 5,
+          "median_distance_between_the_two_rows": 11.8014,
+          "pairs_at_identical_position": 0
+        },
+        "bot BotKill -> bot BotKilled": {
+          "kill_rows": 170,
+          "death_rows": 296,
+          "kill_rows_with_a_death_within_1s": 41,
+          "median_distance_between_the_two_rows": 17.1658,
+          "pairs_at_identical_position": 0
+        }
+      },
+      "distance_from_event_row_to_nearest_movement_sample_of_same_file": [
+        {
+          "actor": "bot",
+          "event": "BotKill",
+          "rows": 170,
+          "median": 2.5516,
+          "p90": 7.2245,
+          "max": 15.3553
+        },
+        {
+          "actor": "bot",
+          "event": "BotKilled",
+          "rows": 296,
+          "median": 2.9546,
+          "p90": 10.1131,
+          "max": 19.6326
+        },
+        {
+          "actor": "human",
+          "event": "BotKill",
+          "rows": 2245,
+          "median": 1.6085,
+          "p90": 5.8125,
+          "max": 63.2485
+        },
+        {
+          "actor": "human",
+          "event": "BotKilled",
+          "rows": 404,
+          "median": 0.4623,
+          "p90": 3.0514,
+          "max": 11.8696
+        },
+        {
+          "actor": "human",
+          "event": "Kill",
+          "rows": 3,
+          "median": 0.0,
+          "p90": 3.097,
+          "max": 3.8713
+        },
+        {
+          "actor": "human",
+          "event": "Killed",
+          "rows": 3,
+          "median": 0.0,
+          "p90": 3.097,
+          "max": 3.8713
+        },
+        {
+          "actor": "human",
+          "event": "KilledByStorm",
+          "rows": 39,
+          "median": 0.161,
+          "p90": 7.6817,
+          "max": 12.8127
+        },
+        {
+          "actor": "human",
+          "event": "Loot",
+          "rows": 12885,
+          "median": 0.9024,
+          "p90": 6.3502,
+          "max": 36.0142
+        }
+      ]
+    },
+    "coordinates": {
+      "per_map": {
+        "AmbroseValley": {
+          "minimap_file": "AmbroseValley_Minimap.png",
+          "format": "PNG",
+          "mode": "RGBA",
+          "width": 4320,
+          "height": 4320,
+          "rows": 61013
+        },
+        "GrandRift": {
+          "minimap_file": "GrandRift_Minimap.png",
+          "format": "PNG",
+          "mode": "RGBA",
+          "width": 2160,
+          "height": 2158,
+          "rows": 6853
+        },
+        "Lockdown": {
+          "minimap_file": "Lockdown_Minimap.jpg",
+          "format": "JPEG",
+          "mode": "RGB",
+          "width": 9000,
+          "height": 9000,
+          "rows": 21238
+        }
+      }
+    }
+  }
+}
