@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-22 23:56 IST
+Last updated: 2026-11-22 23:59 IST
 
 ## Current phase
 
@@ -44,11 +44,10 @@ Phases 2 to 11 are described in [PLAN.md](PLAN.md), a draft awaiting approval.
 ## Exactly where I stopped
 
 - Phase 1 is complete at `bc63f0e` and waits for review. The working tree is clean.
-- **Local `main` was rewritten on 2026-11-22 to remove the `Co-Authored-By` line from every commit message** (user's request). Files, authors and dates are unchanged, checked commit by commit. Every commit hash changed; the hashes in this file are the new ones.
-- Until the user runs `git push --force-with-lease origin main`, local `main` and `origin/main` have diverged and GitHub still shows the old 16 commits. **Do not pull, merge or rebase onto `origin/main` before that.**
-- The old history is kept locally in the branch `backup-before-trailer-rewrite` (and in `refs/original/`). Delete both once the force push is confirmed.
+- The history was rewritten on 2026-11-22 to remove the `Co-Authored-By` line from every commit message, and the user force-pushed it. Local `main` and `origin/main` matched at `cd6af65` afterwards (17 commits, none with the line). The local backups of the old history are deleted.
+- One local commit after that (this update of the progress log) is not pushed.
 - `docs/PLAN.md` (second version) is a draft. No application code exists and none may be written until the user approves it.
-- **NEXT:** when the user confirms the force push, check that `git status -sb` shows `main...origin/main` with nothing ahead or behind, then delete the backup branch. After that, wait for the review: once the user approves PLAN.md and answers the open questions below, start Phase 2 with `pipeline/clean.py` and its tests. Every further push needs the user's go.
+- **NEXT:** wait for the user's review. Once they approve PLAN.md and answer the open questions below, start Phase 2 with `pipeline/clean.py` and its tests. Every push needs the user's go.
 
 ## Decisions and assumptions made
 
@@ -94,7 +93,8 @@ Not available yet: data rebuild (`make data`, Phase 2); dev server and `npm run 
 
 ## Known issues / TODO later
 
-- Local `main` diverges from `origin/main` until the user force-pushes the rewritten history (see "Exactly where I stopped"). After that, commits stay local until the user approves each push.
+- Commits stay local until the user approves each push.
+- Right after the force push GitHub's commit list showed the user as the only author, but its "Contributors" box still listed `claude`. GitHub recalculates that box on its own schedule; look again later.
 - No CI yet (planned in Phase 2).
 - The README's map constants may be 1.5 to 2% too large in x on two maps (open question 5). The proof images use the README constants.
 - 56 of the profiler's 231 metrics were added after the blind cross-check and were not re-derived by it (the cleaning counts among them were confirmed by a skeptic).
