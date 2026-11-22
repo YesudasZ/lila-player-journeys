@@ -2,6 +2,18 @@
 
 Take-home assignment for LILA Games (Product Engineer). A hosted browser tool that lets **Level Designers** (not data scientists) explore player telemetry from LILA BLACK, an extraction shooter: where players move, where fights break out, where people die to the storm, which map areas are ignored. Requirements as a checklist: `docs/BRIEF.md`. Phase plan: `docs/PLAN.md`.
 
+## Session resume protocol
+
+All project state lives in files and git, never only in a conversation: a session can be cut off at any moment. At the start of every session, before anything else:
+
+1. Read `docs/PROGRESS.md` (imported below) and `docs/PLAN.md`.
+2. Run `git status` and `git log --oneline -10`.
+3. Tell the user in 5 lines where the project stands and what the next action is. Then wait for "go".
+
+Do not redo finished work. If PROGRESS.md and the code disagree, trust the code, report the mismatch and fix PROGRESS.md. The `/resume` command (`.claude/commands/resume.md`) runs this protocol on demand.
+
+@docs/PROGRESS.md
+
 ## Stack
 
 - **Pipeline:** Python 3.12+ (pyarrow, pandas, numpy, Pillow, pytest). Runs offline, writes static files into `web/public/data/`.
@@ -14,9 +26,11 @@ Take-home assignment for LILA Games (Product Engineer). A hosted browser tool th
 pipeline/     offline data code: maps.py (projection), dataset.py (loader), profile_data.py, verify_overlay.py, tests/
 analysis/     statistics behind INSIGHTS.md (Phase 10)
 web/          the app (Phase 3 onward)
-docs/         BRIEF.md, DATA_NOTES.md, PLAN.md, profile/ (measurements), img/ (mapping proof)
+docs/         PROGRESS.md (status, single source of truth), BRIEF.md, DATA_NOTES.md, PLAN.md, profile/ (measurements), img/ (mapping proof)
+.claude/      settings.json (permission rules), commands/resume.md
 data/raw/     unzipped player_data (git-ignored)
 _inbox/       the assignment PDF and zip (git-ignored)
+.local/       machine-specific session notes and raw agent output (git-ignored)
 ```
 
 ## Commands
@@ -32,7 +46,7 @@ Run pipeline modules as `.venv/bin/python -m pipeline.<module>` from the repo ro
 
 ## Working rules
 
-1. One phase at a time. At the end of a phase: run the checks, update `docs/PLAN.md`, commit, summarise how to verify locally, then **stop and wait**. Never start the next phase unasked.
+1. One phase at a time. At the end of a phase: run the checks, update `docs/PLAN.md` and `docs/PROGRESS.md`, commit, summarise how to verify locally, then **stop and wait**. Never start the next phase unasked.
 2. Never claim something works unless you ran it and saw the output. Show the key evidence.
 3. The raw files are the source of truth. Where they disagree with the dataset README, trust the measurement, record it in `docs/DATA_NOTES.md` and say so.
 4. Document every assumption. Do not get blocked: make a reasonable assumption and flag it.
@@ -41,6 +55,12 @@ Run pipeline modules as `.venv/bin/python -m pipeline.<module>` from the repo ro
 7. Coordinate mapping lives in one tested function per language. The per-map constants exist only in `pipeline/maps.py`; the app gets them through the manifest.
 8. Do not copy code from other people's public solutions to this assignment.
 9. Player ids are production data: never print or commit full user UUIDs. Use the first eight characters.
+10. Update `docs/PROGRESS.md` after **every** completed sub-step, not only at phase end. Keep its "Exactly where I stopped" section current at all times.
+11. Commit early and often with clear messages, for example `phase-3: add MapCanvas zoom/pan (WIP)`. Put `WIP:` in the message when a step is unfinished, and never leave uncommitted work for long. Local commits need no permission; ask before `git push`.
+12. Never leave the working tree broken without a note under "Known issues" in `docs/PROGRESS.md`.
+13. When the user says "I'm about to hit my limit" or "checkpoint": finish or safely stop the current edit, update `docs/PROGRESS.md`, commit, and print a 3-line status. Do nothing else.
+14. At each phase end: set the status to "DONE (awaiting my review)", record the commit hash, run the checks, then stop.
+15. Do not repeat research, profiling or file reads whose results are already recorded in `docs/DATA_NOTES.md`, `docs/PLAN.md` or `docs/PROGRESS.md`. Use the recorded results.
 
 ## Verified data facts (details and evidence: `docs/DATA_NOTES.md`)
 
@@ -62,7 +82,7 @@ Run pipeline modules as `.venv/bin/python -m pipeline.<module>` from the repo ro
 - **TypeScript:** `strict`, no `any`, pure functions in `web/src/lib/` with Vitest tests, small components, state in Zustand, the playback clock outside React.
 - **Styling:** Tailwind v4 with the tokens below only; no ad-hoc hex values in components.
 - **Docs:** short, tables where they help, real numbers only, each number traceable to `docs/profile/`.
-- **Commits:** small and working; message says what and why.
+- **Commits:** small and working; subject starts with `phase-N:` (or `chore:`, `docs:`, `fix:`) and says what changed; the body says why when it is not obvious.
 
 ## Design tokens ("LILA Night")
 
@@ -89,4 +109,4 @@ Every marker gets a dark outline. Fonts: Space Grotesk (headings), Inter (UI), J
 - Acceptance criteria in `docs/PLAN.md` met and shown with evidence (command output, screenshots).
 - `make test` green; from Phase 3 also `npm run check` (tsc + eslint + vitest) in `web/`.
 - No console errors in the app; no dead code; docs updated.
-- Committed, summary written, stopped for review.
+- Committed; `docs/PROGRESS.md` shows "DONE (awaiting my review)" with the commit hash; summary written; stopped for review.

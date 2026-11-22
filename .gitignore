@@ -27,5 +27,8 @@ playwright/.cache/
 .env.*
 .claude/settings.local.json
 
+# Machine-specific session notes (scratch paths, raw agent output)
+.local/
+
 # OS noise
 .DS_Store
