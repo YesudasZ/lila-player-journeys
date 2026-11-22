@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-22 23:59 IST
+Last updated: 2026-11-23 00:07 IST
 
 ## Current phase
 
@@ -45,7 +45,9 @@ Phases 2 to 11 are described in [PLAN.md](PLAN.md), a draft awaiting approval.
 
 - Phase 1 is complete at `bc63f0e` and waits for review. The working tree is clean.
 - The history was rewritten on 2026-11-22 to remove the `Co-Authored-By` line from every commit message, and the user force-pushed it. Local `main` and `origin/main` matched at `cd6af65` afterwards (17 commits, none with the line). The local backups of the old history are deleted.
-- One local commit after that (this update of the progress log) is not pushed.
+- The user pushed the follow-up commit `3eeba7b` themselves; `origin/main` matched local `main` there. The only ref on GitHub is `main`.
+- GitHub's "Contributors" box is stale after the rewrite: it still shows two contributors, while GitHub's API lists one. Decision (user, 2026-11-23): wait for GitHub to refresh it. Look at it again at the start of the next session and before submission. If it has not cleared by then, the fallbacks are to recreate the repo (the user deletes it, Claude creates it again and pushes) or to ask GitHub Support.
+- One local commit (this note) is not pushed.
 - `docs/PLAN.md` (second version) is a draft. No application code exists and none may be written until the user approves it.
 - **NEXT:** wait for the user's review. Once they approve PLAN.md and answer the open questions below, start Phase 2 with `pipeline/clean.py` and its tests. Every push needs the user's go.
 
@@ -94,7 +96,7 @@ Not available yet: data rebuild (`make data`, Phase 2); dev server and `npm run 
 ## Known issues / TODO later
 
 - Commits stay local until the user approves each push.
-- Right after the force push GitHub's commit list showed the user as the only author, but its "Contributors" box still listed `claude`. GitHub recalculates that box on its own schedule; look again later.
+- GitHub's "Contributors" box is stale (see "Exactly where I stopped"). Recheck before submission; it is also a Phase 11 check in PLAN.md.
 - No CI yet (planned in Phase 2).
 - The README's map constants may be 1.5 to 2% too large in x on two maps (open question 5). The proof images use the README constants.
 - 56 of the profiler's 231 metrics were added after the blind cross-check and were not re-derived by it (the cleaning counts among them were confirmed by a skeptic).

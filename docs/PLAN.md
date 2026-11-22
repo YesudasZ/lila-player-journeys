@@ -181,7 +181,7 @@ Storm deaths are markers only: 39 points, 5 on Grand Rift, are not a heatmap.
 
 ## Phase 11: Final QA (0.75 h)
 
-**Deliverables:** a fresh clone into a temporary folder, following the README literally: the app runs from the committed data, and the data rebuild runs once the zip is added. All tests. BRIEF.md statuses for R, S and C rows set, each with a link to its evidence. An independent agent reviews the hosted tool and the repo as a strict LILA reviewer (first run on Wednesday evening, so its findings can be fixed). The repo opens logged-out.
+**Deliverables:** a fresh clone into a temporary folder, following the README literally: the app runs from the committed data, and the data rebuild runs once the zip is added. All tests. BRIEF.md statuses for R, S and C rows set, each with a link to its evidence. An independent agent reviews the hosted tool and the repo as a strict LILA reviewer (first run on Wednesday evening, so its findings can be fixed). The repo opens logged-out and its page lists a single contributor.
 
 **Acceptance:** every R, S and C row of BRIEF.md is ☑ with evidence; you submit the single GitHub link.
 
