@@ -39,7 +39,7 @@
     {
       "claim": "Unique players",
       "readme": 339,
-      "data": "339 distinct user_ids, but only 248 of them ever have Position rows; 92 have BotPosition rows (1 id has both)",
+      "data": "339 distinct user_ids = 245 UUIDs + 94 numeric ids. The numeric ids are bot ids, except 3 that stand on 17 files with Position rows, one id per map",
       "holds": "partly"
     },
     {
@@ -357,6 +357,14 @@
         "value": 92,
         "definition": "Distinct user_ids of any format that have at least one file containing BotPosition rows."
       },
+      "files_numeric_with_Position_and_death_row": {
+        "value": 1,
+        "definition": "Files with a numeric user_id and Position rows that contain a death row (Killed, BotKilled or KilledByStorm)."
+      },
+      "files_uuid_with_death_row": {
+        "value": 443,
+        "definition": "Files with a UUID user_id that contain a death row."
+      },
       "files_with_Kill_or_Killed": {
         "value": 3,
         "definition": "Files containing at least one Kill or Killed row."
@@ -368,6 +376,14 @@
       "Kill_twins_in_matches_with_several_Position_users": {
         "value": 0,
         "definition": "Kill rows with such a twin whose match has more than one distinct user_id with Position rows."
+      },
+      "Kill_twins_in_single_file_matches": {
+        "value": 3,
+        "definition": "Kill rows with such a twin whose match has exactly one file in the dataset."
+      },
+      "bot_BotKilled_rows_with_BotKill_in_another_file_within_1": {
+        "value": 79,
+        "definition": "BotKilled rows in files with BotPosition rows for which a BotKill row exists in another file of the same match with a raw ts at most 1 away."
       }
     },
     "time": {
@@ -478,6 +494,22 @@
       "rows_same_ts_as_previous_row": {
         "value": 3738,
         "definition": "Rows whose raw ts equals the raw ts of the previous row of the same file, in file order."
+      },
+      "Position_pairs_gap_5": {
+        "value": 42698,
+        "definition": "Consecutive Position rows of a file sorted by (ts, file order) whose raw ts difference is exactly 5."
+      },
+      "Position_pairs_gap_5_moving_under_half_unit": {
+        "value": 66,
+        "definition": "Of those pairs, the ones whose horizontal distance is below 0.5."
+      },
+      "Position_median_distance_gap_5": {
+        "value": 13.1578,
+        "definition": "Median horizontal distance between the two rows of a Position pair whose raw ts difference is exactly 5."
+      },
+      "Position_median_distance_gap_over_6": {
+        "value": 8.2145,
+        "definition": "Median horizontal distance between the two rows of a Position pair whose raw ts difference is greater than 6."
       }
     },
     "matches_quality": {
@@ -564,6 +596,26 @@
       "BotKill_rows_in_single_file_matches": {
         "value": 2119,
         "definition": "BotKill rows in matches that have exactly one file in the dataset."
+      },
+      "rows_median_single_file_matches": {
+        "value": 77.0,
+        "definition": "Median row count of the matches that have exactly one file."
+      },
+      "distinct_match_id_prefixes_8": {
+        "value": 796,
+        "definition": "Distinct values of the first eight characters of match_id."
+      },
+      "distinct_uuid_user_id_prefixes_8": {
+        "value": 245,
+        "definition": "Distinct values of the first eight characters of the UUID user_ids."
+      },
+      "match_span_median_without_bot_files": {
+        "value": 372.5,
+        "definition": "Median (largest raw ts - smallest raw ts) over matches that have no file with BotPosition rows."
+      },
+      "match_span_median_with_bot_files": {
+        "value": 513.5,
+        "definition": "Median (largest raw ts - smallest raw ts) over matches that have at least one file with BotPosition rows."
       },
       "duplicate_rows_within_file": {
         "value": 1420,
@@ -795,7 +847,125 @@
         "value": 890,
         "definition": "Same example: pixel_y = (1 - v) * 1024, rounded to the nearest integer."
       }
+    },
+    "cleaning": {
+      "rows_removed_spare_copy_of_journey": {
+        "value": 88,
+        "definition": "Rule 1. Rows of files holding a (user_id, match_id) journey that another file also holds. Among such files the one kept is the one whose day folder holds the most files of the same match (ties: first by name)."
+      },
+      "rows_removed_second_half_of_file_written_twice": {
+        "value": 190,
+        "definition": "Rule 2. Rows in the second half of the remaining files whose second half repeats the first half exactly."
+      },
+      "rows_removed_Kill_mirroring_Killed": {
+        "value": 3,
+        "definition": "Rule 3. Remaining Kill rows for which a Killed row exists in the same file with identical raw ts, x, y and z."
+      },
+      "rows_removed_movement_after_death": {
+        "value": 206,
+        "definition": "Rule 4. Remaining Position or BotPosition rows that come after a death row (Killed, BotKilled, KilledByStorm) of the same file, rows ordered by (raw ts, file order)."
+      },
+      "rows_removed_movement_after_death_with_later_ts": {
+        "value": 173,
+        "definition": "Of the rule 4 rows, the ones whose raw ts is greater than that of the file's first death row. The rest share the death row's ts and follow it in file order."
+      },
+      "rows_after_cleaning": {
+        "value": 88617,
+        "definition": "Rows left after rules 1 to 4."
+      },
+      "rows_after_cleaning_Position": {
+        "value": 50931,
+        "definition": "Rows left after rules 1 to 4 whose event is Position."
+      },
+      "rows_after_cleaning_BotPosition": {
+        "value": 21712,
+        "definition": "Rows left after rules 1 to 4 whose event is BotPosition."
+      },
+      "rows_after_cleaning_Kill": {
+        "value": 0,
+        "definition": "Rows left after rules 1 to 4 whose event is Kill."
+      },
+      "rows_after_cleaning_Killed": {
+        "value": 3,
+        "definition": "Rows left after rules 1 to 4 whose event is Killed."
+      },
+      "rows_after_cleaning_BotKill": {
+        "value": 2406,
+        "definition": "Rows left after rules 1 to 4 whose event is BotKill."
+      },
+      "rows_after_cleaning_BotKilled": {
+        "value": 697,
+        "definition": "Rows left after rules 1 to 4 whose event is BotKilled."
+      },
+      "rows_after_cleaning_KilledByStorm": {
+        "value": 39,
+        "definition": "Rows left after rules 1 to 4 whose event is KilledByStorm."
+      },
+      "rows_after_cleaning_Loot": {
+        "value": 12829,
+        "definition": "Rows left after rules 1 to 4 whose event is Loot."
+      },
+      "journeys_after_cleaning": {
+        "value": 1242,
+        "definition": "Files left after rules 1 to 4; each holds one (user_id, match_id) journey."
+      },
+      "journeys_after_cleaning_Position": {
+        "value": 798,
+        "definition": "Of those journeys, the ones with Position rows."
+      },
+      "journeys_after_cleaning_BotPosition": {
+        "value": 444,
+        "definition": "Of those journeys, the ones with BotPosition rows."
+      },
+      "journeys_after_cleaning_with_death_row": {
+        "value": 739,
+        "definition": "Journeys left after rules 1 to 4 that contain a death row."
+      },
+      "journeys_after_cleaning_with_several_death_rows": {
+        "value": 0,
+        "definition": "Journeys left after rules 1 to 4 that contain more than one death row."
+      },
+      "journeys_after_cleaning_Position_with_death_row": {
+        "value": 443,
+        "definition": "Journeys with Position rows left after rules 1 to 4 that contain a death row."
+      },
+      "rows_kept_after_death_row": {
+        "value": 2,
+        "definition": "Rows left after rules 1 to 4 that come after a death row of the same file in (raw ts, file order) and are not death rows themselves."
+      },
+      "identical_rows_left_after_cleaning": {
+        "value": 1227,
+        "definition": "Rows left after rules 1 to 4 that repeat an earlier row of the same file on all eight columns (surplus copies only)."
+      },
+      "identical_rows_left_after_cleaning_BotKill": {
+        "value": 30,
+        "definition": "Of those surplus rows, the ones whose event is BotKill."
+      },
+      "identical_rows_left_after_cleaning_Loot": {
+        "value": 1197,
+        "definition": "Of those surplus rows, the ones whose event is Loot."
+      },
+      "identical_rows_left_directly_after_twin": {
+        "value": 1175,
+        "definition": "Of those surplus rows, the ones identical to the row directly before them in (raw ts, file order)."
+      },
+      "matches_in_several_day_folders_after_cleaning": {
+        "value": 0,
+        "definition": "match_ids left with files in more than one day folder after rules 1 to 4."
+      }
     }
+  },
+  "detail_definitions": {
+    "timestamps > speed_world_units_per_raw_ts_unit": "Horizontal distance divided by raw ts difference, over consecutive movement rows of a file sorted by (ts, file order). share_above_5 is the share of pairs above 5.001. median_first_gap is the median over files of the raw ts difference between a file's first two movement rows.",
+    "timestamps > Position_distance_by_gap_length": "Consecutive Position rows of a file sorted by (ts, file order), grouped by their raw ts difference. median_distance_per_unit_of_gap divides each pair's horizontal distance by its ts difference.",
+    "timestamps > human_file_starts_by_utc_hour": "Files with Position rows, counted by the UTC hour of their smallest raw ts read as Unix seconds. The six-hour windows wrap around midnight.",
+    "matches > duration": "Largest minus smallest raw ts over the files recorded for a match. It is an observed span, not the length of the match.",
+    "duplicates > within_file_copies_directly_after_their_twin": "Surplus identical rows whose previous row in file order is identical on all eight columns, as a share of all surplus identical rows within a file.",
+    "deaths > files_by_actor_and_fate": "Fate is the event of the file's first death row in (ts, file order), or 'no death row'.",
+    "deaths > storm_deaths_seconds_into_match_by_map": "Raw ts of the KilledByStorm row minus the smallest raw ts of its match.",
+    "combat > rows_paired_with_rows_in_another_file": "For each row of the first kind: partner rows in the same match, in another file, with a raw ts at most 1 away. Distance is horizontal, to the nearest such partner.",
+    "combat > distance_from_event_row_to_nearest_movement_sample_of_same_file": "Horizontal distance from each non-movement row to the movement row of the same file that is nearest in time.",
+    "cleaning": "The four rules are applied in order, each to what the previous one left. Actor (human or bot) comes from the movement event of the file."
   },
   "details": {
     "inventory": {
@@ -965,6 +1135,40 @@
           "files_with_BotPosition": 3
         }
       ],
+      "numeric_id_on_Position_files_against_bot_id_range_by_map": [
+        {
+          "map_id": "AmbroseValley",
+          "numeric_id_on_Position_files": "1429",
+          "Position_files": 14,
+          "lowest_bot_id": 1432,
+          "highest_bot_id": 1482
+        },
+        {
+          "map_id": "GrandRift",
+          "numeric_id_on_Position_files": "1379",
+          "Position_files": 2,
+          "lowest_bot_id": 1382,
+          "highest_bot_id": 1423
+        },
+        {
+          "map_id": "Lockdown",
+          "numeric_id_on_Position_files": "1402",
+          "Position_files": 1,
+          "lowest_bot_id": 1405,
+          "highest_bot_id": 1455
+        }
+      ],
+      "BotPosition_files_of_those_ids_by_map": [
+        {
+          "user_id": "1429",
+          "map_id": "Lockdown",
+          "BotPosition_files": 3
+        }
+      ],
+      "median_seconds_recorded_per_file": {
+        "numeric id with Position": 161.0,
+        "uuid id": 367.0
+      },
       "their_Position_files": [
         {
           "file": "February_10/1429_41d4555d",
@@ -1231,6 +1435,60 @@
           "max": 12.6521,
           "share_above_5": 0.1436,
           "median_first_gap": 20.0
+        }
+      ],
+      "Position_distance_by_gap_length": [
+        {
+          "gap": "5",
+          "pairs": 42698,
+          "median_distance": 13.1578,
+          "median_distance_per_unit_of_gap": 2.6316
+        },
+        {
+          "gap": "6 to 10",
+          "pairs": 4914,
+          "median_distance": 9.1384,
+          "median_distance_per_unit_of_gap": 1.0073
+        },
+        {
+          "gap": "11 to 20",
+          "pairs": 2029,
+          "median_distance": 8.2145,
+          "median_distance_per_unit_of_gap": 0.5311
+        },
+        {
+          "gap": "21 to 60",
+          "pairs": 713,
+          "median_distance": 8.6007,
+          "median_distance_per_unit_of_gap": 0.2907
+        },
+        {
+          "gap": "over 60",
+          "pairs": 41,
+          "median_distance": 6.7602,
+          "median_distance_per_unit_of_gap": 0.0815
+        }
+      ],
+      "human_file_starts_by_utc_hour": {
+        "busiest_six_hours": {
+          "from_utc_hour": 9,
+          "files": 353
+        },
+        "quietest_six_hours": {
+          "from_utc_hour": 21,
+          "files": 102
+        }
+      },
+      "readme_sample_rows": [
+        {
+          "readme_prints": "1970-01-21 11:52:07.161",
+          "raw_integer": 1770727161,
+          "read_as_unix_seconds": "2026-02-10 12:39:21 UTC"
+        },
+        {
+          "readme_prints": "1970-01-21 11:52:21.082",
+          "raw_integer": 1770741082,
+          "read_as_unix_seconds": "2026-02-10 16:31:22 UTC"
         }
       ],
       "sampling_skips_while_standing_still": {
@@ -1512,7 +1770,12 @@
             88
           ],
           "copies_identical": true,
-          "first_row_utc": "2026-02-10 23:51:05 UTC"
+          "first_row_utc": "2026-02-10 23:51:05 UTC",
+          "last_row_utc": "2026-02-10 23:56:37 UTC",
+          "files_of_its_match_per_folder": {
+            "February_10": 1,
+            "February_11": 7
+          }
         }
       ],
       "matches_per_uuid_user": {
@@ -1521,7 +1784,30 @@
         "median": 2.0,
         "p75": 3.0,
         "max": 49
-      }
+      },
+      "example_matches": [
+        {
+          "example": "most files",
+          "match_id": "fbbc5d02",
+          "map_id": "AmbroseValley",
+          "files": 16,
+          "rows": 1015
+        },
+        {
+          "example": "largest single-file match",
+          "match_id": "a476eb57",
+          "map_id": "AmbroseValley",
+          "files": 1,
+          "rows": 218
+        },
+        {
+          "example": "largest match with a storm death",
+          "match_id": "5a081fe4",
+          "map_id": "AmbroseValley",
+          "files": 1,
+          "rows": 178
+        }
+      ]
     },
     "duplicates": {
       "within_file_by_event": {
@@ -1655,27 +1941,30 @@
         "twins": 3,
         "max_seconds_from_twin_to_end_of_file": 2
       },
-      "kills_paired_with_deaths_in_another_file": {
-        "human BotKill -> bot BotKilled": {
-          "kill_rows": 2245,
-          "death_rows": 296,
-          "kill_rows_with_a_death_within_1s": 35,
-          "median_distance_between_the_two_rows": 12.3941,
-          "pairs_at_identical_position": 0
+      "rows_paired_with_rows_in_another_file": {
+        "human BotKill, partner bot BotKilled": {
+          "rows": 2245,
+          "rows_with_a_partner_within_1s": 35,
+          "median_distance_to_nearest_partner": 12.3941,
+          "partners_at_identical_position": 0
         },
-        "bot BotKill -> human BotKilled": {
-          "kill_rows": 170,
-          "death_rows": 404,
-          "kill_rows_with_a_death_within_1s": 5,
-          "median_distance_between_the_two_rows": 11.8014,
-          "pairs_at_identical_position": 0
+        "bot BotKill, partner human BotKilled": {
+          "rows": 170,
+          "rows_with_a_partner_within_1s": 5,
+          "median_distance_to_nearest_partner": 11.8014,
+          "partners_at_identical_position": 0
         },
-        "bot BotKill -> bot BotKilled": {
-          "kill_rows": 170,
-          "death_rows": 296,
-          "kill_rows_with_a_death_within_1s": 41,
-          "median_distance_between_the_two_rows": 17.1658,
-          "pairs_at_identical_position": 0
+        "bot BotKill, partner bot BotKilled": {
+          "rows": 170,
+          "rows_with_a_partner_within_1s": 41,
+          "median_distance_to_nearest_partner": 17.1658,
+          "partners_at_identical_position": 0
+        },
+        "bot BotKilled, partner any BotKill": {
+          "rows": 296,
+          "rows_with_a_partner_within_1s": 79,
+          "median_distance_to_nearest_partner": 15.8857,
+          "partners_at_identical_position": 0
         }
       },
       "distance_from_event_row_to_nearest_movement_sample_of_same_file": [
@@ -1771,6 +2060,37 @@
           "height": 9000,
           "rows": 21238
         }
+      }
+    },
+    "cleaning": {
+      "copy_kept_of_journeys_stored_twice": [
+        "February_11/cfa03e9f_ac049b28"
+      ],
+      "journeys_by_fate_after_cleaning": [
+        {
+          "journey": "bot",
+          "BotKilled": 296,
+          "Killed": 0,
+          "KilledByStorm": 0,
+          "no death row": 148
+        },
+        {
+          "journey": "human, numeric id",
+          "BotKilled": 1,
+          "Killed": 0,
+          "KilledByStorm": 0,
+          "no death row": 16
+        },
+        {
+          "journey": "human, uuid id",
+          "BotKilled": 400,
+          "Killed": 3,
+          "KilledByStorm": 39,
+          "no death row": 339
+        }
+      ],
+      "rows_kept_after_death_row_by_event": {
+        "BotKill": 2
       }
     }
   }

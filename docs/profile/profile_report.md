@@ -12,7 +12,7 @@ Every number comes from the 1,243 raw files; ids are cut to eight characters.
 | Files per day folder | February_10: 437, February_11: 293, February_12: 268, February_13: 166, February_14: 79 | February_10: 437, February_11: 293, February_12: 268, February_13: 166, February_14: 79 | yes |
 | Total event rows | ~89,000 | 89,104 | yes |
 | Unique matches | 796 | 796 | yes |
-| Unique players | 339 | 339 distinct user_ids, but only 248 of them ever have Position rows; 92 have BotPosition rows (1 id has both) | partly |
+| Unique players | 339 | 339 distinct user_ids = 245 UUIDs + 94 numeric ids. The numeric ids are bot ids, except 3 that stand on 17 files with Position rows, one id per map | partly |
 | Event types | 8 | 8 | yes |
 | Position events are ~85%+ of rows | >= 85% | 82.0% (Position + BotPosition) | no |
 | Minimap images are 1024x1024 | 1024x1024 | AmbroseValley: 4320x4320, GrandRift: 2160x2158, Lockdown: 9000x9000 | no |
@@ -101,9 +101,13 @@ Each value is listed with the exact definition used to compute it.
 | `rows_Loot_in_files_with_BotPosition` | 0 | Loot rows inside files that contain BotPosition rows. |
 | `distinct_user_ids_with_Position` | 248 | Distinct user_ids of any format that have at least one file containing Position rows. |
 | `distinct_user_ids_with_BotPosition` | 92 | Distinct user_ids of any format that have at least one file containing BotPosition rows. |
+| `files_numeric_with_Position_and_death_row` | 1 | Files with a numeric user_id and Position rows that contain a death row (Killed, BotKilled or KilledByStorm). |
+| `files_uuid_with_death_row` | 443 | Files with a UUID user_id that contain a death row. |
 | `files_with_Kill_or_Killed` | 3 | Files containing at least one Kill or Killed row. |
 | `Kill_rows_with_Killed_twin_in_same_file` | 3 | Kill rows for which a Killed row exists in the same file with identical raw ts, x, y and z. |
 | `Kill_twins_in_matches_with_several_Position_users` | 0 | Kill rows with such a twin whose match has more than one distinct user_id with Position rows. |
+| `Kill_twins_in_single_file_matches` | 3 | Kill rows with such a twin whose match has exactly one file in the dataset. |
+| `bot_BotKilled_rows_with_BotKill_in_another_file_within_1` | 79 | BotKilled rows in files with BotPosition rows for which a BotKill row exists in another file of the same match with a raw ts at most 1 away. |
 
 ### Time
 
@@ -136,6 +140,10 @@ Each value is listed with the exact definition used to compute it.
 | `Position_gap_sum_in_gaps_over_6` | 94921.0 | Sum of the raw ts differences of those pairs. |
 | `Position_gap_sum` | 315851.0 | Sum of the raw ts differences over all consecutive Position rows of a file sorted by (ts, file order). |
 | `rows_same_ts_as_previous_row` | 3,738 | Rows whose raw ts equals the raw ts of the previous row of the same file, in file order. |
+| `Position_pairs_gap_5` | 42,698 | Consecutive Position rows of a file sorted by (ts, file order) whose raw ts difference is exactly 5. |
+| `Position_pairs_gap_5_moving_under_half_unit` | 66 | Of those pairs, the ones whose horizontal distance is below 0.5. |
+| `Position_median_distance_gap_5` | 13.1578 | Median horizontal distance between the two rows of a Position pair whose raw ts difference is exactly 5. |
+| `Position_median_distance_gap_over_6` | 8.2145 | Median horizontal distance between the two rows of a Position pair whose raw ts difference is greater than 6. |
 
 ### Matches quality
 
@@ -162,6 +170,11 @@ Each value is listed with the exact definition used to compute it.
 | `journeys` | 1,242 | Distinct (user_id, match_id) pairs. |
 | `journeys_in_several_files` | 1 | Distinct (user_id, match_id) pairs that occur in more than one file. |
 | `BotKill_rows_in_single_file_matches` | 2,119 | BotKill rows in matches that have exactly one file in the dataset. |
+| `rows_median_single_file_matches` | 77.0 | Median row count of the matches that have exactly one file. |
+| `distinct_match_id_prefixes_8` | 796 | Distinct values of the first eight characters of match_id. |
+| `distinct_uuid_user_id_prefixes_8` | 245 | Distinct values of the first eight characters of the UUID user_ids. |
+| `match_span_median_without_bot_files` | 372.5 | Median (largest raw ts - smallest raw ts) over matches that have no file with BotPosition rows. |
+| `match_span_median_with_bot_files` | 513.5 | Median (largest raw ts - smallest raw ts) over matches that have at least one file with BotPosition rows. |
 | `duplicate_rows_within_file` | 1,420 | Rows that repeat an earlier row of the same file on all eight columns. Surplus copies only: a row present three times counts twice. |
 | `duplicate_rows_within_file_BotKill` | 34 | Of those surplus rows, the ones whose event is BotKill. |
 | `duplicate_rows_within_file_BotKilled` | 2 | Of those surplus rows, the ones whose event is BotKilled. |
@@ -225,7 +238,51 @@ Each value is listed with the exact definition used to compute it.
 | `readme_example_pixel_x` | 78 | README worked example (AmbroseValley, x=-301.45, z=-355.55, 1024 px image): pixel_x = u * 1024, rounded to the nearest integer. |
 | `readme_example_pixel_y` | 890 | Same example: pixel_y = (1 - v) * 1024, rounded to the nearest integer. |
 
+### Cleaning
+
+| Metric | Value | Definition |
+|---|---|---|
+| `rows_removed_spare_copy_of_journey` | 88 | Rule 1. Rows of files holding a (user_id, match_id) journey that another file also holds. Among such files the one kept is the one whose day folder holds the most files of the same match (ties: first by name). |
+| `rows_removed_second_half_of_file_written_twice` | 190 | Rule 2. Rows in the second half of the remaining files whose second half repeats the first half exactly. |
+| `rows_removed_Kill_mirroring_Killed` | 3 | Rule 3. Remaining Kill rows for which a Killed row exists in the same file with identical raw ts, x, y and z. |
+| `rows_removed_movement_after_death` | 206 | Rule 4. Remaining Position or BotPosition rows that come after a death row (Killed, BotKilled, KilledByStorm) of the same file, rows ordered by (raw ts, file order). |
+| `rows_removed_movement_after_death_with_later_ts` | 173 | Of the rule 4 rows, the ones whose raw ts is greater than that of the file's first death row. The rest share the death row's ts and follow it in file order. |
+| `rows_after_cleaning` | 88,617 | Rows left after rules 1 to 4. |
+| `rows_after_cleaning_Position` | 50,931 | Rows left after rules 1 to 4 whose event is Position. |
+| `rows_after_cleaning_BotPosition` | 21,712 | Rows left after rules 1 to 4 whose event is BotPosition. |
+| `rows_after_cleaning_Kill` | 0 | Rows left after rules 1 to 4 whose event is Kill. |
+| `rows_after_cleaning_Killed` | 3 | Rows left after rules 1 to 4 whose event is Killed. |
+| `rows_after_cleaning_BotKill` | 2,406 | Rows left after rules 1 to 4 whose event is BotKill. |
+| `rows_after_cleaning_BotKilled` | 697 | Rows left after rules 1 to 4 whose event is BotKilled. |
+| `rows_after_cleaning_KilledByStorm` | 39 | Rows left after rules 1 to 4 whose event is KilledByStorm. |
+| `rows_after_cleaning_Loot` | 12,829 | Rows left after rules 1 to 4 whose event is Loot. |
+| `journeys_after_cleaning` | 1,242 | Files left after rules 1 to 4; each holds one (user_id, match_id) journey. |
+| `journeys_after_cleaning_Position` | 798 | Of those journeys, the ones with Position rows. |
+| `journeys_after_cleaning_BotPosition` | 444 | Of those journeys, the ones with BotPosition rows. |
+| `journeys_after_cleaning_with_death_row` | 739 | Journeys left after rules 1 to 4 that contain a death row. |
+| `journeys_after_cleaning_with_several_death_rows` | 0 | Journeys left after rules 1 to 4 that contain more than one death row. |
+| `journeys_after_cleaning_Position_with_death_row` | 443 | Journeys with Position rows left after rules 1 to 4 that contain a death row. |
+| `rows_kept_after_death_row` | 2 | Rows left after rules 1 to 4 that come after a death row of the same file in (raw ts, file order) and are not death rows themselves. |
+| `identical_rows_left_after_cleaning` | 1,227 | Rows left after rules 1 to 4 that repeat an earlier row of the same file on all eight columns (surplus copies only). |
+| `identical_rows_left_after_cleaning_BotKill` | 30 | Of those surplus rows, the ones whose event is BotKill. |
+| `identical_rows_left_after_cleaning_Loot` | 1,197 | Of those surplus rows, the ones whose event is Loot. |
+| `identical_rows_left_directly_after_twin` | 1,175 | Of those surplus rows, the ones identical to the row directly before them in (raw ts, file order). |
+| `matches_in_several_day_folders_after_cleaning` | 0 | match_ids left with files in more than one day folder after rules 1 to 4. |
+
 ## Details
+
+| Entry | How it is computed |
+|---|---|
+| timestamps > speed_world_units_per_raw_ts_unit | Horizontal distance divided by raw ts difference, over consecutive movement rows of a file sorted by (ts, file order). share_above_5 is the share of pairs above 5.001. median_first_gap is the median over files of the raw ts difference between a file's first two movement rows. |
+| timestamps > Position_distance_by_gap_length | Consecutive Position rows of a file sorted by (ts, file order), grouped by their raw ts difference. median_distance_per_unit_of_gap divides each pair's horizontal distance by its ts difference. |
+| timestamps > human_file_starts_by_utc_hour | Files with Position rows, counted by the UTC hour of their smallest raw ts read as Unix seconds. The six-hour windows wrap around midnight. |
+| matches > duration | Largest minus smallest raw ts over the files recorded for a match. It is an observed span, not the length of the match. |
+| duplicates > within_file_copies_directly_after_their_twin | Surplus identical rows whose previous row in file order is identical on all eight columns, as a share of all surplus identical rows within a file. |
+| deaths > files_by_actor_and_fate | Fate is the event of the file's first death row in (ts, file order), or 'no death row'. |
+| deaths > storm_deaths_seconds_into_match_by_map | Raw ts of the KilledByStorm row minus the smallest raw ts of its match. |
+| combat > rows_paired_with_rows_in_another_file | For each row of the first kind: partner rows in the same match, in another file, with a raw ts at most 1 away. Distance is horizontal, to the nearest such partner. |
+| combat > distance_from_event_row_to_nearest_movement_sample_of_same_file | Horizontal distance from each non-movement row to the movement row of the same file that is nearest in time. |
+| cleaning | The four rules are applied in order, each to what the previous one left. Actor (human or bot) comes from the movement event of the file. |
 
 ### Inventory
 
@@ -327,6 +384,27 @@ Movement share of rows: 0.8199
 | 1379 | 2 | 0 |
 | 1402 | 1 | 0 |
 | 1429 | 14 | 3 |
+
+#### Numeric id on position files against bot id range by map
+
+| map_id | numeric_id_on_Position_files | Position_files | lowest_bot_id | highest_bot_id |
+|---|---|---|---|---|
+| AmbroseValley | 1429 | 14 | 1,432 | 1,482 |
+| GrandRift | 1379 | 2 | 1,382 | 1,423 |
+| Lockdown | 1402 | 1 | 1,405 | 1,455 |
+
+#### Botposition files of those ids by map
+
+| user_id | map_id | BotPosition_files |
+|---|---|---|
+| 1429 | Lockdown | 3 |
+
+#### Median seconds recorded per file
+
+|  | value |
+|---|---|
+| numeric id with Position | 161.0 |
+| uuid id | 367.0 |
 
 #### Their position files
 
@@ -444,6 +522,39 @@ Movement gap share equal 5: 0.8692
 | BotPosition rows | 21,268 | 3.0343 | 4.9268 | 5.0008 | 0.0 | 5.0 |
 | Position rows, numeric id | 619 | 2.4246 | 6.7262 | 9.3063 | 0.1486 | 20.0 |
 | Position rows, uuid id | 49,782 | 2.2531 | 6.4694 | 12.6521 | 0.1436 | 20.0 |
+
+#### Position distance by gap length
+
+| gap | pairs | median_distance | median_distance_per_unit_of_gap |
+|---|---|---|---|
+| 5 | 42,698 | 13.1578 | 2.6316 |
+| 6 to 10 | 4,914 | 9.1384 | 1.0073 |
+| 11 to 20 | 2,029 | 8.2145 | 0.5311 |
+| 21 to 60 | 713 | 8.6007 | 0.2907 |
+| over 60 | 41 | 6.7602 | 0.0815 |
+
+#### Human file starts by utc hour
+
+##### Busiest six hours
+
+|  | value |
+|---|---|
+| from_utc_hour | 9 |
+| files | 353 |
+
+##### Quietest six hours
+
+|  | value |
+|---|---|
+| from_utc_hour | 21 |
+| files | 102 |
+
+#### Readme sample rows
+
+| readme_prints | raw_integer | read_as_unix_seconds |
+|---|---|---|
+| 1970-01-21 11:52:07.161 | 1770727161 | 2026-02-10 12:39:21 UTC |
+| 1970-01-21 11:52:21.082 | 1770741082 | 2026-02-10 16:31:22 UTC |
 
 #### Sampling skips while standing still
 
@@ -611,9 +722,9 @@ Share of matches with one file: 0.9334
 
 #### Journeys split across files
 
-| journey | folders | rows_per_copy | copies_identical | first_row_utc |
-|---|---|---|---|---|
-| cfa03e9f_ac049b28 | February_10, February_11 | 88, 88 | True | 2026-02-10 23:51:05 UTC |
+| journey | folders | rows_per_copy | copies_identical | first_row_utc | last_row_utc | files_of_its_match_per_folder |
+|---|---|---|---|---|---|---|
+| cfa03e9f_ac049b28 | February_10, February_11 | 88, 88 | True | 2026-02-10 23:51:05 UTC | 2026-02-10 23:56:37 UTC | February_10: 1, February_11: 7 |
 
 #### Matches per uuid user
 
@@ -624,6 +735,14 @@ Share of matches with one file: 0.9334
 | median | 2.0 |
 | p75 | 3.0 |
 | max | 49 |
+
+#### Example matches
+
+| example | match_id | map_id | files | rows |
+|---|---|---|---|---|
+| most files | fbbc5d02 | AmbroseValley | 16 | 1,015 |
+| largest single-file match | a476eb57 | AmbroseValley | 1 | 218 |
+| largest match with a storm death | 5a081fe4 | AmbroseValley | 1 | 178 |
 
 ### Duplicates
 
@@ -780,37 +899,43 @@ Extra copies only found across files: 85
 | twins | 3 |
 | max_seconds_from_twin_to_end_of_file | 2 |
 
-#### Kills paired with deaths in another file
+#### Rows paired with rows in another file
 
-##### Human botkill -> bot botkilled
-
-|  | value |
-|---|---|
-| kill_rows | 2,245 |
-| death_rows | 296 |
-| kill_rows_with_a_death_within_1s | 35 |
-| median_distance_between_the_two_rows | 12.3941 |
-| pairs_at_identical_position | 0 |
-
-##### Bot botkill -> human botkilled
+##### Human botkill, partner bot botkilled
 
 |  | value |
 |---|---|
-| kill_rows | 170 |
-| death_rows | 404 |
-| kill_rows_with_a_death_within_1s | 5 |
-| median_distance_between_the_two_rows | 11.8014 |
-| pairs_at_identical_position | 0 |
+| rows | 2,245 |
+| rows_with_a_partner_within_1s | 35 |
+| median_distance_to_nearest_partner | 12.3941 |
+| partners_at_identical_position | 0 |
 
-##### Bot botkill -> bot botkilled
+##### Bot botkill, partner human botkilled
 
 |  | value |
 |---|---|
-| kill_rows | 170 |
-| death_rows | 296 |
-| kill_rows_with_a_death_within_1s | 41 |
-| median_distance_between_the_two_rows | 17.1658 |
-| pairs_at_identical_position | 0 |
+| rows | 170 |
+| rows_with_a_partner_within_1s | 5 |
+| median_distance_to_nearest_partner | 11.8014 |
+| partners_at_identical_position | 0 |
+
+##### Bot botkill, partner bot botkilled
+
+|  | value |
+|---|---|
+| rows | 170 |
+| rows_with_a_partner_within_1s | 41 |
+| median_distance_to_nearest_partner | 17.1658 |
+| partners_at_identical_position | 0 |
+
+##### Bot botkilled, partner any botkill
+
+|  | value |
+|---|---|
+| rows | 296 |
+| rows_with_a_partner_within_1s | 79 |
+| median_distance_to_nearest_partner | 15.8857 |
+| partners_at_identical_position | 0 |
 
 #### Distance from event row to nearest movement sample of same file
 
@@ -861,3 +986,23 @@ Extra copies only found across files: 85
 | width | 9,000 |
 | height | 9,000 |
 | rows | 21,238 |
+
+### Cleaning
+
+#### Copy kept of journeys stored twice
+
+February_11/cfa03e9f_ac049b28
+
+#### Journeys by fate after cleaning
+
+| journey | BotKilled | Killed | KilledByStorm | no death row |
+|---|---|---|---|---|
+| bot | 296 | 0 | 0 | 148 |
+| human, numeric id | 1 | 0 | 0 | 16 |
+| human, uuid id | 400 | 3 | 39 | 339 |
+
+#### Rows kept after death row by event
+
+|  | value |
+|---|---|
+| BotKill | 2 |

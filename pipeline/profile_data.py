@@ -25,7 +25,20 @@ from pipeline.maps import MAPS, uv_to_pixel, world_to_uv
 README_EVENTS = ("Position", "BotPosition", "Kill", "Killed", "BotKill", "BotKilled", "KilledByStorm", "Loot")
 README_FILES_PER_DAY = {"February_10": 437, "February_11": 293, "February_12": 268, "February_13": 166, "February_14": 79}
 README_EXAMPLE = {"map_id": "AmbroseValley", "x": -301.45, "z": -355.55, "image": 1024, "pixel": (78, 890)}
+README_SAMPLE_TS = ("1970-01-21 11:52:07.161", "1970-01-21 11:52:21.082")  # ts of the README's two sample rows, as printed
 IST_OFFSET_SECONDS = 19_800  # UTC+05:30
+DETAIL_DEFINITIONS = {
+    "timestamps > speed_world_units_per_raw_ts_unit": "Horizontal distance divided by raw ts difference, over consecutive movement rows of a file sorted by (ts, file order). share_above_5 is the share of pairs above 5.001. median_first_gap is the median over files of the raw ts difference between a file's first two movement rows.",
+    "timestamps > Position_distance_by_gap_length": "Consecutive Position rows of a file sorted by (ts, file order), grouped by their raw ts difference. median_distance_per_unit_of_gap divides each pair's horizontal distance by its ts difference.",
+    "timestamps > human_file_starts_by_utc_hour": "Files with Position rows, counted by the UTC hour of their smallest raw ts read as Unix seconds. The six-hour windows wrap around midnight.",
+    "matches > duration": "Largest minus smallest raw ts over the files recorded for a match. It is an observed span, not the length of the match.",
+    "duplicates > within_file_copies_directly_after_their_twin": "Surplus identical rows whose previous row in file order is identical on all eight columns, as a share of all surplus identical rows within a file.",
+    "deaths > files_by_actor_and_fate": "Fate is the event of the file's first death row in (ts, file order), or 'no death row'.",
+    "deaths > storm_deaths_seconds_into_match_by_map": "Raw ts of the KilledByStorm row minus the smallest raw ts of its match.",
+    "combat > rows_paired_with_rows_in_another_file": "For each row of the first kind: partner rows in the same match, in another file, with a raw ts at most 1 away. Distance is horizontal, to the nearest such partner.",
+    "combat > distance_from_event_row_to_nearest_movement_sample_of_same_file": "Horizontal distance from each non-movement row to the movement row of the same file that is nearest in time.",
+    "cleaning": "The four rules are applied in order, each to what the previous one left. Actor (human or bot) comes from the movement event of the file.",
+}
 ID_KINDS = "uuid = lowercase 8-4-4-4-12 hexadecimal, numeric = ASCII digits only"
 
 
@@ -235,6 +248,26 @@ def actors(rows: pd.DataFrame, files: pd.DataFrame, m: Metrics) -> dict[str, obj
     m.add(topic, "distinct_user_ids_with_Position", files.loc[files["Position"] > 0, "user_id"].nunique(), "Distinct user_ids of any format that have at least one file containing Position rows.")
     m.add(topic, "distinct_user_ids_with_BotPosition", files.loc[files["BotPosition"] > 0, "user_id"].nunique(), "Distinct user_ids of any format that have at least one file containing BotPosition rows.")
 
+    has_death = files[list(DEATH_EVENTS)].sum(axis=1) > 0
+    m.add(topic, "files_numeric_with_Position_and_death_row", (has_death & (files["id_kind"] == "numeric") & (files["Position"] > 0)).sum(), "Files with a numeric user_id and Position rows that contain a death row (Killed, BotKilled or KilledByStorm).")
+    m.add(topic, "files_uuid_with_death_row", (has_death & (files["id_kind"] == "uuid")).sum(), "Files with a UUID user_id that contain a death row.")
+
+    # Are the numeric ids on Position files player identities, or one placeholder per map?
+    bots = numeric[numeric["BotPosition"] > 0]
+    bot_numbers = bots["user_id"].astype(int)
+    per_map = [
+        {
+            "map_id": map_id,
+            "numeric_id_on_Position_files": ", ".join(sorted(part["user_id"].unique(), key=int)),
+            "Position_files": len(part),
+            "lowest_bot_id": bot_numbers[bots["map_id"] == map_id].min(),
+            "highest_bot_id": bot_numbers[bots["map_id"] == map_id].max(),
+        }
+        for map_id, part in human_like.groupby("map_id")
+    ]
+    shared = bots[bots["user_id"].isin(human_like_ids)]
+    span = files["last_ts"] - files["first_ts"]
+
     uuid_users_per_match = files[files["id_kind"] == "uuid"].groupby("match_id")["user_id"].nunique()
     listing = human_like.reset_index()
     listing["uuid_users_in_match"] = listing["match_id"].map(uuid_users_per_match).fillna(0).astype(int)
@@ -249,6 +282,9 @@ def actors(rows: pd.DataFrame, files: pd.DataFrame, m: Metrics) -> dict[str, obj
     ]
     return {
         "numeric_ids_with_Position_files": roles,
+        "numeric_id_on_Position_files_against_bot_id_range_by_map": per_map,
+        "BotPosition_files_of_those_ids_by_map": shared.groupby(["user_id", "map_id"]).size().reset_index(name="BotPosition_files").to_dict("records"),
+        "median_seconds_recorded_per_file": {"numeric id with Position": span[human_like.index].median(), "uuid id": span[files["id_kind"] == "uuid"].median()},
         "their_Position_files": listing[["file", "map_id", "rows", "Position", "Loot", "BotKill", "BotKilled", "uuid_users_in_match"]].to_dict("records"),
         "files_by_actor_from_movement_event": files["actor"].value_counts().to_dict(),
         "files_by_id_kind_and_actor": pd.crosstab(files["id_kind"], files["actor"]).reset_index().to_dict("records"),
@@ -315,6 +351,19 @@ def timestamps(rows: pd.DataFrame, files: pd.DataFrame, m: Metrics) -> dict[str,
     m.add(topic, "Position_gap_sum_in_gaps_over_6", seconds[long_gap].sum(), "Sum of the raw ts differences of those pairs.")
     m.add(topic, "Position_gap_sum", seconds[is_position].sum(), "Sum of the raw ts differences over all consecutive Position rows of a file sorted by (ts, file order).")
     m.add(topic, "rows_same_ts_as_previous_row", (step == 0).sum(), "Rows whose raw ts equals the raw ts of the previous row of the same file, in file order.")
+    position_5 = is_position & (seconds == 5)
+    m.add(topic, "Position_pairs_gap_5", position_5.sum(), "Consecutive Position rows of a file sorted by (ts, file order) whose raw ts difference is exactly 5.")
+    m.add(topic, "Position_pairs_gap_5_moving_under_half_unit", (position_5 & (distance < 0.5)).sum(), "Of those pairs, the ones whose horizontal distance is below 0.5.")
+    m.add(topic, "Position_median_distance_gap_5", distance[position_5].median(), "Median horizontal distance between the two rows of a Position pair whose raw ts difference is exactly 5.")
+    m.add(topic, "Position_median_distance_gap_over_6", distance[long_gap].median(), "Median horizontal distance between the two rows of a Position pair whose raw ts difference is greater than 6.")
+    gap_bucket = pd.cut(seconds[is_position], [4, 5, 10, 20, 60, np.inf], labels=["5", "6 to 10", "11 to 20", "21 to 60", "over 60"])
+    distance_by_gap = [
+        {"gap": name, "pairs": len(part), "median_distance": part.median(), "median_distance_per_unit_of_gap": (part / seconds[part.index]).median()}
+        for name, part in distance[is_position].groupby(gap_bucket, observed=True)
+    ]
+    human_files = files[files["actor"] == "human"]
+    starts_by_hour = ((human_files["first_ts"] % 86_400) // 3_600).value_counts().reindex(range(24), fill_value=0)
+    six_hours = pd.Series({hour: int(sum(starts_by_hour[(hour + k) % 24] for k in range(6))) for hour in range(24)})
 
     fits = {hours: int((_folder_label(files["first_ts"], int(hours * 3600)) == files["day"]).sum()) for hours in np.arange(-12, 14.5, 0.5)}
     best_offset = max(fits, key=fits.get)
@@ -340,6 +389,15 @@ def timestamps(rows: pd.DataFrame, files: pd.DataFrame, m: Metrics) -> dict[str,
                 "median_first_gap": first_gap_by_mover[name],
             }
             for name, part in speed.groupby(mover[moving])
+        ],
+        "Position_distance_by_gap_length": distance_by_gap,
+        "human_file_starts_by_utc_hour": {
+            "busiest_six_hours": {"from_utc_hour": six_hours.idxmax(), "files": six_hours.max()},
+            "quietest_six_hours": {"from_utc_hour": six_hours.idxmin(), "files": six_hours.min()},
+        },
+        "readme_sample_rows": [
+            {"readme_prints": text, "raw_integer": int(pd.Timestamp(text).value // 1_000_000), "read_as_unix_seconds": _utc(pd.Timestamp(text).value // 1_000_000)}
+            for text in README_SAMPLE_TS
         ],
         "sampling_skips_while_standing_still": {
             "share_of_gap_5_pairs_moving_under_half_unit": still_5.sum() / (seconds == 5).sum(),
@@ -394,6 +452,21 @@ def matches(rows: pd.DataFrame, files: pd.DataFrame, m: Metrics) -> dict[str, ob
     m.add(topic, "journeys_in_several_files", (journeys > 1).sum(), "Distinct (user_id, match_id) pairs that occur in more than one file.")
     single_file_matches = per_match.index[per_match["files"] == 1]
     m.add(topic, "BotKill_rows_in_single_file_matches", flat.loc[flat["match_id"].isin(single_file_matches), "BotKill"].sum(), "BotKill rows in matches that have exactly one file in the dataset.")
+    m.add(topic, "rows_median_single_file_matches", per_match.loc[single_file_matches, "rows"].median(), "Median row count of the matches that have exactly one file.")
+    m.add(topic, "distinct_match_id_prefixes_8", pd.Series(per_match.index).str[:8].nunique(), "Distinct values of the first eight characters of match_id.")
+    uuid_ids = pd.Series(flat.loc[flat["id_kind"] == "uuid", "user_id"].unique())
+    m.add(topic, "distinct_uuid_user_id_prefixes_8", uuid_ids.str[:8].nunique(), "Distinct values of the first eight characters of the UUID user_ids.")
+    human_only = per_match[(per_match["bot_journeys"] == 0)]
+    with_bot_files = per_match[(per_match["bot_journeys"] > 0)]
+    m.add(topic, "match_span_median_without_bot_files", human_only["duration"].median(), "Median (largest raw ts - smallest raw ts) over matches that have no file with BotPosition rows.")
+    m.add(topic, "match_span_median_with_bot_files", with_bot_files["duration"].median(), "Median (largest raw ts - smallest raw ts) over matches that have at least one file with BotPosition rows.")
+
+    storm_rows = rows[rows["event"] == "KilledByStorm"].groupby("match_id").size()
+    examples = {
+        "most files": per_match["files"].idxmax(),
+        "largest single-file match": per_match.loc[single_file_matches, "rows"].idxmax(),
+        "largest match with a storm death": per_match.loc[storm_rows.index, "rows"].idxmax(),
+    }
 
     split = []
     for (user_id, match_id), _ in journeys[journeys > 1].items():
@@ -404,6 +477,8 @@ def matches(rows: pd.DataFrame, files: pd.DataFrame, m: Metrics) -> dict[str, ob
             "rows_per_copy": [len(c) for c in copies],
             "copies_identical": all(c.equals(copies[0]) for c in copies[1:]),
             "first_row_utc": _utc(copies[0]["ts"].min()),
+            "last_row_utc": _utc(copies[0]["ts"].max()),
+            "files_of_its_match_per_folder": flat[flat["match_id"] == match_id].groupby("day").size().to_dict(),
         })
     busiest = per_match.sort_values(["files", "rows"], ascending=False).head(10).reset_index()
     busiest["match_id"] = busiest["match_id"].map(_short)
@@ -421,6 +496,10 @@ def matches(rows: pd.DataFrame, files: pd.DataFrame, m: Metrics) -> dict[str, ob
         "busiest_matches": busiest[["match_id", "map_id", "day", "files", "human_journeys", "bot_journeys", "rows", "duration"]].to_dict("records"),
         "journeys_split_across_files": split,
         "matches_per_uuid_user": _spread(flat[flat["id_kind"] == "uuid"].groupby("user_id")["match_id"].nunique()),
+        "example_matches": [
+            {"example": name, "match_id": _short(match_id), "map_id": per_match.loc[match_id, "map_id"], "files": per_match.loc[match_id, "files"], "rows": per_match.loc[match_id, "rows"]}
+            for name, match_id in examples.items()
+        ],
     }
 
 
@@ -494,18 +573,89 @@ def deaths(rows: pd.DataFrame, files: pd.DataFrame, m: Metrics) -> dict[str, obj
     }
 
 
-def _pairs_across_files(killers: pd.DataFrame, victims: pd.DataFrame) -> dict[str, object]:
-    """Kill rows that have a death row in the same match, in another file, within one second."""
-    both = killers.merge(victims, on="match_id", suffixes=("_kill", "_death"))
-    both = both[(both["file_kill"] != both["file_death"]) & ((both["ts_kill"] - both["ts_death"]).abs() <= 1)]
-    distance = np.hypot(both["x_kill"] - both["x_death"], both["z_kill"] - both["z_death"])
-    nearest = distance.groupby([both["file_kill"], both["row_kill"]]).min()
+def cleaning_preview(rows: pd.DataFrame, files: pd.DataFrame, m: Metrics) -> dict[str, object]:
+    """What the four cleaning rules of DATA_NOTES.md remove, applied in order, and what is left.
+
+    The pipeline's own cleaning code must reproduce these numbers.
+    """
+    topic = "cleaning"
+    flat = files.reset_index()
+
+    # Rule 1: a journey stored in several files keeps the copy filed with most of its match.
+    weight = flat.groupby(["match_id", "day"])["file"].transform("size")
+    best_first = flat.assign(weight=weight).sort_values(["weight", "file"], ascending=[False, True])
+    spare_files = set(best_first.loc[best_first.duplicated(["user_id", "match_id"]), "file"])
+    spare_copy = rows["file"].isin(spare_files)
+
+    # Rule 2: a file written twice keeps its first half.
+    written_twice = rows.groupby("file", sort=False)[COLUMNS].apply(_is_written_twice)
+    second_half = ~spare_copy & rows["file"].map(written_twice) & (rows["row"] >= rows["file"].map(files["rows"]) // 2)
+    kept = rows[~spare_copy & ~second_half]
+
+    # Rule 3: a Kill row mirrored by a Killed row of the same file, second and position is not a kill.
+    killed = kept.loc[kept["event"] == "Killed", ["file", "ts", "x", "y", "z"]].drop_duplicates()
+    mirrored = kept[kept["event"] == "Kill"].reset_index().merge(killed, on=["file", "ts", "x", "y", "z"])["index"]
+    kept = kept.drop(index=mirrored)
+
+    # Rule 4: a path ends at the death row; movement rows after it are dropped.
+    ordered = kept.sort_values(["file", "ts", "row"])
+    is_death = ordered["event"].isin(DEATH_EVENTS)
+    is_movement = ordered["event"].isin(MOVEMENT_EVENTS)
+    after_death = (is_death.groupby(ordered["file"], sort=False).cumsum() - is_death) > 0
+    death_ts = ordered["ts"].where(is_death).groupby(ordered["file"], sort=False).transform("min")
+    late = after_death & is_movement
+    clean = ordered[~late]
+
+    m.add(topic, "rows_removed_spare_copy_of_journey", spare_copy.sum(), "Rule 1. Rows of files holding a (user_id, match_id) journey that another file also holds. Among such files the one kept is the one whose day folder holds the most files of the same match (ties: first by name).")
+    m.add(topic, "rows_removed_second_half_of_file_written_twice", second_half.sum(), "Rule 2. Rows in the second half of the remaining files whose second half repeats the first half exactly.")
+    m.add(topic, "rows_removed_Kill_mirroring_Killed", len(mirrored), "Rule 3. Remaining Kill rows for which a Killed row exists in the same file with identical raw ts, x, y and z.")
+    m.add(topic, "rows_removed_movement_after_death", late.sum(), "Rule 4. Remaining Position or BotPosition rows that come after a death row (Killed, BotKilled, KilledByStorm) of the same file, rows ordered by (raw ts, file order).")
+    m.add(topic, "rows_removed_movement_after_death_with_later_ts", (late & (ordered["ts"] > death_ts)).sum(), "Of the rule 4 rows, the ones whose raw ts is greater than that of the file's first death row. The rest share the death row's ts and follow it in file order.")
+    m.add(topic, "rows_after_cleaning", len(clean), "Rows left after rules 1 to 4.")
+    for event in README_EVENTS:
+        m.add(topic, f"rows_after_cleaning_{event}", (clean["event"] == event).sum(), f"Rows left after rules 1 to 4 whose event is {event}.")
+
+    actor = clean["file"].map(files["actor"])
+    death_rows = clean[clean["event"].isin(DEATH_EVENTS)]
+    deaths_per_journey = death_rows.groupby("file").size()
+    surplus = clean.duplicated(subset=["file", *COLUMNS], keep="first")
+    directly_after_twin = surplus & (clean[COLUMNS] == clean[COLUMNS].shift()).all(axis=1)
+    kept_after_death = clean[after_death[clean.index] & ~clean["event"].isin(DEATH_EVENTS)]
+    m.add(topic, "journeys_after_cleaning", clean["file"].nunique(), "Files left after rules 1 to 4; each holds one (user_id, match_id) journey.")
+    m.add(topic, "journeys_after_cleaning_Position", clean.loc[actor == "human", "file"].nunique(), "Of those journeys, the ones with Position rows.")
+    m.add(topic, "journeys_after_cleaning_BotPosition", clean.loc[actor == "bot", "file"].nunique(), "Of those journeys, the ones with BotPosition rows.")
+    m.add(topic, "journeys_after_cleaning_with_death_row", len(deaths_per_journey), "Journeys left after rules 1 to 4 that contain a death row.")
+    m.add(topic, "journeys_after_cleaning_with_several_death_rows", (deaths_per_journey > 1).sum(), "Journeys left after rules 1 to 4 that contain more than one death row.")
+    m.add(topic, "journeys_after_cleaning_Position_with_death_row", death_rows.loc[death_rows["file"].map(files["actor"]) == "human", "file"].nunique(), "Journeys with Position rows left after rules 1 to 4 that contain a death row.")
+    m.add(topic, "rows_kept_after_death_row", len(kept_after_death), "Rows left after rules 1 to 4 that come after a death row of the same file in (raw ts, file order) and are not death rows themselves.")
+    m.add(topic, "identical_rows_left_after_cleaning", surplus.sum(), "Rows left after rules 1 to 4 that repeat an earlier row of the same file on all eight columns (surplus copies only).")
+    for event, count in clean.loc[surplus, "event"].value_counts().sort_index().items():
+        m.add(topic, f"identical_rows_left_after_cleaning_{event}", count, f"Of those surplus rows, the ones whose event is {event}.")
+    m.add(topic, "identical_rows_left_directly_after_twin", directly_after_twin.sum(), "Of those surplus rows, the ones identical to the row directly before them in (raw ts, file order).")
+    m.add(topic, "matches_in_several_day_folders_after_cleaning", (clean.groupby("match_id")["day"].nunique() > 1).sum(), "match_ids left with files in more than one day folder after rules 1 to 4.")
+
+    first_death = death_rows.drop_duplicates("file").set_index("file")["event"]
+    journeys = files.loc[clean["file"].unique()]
+    fate = journeys.assign(fate=first_death.reindex(journeys.index).fillna("no death row"))
+    who = np.where(fate["actor"] == "bot", "bot", np.where(fate["id_kind"] == "uuid", "human, uuid id", "human, numeric id"))
     return {
-        "kill_rows": len(killers),
-        "death_rows": len(victims),
-        "kill_rows_with_a_death_within_1s": len(nearest),
-        "median_distance_between_the_two_rows": nearest.median() if len(nearest) else None,
-        "pairs_at_identical_position": int((nearest == 0).sum()),
+        "copy_kept_of_journeys_stored_twice": sorted(_short_file(f) for f in flat.loc[flat.duplicated(["user_id", "match_id"], keep=False) & ~flat["file"].isin(spare_files), "file"]),
+        "journeys_by_fate_after_cleaning": pd.crosstab(pd.Series(who, index=fate.index, name="journey"), fate["fate"]).reset_index().to_dict("records"),
+        "rows_kept_after_death_row_by_event": kept_after_death["event"].value_counts().to_dict(),
+    }
+
+
+def _partners_in_other_files(first: pd.DataFrame, partner: pd.DataFrame) -> dict[str, object]:
+    """Rows of ``first`` that have a ``partner`` row in the same match, in another file, within one second."""
+    both = first.merge(partner, on="match_id", suffixes=("_a", "_b"))
+    both = both[(both["file_a"] != both["file_b"]) & ((both["ts_a"] - both["ts_b"]).abs() <= 1)]
+    distance = np.hypot(both["x_a"] - both["x_b"], both["z_a"] - both["z_b"])
+    nearest = distance.groupby([both["file_a"], both["row_a"]]).min()
+    return {
+        "rows": len(first),
+        "rows_with_a_partner_within_1s": len(nearest),
+        "median_distance_to_nearest_partner": nearest.median() if len(nearest) else None,
+        "partners_at_identical_position": int((nearest == 0).sum()),
     }
 
 
@@ -516,10 +666,16 @@ def combat(rows: pd.DataFrame, files: pd.DataFrame, m: Metrics) -> dict[str, obj
     twins = kills.merge(killed, on=["file", "ts", "x", "y", "z"])
     seconds_to_end = twins["file"].map(files["last_ts"]) - twins["ts"]
 
+    def of(event: str, who: str) -> pd.DataFrame:
+        return rows[(rows["event"] == event) & (actor == who)]
+
     m.add(topic, "files_with_Kill_or_Killed", rows.loc[rows["event"].isin(["Kill", "Killed"]), "file"].nunique(), "Files containing at least one Kill or Killed row.")
     m.add(topic, "Kill_rows_with_Killed_twin_in_same_file", len(twins), "Kill rows for which a Killed row exists in the same file with identical raw ts, x, y and z.")
     humans_in_match = files[files["actor"] == "human"].groupby("match_id")["user_id"].nunique()
     m.add(topic, "Kill_twins_in_matches_with_several_Position_users", (twins["file"].map(files["match_id"]).map(humans_in_match) > 1).sum(), "Kill rows with such a twin whose match has more than one distinct user_id with Position rows.")
+    m.add(topic, "Kill_twins_in_single_file_matches", (twins["file"].map(files["match_id"]).map(files.groupby("match_id").size()) == 1).sum(), "Kill rows with such a twin whose match has exactly one file in the dataset.")
+    bot_deaths_with_killer = _partners_in_other_files(of("BotKilled", "bot"), rows[rows["event"] == "BotKill"])
+    m.add(topic, "bot_BotKilled_rows_with_BotKill_in_another_file_within_1", bot_deaths_with_killer["rows_with_a_partner_within_1s"], "BotKilled rows in files with BotPosition rows for which a BotKill row exists in another file of the same match with a raw ts at most 1 away.")
 
     movement = rows[rows["event"].isin(MOVEMENT_EVENTS)].sort_values("ts")[["file", "ts", "x", "z"]]
     others = rows[~rows["event"].isin(MOVEMENT_EVENTS)].sort_values("ts")[["file", "ts", "x", "z", "event"]]
@@ -528,15 +684,13 @@ def combat(rows: pd.DataFrame, files: pd.DataFrame, m: Metrics) -> dict[str, obj
     near["actor"] = near["file"].map(files["actor"])
     to_own_path = near.groupby(["actor", "event"])["distance"].agg(rows="size", median="median", p90=lambda s: s.quantile(0.9), max="max")
 
-    def of(event: str, who: str) -> pd.DataFrame:
-        return rows[(rows["event"] == event) & (actor == who)]
-
     return {
         "Kill_and_Killed_twins": {"twins": len(twins), "max_seconds_from_twin_to_end_of_file": seconds_to_end.max() if len(twins) else None},
-        "kills_paired_with_deaths_in_another_file": {
-            "human BotKill -> bot BotKilled": _pairs_across_files(of("BotKill", "human"), of("BotKilled", "bot")),
-            "bot BotKill -> human BotKilled": _pairs_across_files(of("BotKill", "bot"), of("BotKilled", "human")),
-            "bot BotKill -> bot BotKilled": _pairs_across_files(of("BotKill", "bot"), of("BotKilled", "bot")),
+        "rows_paired_with_rows_in_another_file": {
+            "human BotKill, partner bot BotKilled": _partners_in_other_files(of("BotKill", "human"), of("BotKilled", "bot")),
+            "bot BotKill, partner human BotKilled": _partners_in_other_files(of("BotKill", "bot"), of("BotKilled", "human")),
+            "bot BotKill, partner bot BotKilled": _partners_in_other_files(of("BotKill", "bot"), of("BotKilled", "bot")),
+            "bot BotKilled, partner any BotKill": bot_deaths_with_killer,
         },
         "distance_from_event_row_to_nearest_movement_sample_of_same_file": to_own_path.reset_index().to_dict("records"),
     }
@@ -578,18 +732,18 @@ def readme_check(m: Metrics, details: dict[str, dict[str, object]]) -> list[dict
     sizes = {k: f"{v['width']}x{v['height']}" for k, v in details["coordinates"]["per_map"].items()}
     per_day = {day: m.value("files_schema", f"files_{day}") for day in README_FILES_PER_DAY}
     movement_share = details["events"]["movement_share_of_rows"]
-    human_ids = m.value("actors_events", "distinct_user_ids_with_Position")
-    bot_ids = m.value("actors_events", "distinct_user_ids_with_BotPosition")
+    uuid_ids = m.value("actors_events", "distinct_uuid_user_ids")
+    numeric_ids = m.value("actors_events", "distinct_numeric_user_ids")
+    placeholder_ids = m.value("actors_events", "numeric_user_ids_with_Position")
     matches_total = m.value("matches_quality", "distinct_matches")
     numeric_human_files = m.value("actors_events", "files_numeric_with_Position")
-    both_roles = m.value("actors_events", "numeric_user_ids_in_both_roles")
     file_span = details["timestamps"]["file_span"]["if_seconds"]
     checks = [
         ("Total files", 1243, files, files == 1243),
         ("Files per day folder", README_FILES_PER_DAY, per_day, per_day == README_FILES_PER_DAY),
         ("Total event rows", "~89,000", rows, round(rows, -3) == 89_000),
         ("Unique matches", 796, matches_total, matches_total == 796),
-        ("Unique players", 339, f"{m.value('actors_events', 'distinct_user_ids')} distinct user_ids, but only {human_ids} of them ever have Position rows; {bot_ids} have BotPosition rows ({both_roles} id has both)", "partly"),
+        ("Unique players", 339, f"{m.value('actors_events', 'distinct_user_ids')} distinct user_ids = {uuid_ids} UUIDs + {numeric_ids} numeric ids. The numeric ids are bot ids, except {placeholder_ids} that stand on {numeric_human_files} files with Position rows, one id per map", "partly"),
         ("Event types", 8, m.value("files_schema", "distinct_event_values"), not details["schema"]["event_values_not_in_readme"]),
         ("Position events are ~85%+ of rows", ">= 85%", f"{movement_share:.1%} (Position + BotPosition)", movement_share >= 0.85),
         ("Minimap images are 1024x1024", "1024x1024", sizes, all(s == "1024x1024" for s in sizes.values())),
@@ -620,8 +774,9 @@ def build_report(raw_root: Path) -> dict[str, object]:
         "deaths": deaths(rows, files, m),
         "combat": combat(rows, files, m),
         "coordinates": coordinates(rows, raw_root, m),
+        "cleaning": cleaning_preview(rows, files, m),
     }
-    return _clean({"readme_check": readme_check(m, details), "metrics": m.as_dict(), "details": details})
+    return _clean({"readme_check": readme_check(m, details), "metrics": m.as_dict(), "detail_definitions": DETAIL_DEFINITIONS, "details": details})
 
 
 def _title(key: str) -> str:
@@ -680,7 +835,7 @@ def render_markdown(report: dict[str, object]) -> str:
     ]
     for topic, entries in report["metrics"].items():
         lines += [f"### {_title(topic)}", "", *_table(["Metric", "Value", "Definition"], [[f"`{key}`", entry["value"], entry["definition"]] for key, entry in entries.items()])]
-    lines += ["## Details", ""]
+    lines += ["## Details", "", *_table(["Entry", "How it is computed"], [[key, text] for key, text in report["detail_definitions"].items()])]
     for section, detail in report["details"].items():
         lines += [f"### {_title(section)}", "", *_render(detail, 4)]
     return "\n".join(lines).rstrip() + "\n"

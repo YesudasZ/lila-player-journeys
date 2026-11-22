@@ -10,8 +10,11 @@ For each map:
                          orientations, as a contact sheet.
 
 Also writes orientation_check.json: for every orientation, the share of
-movement samples that land on the black area around the map artwork. Players
-cannot stand there, so a wrong orientation shows up as a high share.
+movement samples that land on the black area around the map artwork (black
+pixels connected to the image border). Players cannot stand there, so a wrong
+orientation shows up as a high share. The check tests orientation at the
+README's scale and origin; it does not pin scale or origin to better than a
+few percent.
 """
 from __future__ import annotations
 
@@ -89,13 +92,28 @@ def to_pixels(cfg: MapConfig, part: pd.DataFrame, size: tuple[int, int], orienta
     return uv_to_pixel(*orientation.apply(u, v), *size)
 
 
-def share_on_black(minimap: Image.Image, px: np.ndarray, py: np.ndarray) -> float:
-    """Share of points that fall on a black pixel of the minimap, or outside it."""
+def black_surround(minimap: Image.Image) -> np.ndarray:
+    """Mask of the black area around the map artwork: black pixels connected to the image border.
+
+    Black linework inside the artwork (zone outlines, label strokes) is not part of it.
+    """
     black = np.asarray(minimap).max(axis=2) < BLACK_BELOW
-    height, width = black.shape
+    mask = Image.fromarray(black.astype(np.uint8) * 255).copy()  # a copy, because floodfill needs a writable image
+    width, height = mask.size
+    pixels = mask.load()
+    border = [(x, y) for x in range(width) for y in (0, height - 1)] + [(x, y) for y in range(height) for x in (0, width - 1)]
+    for seed in border:
+        if pixels[seed] == 255:
+            ImageDraw.floodfill(mask, seed, 128)
+    return np.asarray(mask) == 128
+
+
+def share_off_map(surround: np.ndarray, px: np.ndarray, py: np.ndarray) -> float:
+    """Share of points that fall on the black surround of the minimap, or outside the image."""
+    height, width = surround.shape
     inside = (px >= 0) & (px < width) & (py >= 0) & (py < height)
-    on_black = black[py[inside].astype(int), px[inside].astype(int)]
-    return float((on_black.sum() + (~inside).sum()) / len(px))
+    on_surround = surround[py[inside].astype(int), px[inside].astype(int)]
+    return float((on_surround.sum() + (~inside).sum()) / len(px))
 
 
 def _dots(draw: ImageDraw.ImageDraw, px: np.ndarray, py: np.ndarray, radius: float, colour: tuple[int, int, int], alpha: int) -> None:
@@ -179,7 +197,7 @@ def orientation_sheet(minimap: Image.Image, cfg: MapConfig, movement: pd.DataFra
         sheet.paste(draw_samples(small, cfg, movement, orientation, with_markers=False), (left, top))
         name = orientation.label + ("  (README)" if orientation.is_readme else "")
         draw.text((left + 4, top + panel_height + 3), name, fill=ACCENT if orientation.is_readme else PAPER, font=font)
-        draw.text((left + 4, top + panel_height + 23), f"{shares[orientation]:.2%} of samples on black", fill=ACCENT if orientation.is_readme else PAPER, font=font)
+        draw.text((left + 4, top + panel_height + 23), f"{shares[orientation]:.2%} of samples off the map", fill=ACCENT if orientation.is_readme else PAPER, font=font)
         if orientation.is_readme:
             draw.rectangle((left - 3, top - 3, left + PANEL_WIDTH + 2, top + panel_height + 2), outline=ACCENT, width=3)
     return sheet
@@ -200,15 +218,17 @@ def main() -> None:
         part = rows[rows["map_id"] == map_id]
         movement = part[part["event"].isin(MOVEMENT_EVENTS)]
         minimap = load_minimap(args.raw / "minimaps" / cfg.minimap_file, OVERLAY_WIDTH)
-        shares = {o: share_on_black(minimap, *to_pixels(cfg, movement, minimap.size, o)) for o in ORIENTATIONS}
+        surround = black_surround(minimap)
+        shares = {o: share_off_map(surround, *to_pixels(cfg, movement, minimap.size, o)) for o in ORIENTATIONS}
         overlay(minimap, cfg, part).save(args.out / f"overlay_{map_id}.jpg", quality=90, subsampling=0, optimize=True)
         orientation_sheet(minimap, cfg, movement, shares).save(args.out / f"orientation_{map_id}.jpg", quality=88, subsampling=0, optimize=True)
         report[map_id] = {
             "movement_samples": len(movement),
-            "share_of_samples_on_black": [{"orientation": o.label, "readme": o.is_readme, "share": round(share, 4)} for o, share in shares.items()],
+            "black_surround_share_of_image": round(float(surround.mean()), 4),
+            "share_of_samples_off_the_map": [{"orientation": o.label, "readme": o.is_readme, "share": round(share, 4)} for o, share in shares.items()],
         }
         impostor = min(share for o, share in shares.items() if not o.is_readme)
-        print(f"{map_id}: README orientation {shares[README_ORIENTATION]:.2%} of samples on black; best wrong orientation {impostor:.2%}")
+        print(f"{map_id}: README orientation {shares[README_ORIENTATION]:.2%} of samples off the map; best wrong orientation {impostor:.2%}")
     args.report.write_text(json.dumps(report, indent=2) + "\n")
     print(f"images in {args.out}/, numbers in {args.report}")
 

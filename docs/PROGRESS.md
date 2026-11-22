@@ -35,7 +35,7 @@ Phases 2 to 11 are described in [PLAN.md](PLAN.md), which is still a draft await
 - [x] 1.7 Resumable progress system: this file, `/resume`, protocol and rules in `CLAUDE.md`
 - [x] 1.8 Review (3 reviewers) and cross-check (5 blind re-derivations, 4 skeptics, 2 blind overlay judges) both finished. Raw results: `.local/phase1-review-result.raw`, `.local/phase1-crosscheck-result.raw`. Outcome: 175 of 175 metrics re-derived with no difference; 6 of 6 blind orientation picks correct; all four decisions "weakened" (core holds, details to fix)
 - [x] 1.9a `BRIEF.md`: the 7 review findings applied
-- [ ] 1.9b Profiler and overlay script: add the numbers the reviews asked for (cleaning preview with exact removals, movement across long gaps, placeholder ids per map, share of samples on the black surround instead of any black pixel)
+- [x] 1.9b Profiler (now 216 metrics) and overlay script: cleaning preview with exact removals, movement across long gaps, placeholder ids per map, share of samples on the black surround instead of any black pixel
 - [ ] 1.9c `docs/profile/crosscheck.md`: what was checked independently and what it found
 - [ ] 1.9d `DATA_NOTES.md`: 15 evidence-audit findings plus the skeptics' corrections
 - [ ] 1.9e `PLAN.md`: 6 blockers and 22 should-fix items from the plan review
@@ -46,13 +46,13 @@ Phases 2 to 11 are described in [PLAN.md](PLAN.md), which is still a draft await
 
 ## Exactly where I stopped
 
-- Last completed: 1.9a, BRIEF.md fixes (this commit). The working tree is clean after it.
-- Both background checks are done and saved in `.local/` (git-ignored). Nothing from the cross-check is applied yet. What it changes, in short:
+- Last completed: 1.9b, profiler and overlay additions (this commit). The working tree is clean after it. `make profile` and `make overlay` were re-run; `docs/profile/` and `docs/img/` are current.
+- Both background checks are done and saved in `.local/` (git-ignored). Their findings are now measured by the profiler (topic "cleaning" and others) but **not yet written into DATA_NOTES.md, PLAN.md or CLAUDE.md**, which still describe the old three-rule cleaning. What changes, in short:
   - the 17 numeric-id human journeys use per-map placeholder ids (1429 Ambrose Valley, 1379 Grand Rift, 1402 Lockdown): anonymous humans, not 3 players; id 1429 as a bot is a Lockdown bot, a collision;
-  - cleaning needs 4 rules: drop one copy of the journey stored twice (keep the February_11 copy, where the rest of its match is), drop second halves of 3 doubled files, drop the 3 Kill rows that mirror a Killed row, drop movement rows after the death row in (ts, file order). Expected rows out: 88,617, to be confirmed by the profiler;
+  - cleaning needs 4 rules: drop one copy of the journey stored twice (keep the February_11 copy, where the rest of its match is; 88 rows), drop second halves of 3 doubled files (190), drop the 3 Kill rows that mirror a Killed row (3), drop movement rows after the death row in (ts, file order) (206). Rows out: 88,617 (`rows_after_cleaning`, confirmed);
   - "match duration" is the observed span of the recorded files (one human's journey in 743 matches), not match length;
-  - a registration fit suggests the map x-scale is 1.5 to 2% smaller than the README's on Ambrose Valley and Lockdown, and Grand Rift's scale is uncertain to about 3.5%. Not verified by me yet; README constants stay unless a zoomed check shows a visible misfit.
-- **NEXT:** 1.9b. In `pipeline/profile_data.py` add a "cleaning" topic and the other numbers listed in 1.9b; in `pipeline/verify_overlay.py` count samples on the border-connected black surround. Run `make profile overlay test`, commit as `phase-1: profile numbers requested by the reviews`.
+  - a registration fit by one skeptic suggests the map x-scale is 1.5 to 2% smaller than the README's on Ambrose Valley and Lockdown, and Grand Rift's scale is uncertain to about 3.5%. My own zoomed side-by-side on Ambrose Valley's east road agrees that the fitted constants sit better there (README puts samples up to about 9 world units west of the road). Decision pending with the user; README constants stay for now.
+- **NEXT:** 1.9c. Write `docs/profile/crosscheck.md` from `.local/phase1-crosscheck-result.raw` (what was checked, verdicts, what changed), commit. Then 1.9d: rewrite `docs/DATA_NOTES.md` rows 5 to 21 and the assumptions with the numbers above.
 
 ## Decisions and assumptions made
 

@@ -1,136 +1,139 @@
 {
   "AmbroseValley": {
     "movement_samples": 48754,
-    "share_of_samples_on_black": [
+    "black_surround_share_of_image": 0.4902,
+    "share_of_samples_off_the_map": [
       {
         "orientation": "x right, z up",
         "readme": true,
-        "share": 0.0001
+        "share": 0.0
       },
       {
         "orientation": "x right, z down",
         "readme": false,
-        "share": 0.0534
+        "share": 0.0533
       },
       {
         "orientation": "x left, z up",
         "readme": false,
-        "share": 0.2394
+        "share": 0.2377
       },
       {
         "orientation": "x left, z down",
         "readme": false,
-        "share": 0.2696
+        "share": 0.2694
       },
       {
         "orientation": "z right, x up",
         "readme": false,
-        "share": 0.156
+        "share": 0.1556
       },
       {
         "orientation": "z right, x down",
         "readme": false,
-        "share": 0.1545
+        "share": 0.1539
       },
       {
         "orientation": "z left, x up",
         "readme": false,
-        "share": 0.2296
+        "share": 0.2292
       },
       {
         "orientation": "z left, x down",
         "readme": false,
-        "share": 0.2535
+        "share": 0.2533
       }
     ]
   },
   "GrandRift": {
     "movement_samples": 5728,
-    "share_of_samples_on_black": [
+    "black_surround_share_of_image": 0.5857,
+    "share_of_samples_off_the_map": [
       {
         "orientation": "x right, z up",
         "readme": true,
-        "share": 0.0314
+        "share": 0.004
       },
       {
         "orientation": "x right, z down",
         "readme": false,
-        "share": 0.1013
+        "share": 0.0869
       },
       {
         "orientation": "x left, z up",
         "readme": false,
-        "share": 0.0649
+        "share": 0.0461
       },
       {
         "orientation": "x left, z down",
         "readme": false,
-        "share": 0.0679
+        "share": 0.0548
       },
       {
         "orientation": "z right, x up",
         "readme": false,
-        "share": 0.1807
+        "share": 0.1666
       },
       {
         "orientation": "z right, x down",
         "readme": false,
-        "share": 0.1329
+        "share": 0.1212
       },
       {
         "orientation": "z left, x up",
         "readme": false,
-        "share": 0.1653
+        "share": 0.1493
       },
       {
         "orientation": "z left, x down",
         "readme": false,
-        "share": 0.1191
+        "share": 0.1081
       }
     ]
   },
   "Lockdown": {
     "movement_samples": 18577,
-    "share_of_samples_on_black": [
+    "black_surround_share_of_image": 0.5102,
+    "share_of_samples_off_the_map": [
       {
         "orientation": "x right, z up",
         "readme": true,
-        "share": 0.0006
+        "share": 0.0
       },
       {
         "orientation": "x right, z down",
         "readme": false,
-        "share": 0.0995
+        "share": 0.0987
       },
       {
         "orientation": "x left, z up",
         "readme": false,
-        "share": 0.0272
+        "share": 0.027
       },
       {
         "orientation": "x left, z down",
         "readme": false,
-        "share": 0.0513
+        "share": 0.0501
       },
       {
         "orientation": "z right, x up",
         "readme": false,
-        "share": 0.1129
+        "share": 0.1118
       },
       {
         "orientation": "z right, x down",
         "readme": false,
-        "share": 0.0971
+        "share": 0.0961
       },
       {
         "orientation": "z left, x up",
         "readme": false,
-        "share": 0.1079
+        "share": 0.1075
       },
       {
         "orientation": "z left, x down",
         "readme": false,
-        "share": 0.0336
+        "share": 0.0308
       }
     ]
   }
