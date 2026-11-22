@@ -1,12 +1,12 @@
 # Progress Log
 
-Last updated: 2026-11-22 23:44 IST
+Last updated: 2026-11-22 23:47 IST
 
 ## Current phase
 
 Phase 1, Data discovery and repo setup. Status: **DONE (awaiting my review)**
 
-One step of Phase 1 is deliberately left for the user's word: creating the public GitHub repo and the first push (task 1.11).
+Repo: https://github.com/YesudasZ/lila-player-journeys (public). `main` was pushed on 2026-11-22 after the user said "Yes, push".
 
 ## Phase checklist
 
@@ -38,15 +38,14 @@ Phases 2 to 11 are described in [PLAN.md](PLAN.md), a draft awaiting approval.
 - [x] 1.8 Review (3 reviewers) and cross-check (5 blind re-derivations, 4 skeptics, 2 blind overlay judges) finished. Raw results in `.local/` (git-ignored); summary in `docs/profile/crosscheck.md`
 - [x] 1.9 All findings applied: `BRIEF.md` (`2ca4968`), profiler and overlay script (`b241d7b`), `crosscheck.md` and `DATA_NOTES.md` (`a161474`), `PLAN.md` second version and `CLAUDE.md` data facts (this commit)
 - [x] 1.10 Leak check passed on the tree and the whole history: 29 tracked files, 4.1 MB; no raw data, PDF or zip; no private email address, home-folder path, token or full player UUID; the only author is the no-reply address
-- [ ] 1.11 Create the public GitHub repo `lila-player-journeys` and push `main`. **Waiting for the user's go** (rule: ask before every push)
+- [x] 1.11 Public GitHub repo created and `main` pushed, on the user's go: https://github.com/YesudasZ/lila-player-journeys
 - [x] 1.12 Phase report given to the user; stopped for review
 
 ## Exactly where I stopped
 
-- Phase 1 is complete locally at `e2cd82f` and waits for review. The working tree is clean. Checks at the end of the phase: `make test` 22 passed; `make profile` and `make overlay` reproduce the committed files exactly.
-- Nothing is pushed and no GitHub repo exists. That step waits for the user's go.
+- Phase 1 is complete at `e2cd82f`, pushed to `origin/main`, and waits for review. The working tree is clean. Checks at the end of the phase: `make test` 22 passed; `make profile` and `make overlay` reproduce the committed files exactly; the leak check passed on every commit before the push.
 - `docs/PLAN.md` (second version) is a draft. No application code exists and none may be written until the user approves it.
-- **NEXT, only after the user says go:** `gh repo create lila-player-journeys --public --source=. --remote=origin --push`, then put the repo URL in this file. After the user approves PLAN.md and answers the open questions: start Phase 2 with `pipeline/clean.py` and its tests.
+- **NEXT:** wait for the user's review. Once they approve PLAN.md and answer the open questions below, start Phase 2 with `pipeline/clean.py` and its tests. Every further push needs the user's go.
 
 ## Decisions and assumptions made
 
@@ -91,7 +90,7 @@ Not available yet: data rebuild (`make data`, Phase 2); dev server and `npm run 
 
 ## Known issues / TODO later
 
-- There is no git remote yet. Nothing is pushed; the work exists only on this machine (task 1.11 waits for the user).
+- Commits made after the first push stay local until the user approves the next push.
 - No CI yet (planned in Phase 2).
 - The README's map constants may be 1.5 to 2% too large in x on two maps (open question 5). The proof images use the README constants.
 - 56 of the profiler's 231 metrics were added after the blind cross-check and were not re-derived by it (the cleaning counts among them were confirmed by a skeptic).
