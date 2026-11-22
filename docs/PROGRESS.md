@@ -1,16 +1,18 @@
 # Progress Log
 
-Last updated: 2026-11-22 23:41 IST
+Last updated: 2026-11-22 23:44 IST
 
 ## Current phase
 
-Phase 1, Data discovery and repo setup. Status: **IN PROGRESS** (all analysis and documents done; leak check, GitHub repo and push remain)
+Phase 1, Data discovery and repo setup. Status: **DONE (awaiting my review)**
+
+One step of Phase 1 is deliberately left for the user's word: creating the public GitHub repo and the first push (task 1.11).
 
 ## Phase checklist
 
 | # | Phase | Status | Commit |
 |---|---|---|---|
-| 1 | Data discovery and repo setup | IN PROGRESS | |
+| 1 | Data discovery and repo setup | DONE (awaiting my review) | `e2cd82f` |
 | 2 | Pipeline | NOT STARTED | |
 | 3 | App shell and map canvas (ends with the first deployment, step 9.1) | NOT STARTED | |
 | 4 | Journeys, humans versus bots, markers | NOT STARTED | |
@@ -35,16 +37,16 @@ Phases 2 to 11 are described in [PLAN.md](PLAN.md), a draft awaiting approval.
 - [x] 1.7 Resumable progress system: this file, `/resume`, protocol and rules in `CLAUDE.md` (`90e00e1`)
 - [x] 1.8 Review (3 reviewers) and cross-check (5 blind re-derivations, 4 skeptics, 2 blind overlay judges) finished. Raw results in `.local/` (git-ignored); summary in `docs/profile/crosscheck.md`
 - [x] 1.9 All findings applied: `BRIEF.md` (`2ca4968`), profiler and overlay script (`b241d7b`), `crosscheck.md` and `DATA_NOTES.md` (`a161474`), `PLAN.md` second version and `CLAUDE.md` data facts (this commit)
-- [ ] 1.10 Leak check: no raw data, PDF, work email, home-folder path or full player UUID in the tree or the history
-- [ ] 1.11 Create the public GitHub repo `lila-player-journeys` and push `main` (the user chose public; the push itself still asks)
-- [ ] 1.12 Phase report to the user; status to "DONE (awaiting my review)"; stop
+- [x] 1.10 Leak check passed on the tree and all 12 commits: 29 tracked files, 4.1 MB; no raw data, PDF or zip; no private email address, home-folder path, token or full player UUID; the only author is the no-reply address
+- [ ] 1.11 Create the public GitHub repo `lila-player-journeys` and push `main`. **Waiting for the user's go** (rule: ask before every push)
+- [x] 1.12 Phase report given to the user; stopped for review
 
 ## Exactly where I stopped
 
-- Last completed: 1.9, every review and cross-check finding is applied (this commit). The working tree is clean after it. `make test`, `make profile` and `make overlay` pass and their outputs are committed.
-- Nothing is half-edited. `docs/DATA_NOTES.md`, `docs/PLAN.md` and `CLAUDE.md` agree with each other and with `docs/profile/profile_report.json`.
-- Not done: nothing is pushed. No GitHub repo exists yet.
-- **NEXT:** 1.10. Run the leak check on the tree and on `git log -p` (patterns: `.nakama-0` files, `.pdf`, `.zip`, the work email domain, `/Users/`, 36-character UUIDs other than the two made-up ones in `pipeline/tests/test_dataset.py`). Then 1.11: `gh repo create lila-player-journeys --public --source=. --remote=origin --push`, then write the phase report.
+- Phase 1 is complete locally at `e2cd82f` and waits for review. The working tree is clean. Checks at the end of the phase: `make test` 22 passed; `make profile` and `make overlay` reproduce the committed files exactly.
+- Nothing is pushed and no GitHub repo exists. That step waits for the user's go.
+- `docs/PLAN.md` (second version) is a draft. No application code exists and none may be written until the user approves it.
+- **NEXT, only after the user says go:** `gh repo create lila-player-journeys --public --source=. --remote=origin --push`, then put the repo URL in this file. After the user approves PLAN.md and answers the open questions: start Phase 2 with `pipeline/clean.py` and its tests.
 
 ## Decisions and assumptions made
 
@@ -72,7 +74,8 @@ All dated 2026-11-22. Data decisions are recorded with evidence in [DATA_NOTES.m
 5. Map constants: keep the README's (recommended), or apply the fitted x scale on Ambrose Valley and Lockdown? See `docs/profile/crosscheck.md`, section 4.
 6. One review per phase, or one per day?
 7. Should `docs/PROGRESS.md`, `CLAUDE.md` and `.claude/` stay in the repo at submission? They show how the work was run with Claude Code, which the brief allows; they are also working notes in a public repo.
-8. `/resume` is also the name of a built-in Claude Code command (reopen a past conversation). The documentation says a project skill of the same name replaces the built-in in a terminal session; for a `.claude/commands` file it does not say. Keep the name, or rename it (for example `/where`)?
+8. The "Outside claims about this dataset, tested" table in DATA_NOTES.md shows that claims from outside were checked. Keep it, or drop it before submission?
+9. `/resume` is also the name of a built-in Claude Code command (reopen a past conversation). The documentation says a project skill of the same name replaces the built-in in a terminal session; for a `.claude/commands` file it does not say. Keep the name, or rename it (for example `/where`)?
 
 ## Commands that work
 
@@ -88,7 +91,7 @@ Not available yet: data rebuild (`make data`, Phase 2); dev server and `npm run 
 
 ## Known issues / TODO later
 
-- There is no git remote yet. Nothing is pushed; the work exists only on this machine.
+- There is no git remote yet. Nothing is pushed; the work exists only on this machine (task 1.11 waits for the user).
 - No CI yet (planned in Phase 2).
 - The README's map constants may be 1.5 to 2% too large in x on two maps (open question 5). The proof images use the README constants.
 - 41 of the profiler's metrics were added after the blind cross-check and were not re-derived by it (the cleaning counts among them were confirmed by a skeptic).
