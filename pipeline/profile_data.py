@@ -409,6 +409,10 @@ def timestamps(rows: pd.DataFrame, files: pd.DataFrame, m: Metrics) -> dict[str,
             for r in rows[backwards].itertuples()
         ],
         "files_whose_date_differs_from_folder": mismatch,
+        "files_whose_last_row_utc_date_differs_from_folder": [
+            {"file": _short_file(file), "last_row": _utc(last)}
+            for file, last in files.loc[_folder_label(files["last_ts"]) != files["day"], "last_ts"].items()
+        ],
         "utc_offset_hours_that_best_matches_folders": {"offset": best_offset, "files_matching": fits[best_offset], "files": len(files)},
         "per_folder_range_utc": [{"folder": day, "first": _utc(r["first"]), "last": _utc(r["last"])} for day, r in per_folder.iterrows()],
     }

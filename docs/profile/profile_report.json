@@ -1532,6 +1532,40 @@
           "last_row": 190
         }
       },
+      "files_whose_last_row_utc_date_differs_from_folder": [
+        {
+          "file": "February_11/1436_ac049b28",
+          "last_row": "2026-02-10 23:52:20 UTC"
+        },
+        {
+          "file": "February_11/1440_ac049b28",
+          "last_row": "2026-02-10 23:54:11 UTC"
+        },
+        {
+          "file": "February_11/1444_ac049b28",
+          "last_row": "2026-02-10 23:54:17 UTC"
+        },
+        {
+          "file": "February_11/1448_ac049b28",
+          "last_row": "2026-02-10 23:52:51 UTC"
+        },
+        {
+          "file": "February_11/1452_ac049b28",
+          "last_row": "2026-02-10 23:57:27 UTC"
+        },
+        {
+          "file": "February_11/1456_ac049b28",
+          "last_row": "2026-02-10 23:52:42 UTC"
+        },
+        {
+          "file": "February_11/cfa03e9f_ac049b28",
+          "last_row": "2026-02-10 23:56:37 UTC"
+        },
+        {
+          "file": "February_11/e7ac0138_7364fb6c",
+          "last_row": "2026-02-10 23:56:37 UTC"
+        }
+      ],
       "utc_offset_hours_that_best_matches_folders": {
         "offset": 0.0,
         "files_matching": 1232,

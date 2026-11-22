@@ -588,6 +588,19 @@ Movement gap share equal 5: 0.8692
 | first_row | 178 |
 | last_row | 190 |
 
+#### Files whose last row utc date differs from folder
+
+| file | last_row |
+|---|---|
+| February_11/1436_ac049b28 | 2026-02-10 23:52:20 UTC |
+| February_11/1440_ac049b28 | 2026-02-10 23:54:11 UTC |
+| February_11/1444_ac049b28 | 2026-02-10 23:54:17 UTC |
+| February_11/1448_ac049b28 | 2026-02-10 23:52:51 UTC |
+| February_11/1452_ac049b28 | 2026-02-10 23:57:27 UTC |
+| February_11/1456_ac049b28 | 2026-02-10 23:52:42 UTC |
+| February_11/cfa03e9f_ac049b28 | 2026-02-10 23:56:37 UTC |
+| February_11/e7ac0138_7364fb6c | 2026-02-10 23:56:37 UTC |
+
 #### Utc offset hours that best matches folders
 
 |  | value |
