@@ -1,0 +1,137 @@
+{
+  "AmbroseValley": {
+    "movement_samples": 48754,
+    "share_of_samples_on_black": [
+      {
+        "orientation": "x right, z up",
+        "readme": true,
+        "share": 0.0001
+      },
+      {
+        "orientation": "x right, z down",
+        "readme": false,
+        "share": 0.0534
+      },
+      {
+        "orientation": "x left, z up",
+        "readme": false,
+        "share": 0.2394
+      },
+      {
+        "orientation": "x left, z down",
+        "readme": false,
+        "share": 0.2696
+      },
+      {
+        "orientation": "z right, x up",
+        "readme": false,
+        "share": 0.156
+      },
+      {
+        "orientation": "z right, x down",
+        "readme": false,
+        "share": 0.1545
+      },
+      {
+        "orientation": "z left, x up",
+        "readme": false,
+        "share": 0.2296
+      },
+      {
+        "orientation": "z left, x down",
+        "readme": false,
+        "share": 0.2535
+      }
+    ]
+  },
+  "GrandRift": {
+    "movement_samples": 5728,
+    "share_of_samples_on_black": [
+      {
+        "orientation": "x right, z up",
+        "readme": true,
+        "share": 0.0314
+      },
+      {
+        "orientation": "x right, z down",
+        "readme": false,
+        "share": 0.1013
+      },
+      {
+        "orientation": "x left, z up",
+        "readme": false,
+        "share": 0.0649
+      },
+      {
+        "orientation": "x left, z down",
+        "readme": false,
+        "share": 0.0679
+      },
+      {
+        "orientation": "z right, x up",
+        "readme": false,
+        "share": 0.1807
+      },
+      {
+        "orientation": "z right, x down",
+        "readme": false,
+        "share": 0.1329
+      },
+      {
+        "orientation": "z left, x up",
+        "readme": false,
+        "share": 0.1653
+      },
+      {
+        "orientation": "z left, x down",
+        "readme": false,
+        "share": 0.1191
+      }
+    ]
+  },
+  "Lockdown": {
+    "movement_samples": 18577,
+    "share_of_samples_on_black": [
+      {
+        "orientation": "x right, z up",
+        "readme": true,
+        "share": 0.0006
+      },
+      {
+        "orientation": "x right, z down",
+        "readme": false,
+        "share": 0.0995
+      },
+      {
+        "orientation": "x left, z up",
+        "readme": false,
+        "share": 0.0272
+      },
+      {
+        "orientation": "x left, z down",
+        "readme": false,
+        "share": 0.0513
+      },
+      {
+        "orientation": "z right, x up",
+        "readme": false,
+        "share": 0.1129
+      },
+      {
+        "orientation": "z right, x down",
+        "readme": false,
+        "share": 0.0971
+      },
+      {
+        "orientation": "z left, x up",
+        "readme": false,
+        "share": 0.1079
+      },
+      {
+        "orientation": "z left, x down",
+        "readme": false,
+        "share": 0.0336
+      }
+    ]
+  }
+}
