@@ -37,7 +37,7 @@ Phases 2 to 11 are described in [PLAN.md](PLAN.md), a draft awaiting approval.
 - [x] 1.7 Resumable progress system: this file, `/resume`, protocol and rules in `CLAUDE.md` (`90e00e1`)
 - [x] 1.8 Review (3 reviewers) and cross-check (5 blind re-derivations, 4 skeptics, 2 blind overlay judges) finished. Raw results in `.local/` (git-ignored); summary in `docs/profile/crosscheck.md`
 - [x] 1.9 All findings applied: `BRIEF.md` (`2ca4968`), profiler and overlay script (`b241d7b`), `crosscheck.md` and `DATA_NOTES.md` (`a161474`), `PLAN.md` second version and `CLAUDE.md` data facts (this commit)
-- [x] 1.10 Leak check passed on the tree and all 12 commits: 29 tracked files, 4.1 MB; no raw data, PDF or zip; no private email address, home-folder path, token or full player UUID; the only author is the no-reply address
+- [x] 1.10 Leak check passed on the tree and the whole history: 29 tracked files, 4.1 MB; no raw data, PDF or zip; no private email address, home-folder path, token or full player UUID; the only author is the no-reply address
 - [ ] 1.11 Create the public GitHub repo `lila-player-journeys` and push `main`. **Waiting for the user's go** (rule: ask before every push)
 - [x] 1.12 Phase report given to the user; stopped for review
 
