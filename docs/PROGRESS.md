@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-22 23:47 IST
+Last updated: 2026-11-22 23:56 IST
 
 ## Current phase
 
@@ -12,7 +12,7 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public). `main` was push
 
 | # | Phase | Status | Commit |
 |---|---|---|---|
-| 1 | Data discovery and repo setup | DONE (awaiting my review) | `e2cd82f` |
+| 1 | Data discovery and repo setup | DONE (awaiting my review) | `bc63f0e` |
 | 2 | Pipeline | NOT STARTED | |
 | 3 | App shell and map canvas (ends with the first deployment, step 9.1) | NOT STARTED | |
 | 4 | Journeys, humans versus bots, markers | NOT STARTED | |
@@ -29,23 +29,26 @@ Phases 2 to 11 are described in [PLAN.md](PLAN.md), a draft awaiting approval.
 ## Current phase task list
 
 - [x] 1.1 Project folder; PDF and zip copied to `_inbox/`; zip unzipped to `data/raw/` (both git-ignored)
-- [x] 1.2 `.venv` with pinned dependencies; repo initialised with the no-reply author (`c50cd6d`)
-- [x] 1.3 `pipeline/maps.py` and `pipeline/dataset.py` with 22 unit tests (`2f4f3fc`)
-- [x] 1.4 `pipeline/profile_data.py` → `docs/profile/profile_report.{json,md}` (`6448721`, `7811c25`; 231 metrics since `b241d7b`)
-- [x] 1.5 `pipeline/verify_overlay.py` → `docs/img/overlay_*.jpg`, `orientation_*.jpg`, `docs/profile/orientation_check.json` (`6490f2a`)
-- [x] 1.6 Docs drafted: `BRIEF.md`, `DATA_NOTES.md`, `PLAN.md`, `CLAUDE.md`, `README.md` stub (`a017a8b`)
-- [x] 1.7 Resumable progress system: this file, `/resume`, protocol and rules in `CLAUDE.md` (`90e00e1`)
+- [x] 1.2 `.venv` with pinned dependencies; repo initialised with the no-reply author (`0e02ae3`)
+- [x] 1.3 `pipeline/maps.py` and `pipeline/dataset.py` with 22 unit tests (`7f697a3`)
+- [x] 1.4 `pipeline/profile_data.py` → `docs/profile/profile_report.{json,md}` (`0084a38`, `596e694`; 231 metrics since `ec5f537`)
+- [x] 1.5 `pipeline/verify_overlay.py` → `docs/img/overlay_*.jpg`, `orientation_*.jpg`, `docs/profile/orientation_check.json` (`89800f0`)
+- [x] 1.6 Docs drafted: `BRIEF.md`, `DATA_NOTES.md`, `PLAN.md`, `CLAUDE.md`, `README.md` stub (`d22e705`)
+- [x] 1.7 Resumable progress system: this file, `/resume`, protocol and rules in `CLAUDE.md` (`2171c5a`)
 - [x] 1.8 Review (3 reviewers) and cross-check (5 blind re-derivations, 4 skeptics, 2 blind overlay judges) finished. Raw results in `.local/` (git-ignored); summary in `docs/profile/crosscheck.md`
-- [x] 1.9 All findings applied: `BRIEF.md` (`2ca4968`), profiler and overlay script (`b241d7b`), `crosscheck.md` and `DATA_NOTES.md` (`a161474`), `PLAN.md` second version and `CLAUDE.md` data facts (this commit)
+- [x] 1.9 All findings applied: `BRIEF.md` (`6dff70b`), profiler and overlay script (`ec5f537`), `crosscheck.md` and `DATA_NOTES.md` (`c3cfe0d`), `PLAN.md` second version and `CLAUDE.md` data facts (this commit)
 - [x] 1.10 Leak check passed on the tree and the whole history: 29 tracked files, 4.1 MB; no raw data, PDF or zip; no private email address, home-folder path, token or full player UUID; the only author is the no-reply address
 - [x] 1.11 Public GitHub repo created and `main` pushed, on the user's go: https://github.com/YesudasZ/lila-player-journeys
 - [x] 1.12 Phase report given to the user; stopped for review
 
 ## Exactly where I stopped
 
-- Phase 1 is complete at `e2cd82f`, pushed to `origin/main`, and waits for review. The working tree is clean. Checks at the end of the phase: `make test` 22 passed; `make profile` and `make overlay` reproduce the committed files exactly; the leak check passed on every commit before the push.
+- Phase 1 is complete at `bc63f0e` and waits for review. The working tree is clean.
+- **Local `main` was rewritten on 2026-11-22 to remove the `Co-Authored-By` line from every commit message** (user's request). Files, authors and dates are unchanged, checked commit by commit. Every commit hash changed; the hashes in this file are the new ones.
+- Until the user runs `git push --force-with-lease origin main`, local `main` and `origin/main` have diverged and GitHub still shows the old 16 commits. **Do not pull, merge or rebase onto `origin/main` before that.**
+- The old history is kept locally in the branch `backup-before-trailer-rewrite` (and in `refs/original/`). Delete both once the force push is confirmed.
 - `docs/PLAN.md` (second version) is a draft. No application code exists and none may be written until the user approves it.
-- **NEXT:** wait for the user's review. Once they approve PLAN.md and answer the open questions below, start Phase 2 with `pipeline/clean.py` and its tests. Every further push needs the user's go.
+- **NEXT:** when the user confirms the force push, check that `git status -sb` shows `main...origin/main` with nothing ahead or behind, then delete the backup branch. After that, wait for the review: once the user approves PLAN.md and answers the open questions below, start Phase 2 with `pipeline/clean.py` and its tests. Every further push needs the user's go.
 
 ## Decisions and assumptions made
 
@@ -62,6 +65,7 @@ All dated 2026-11-22. Data decisions are recorded with evidence in [DATA_NOTES.m
 - No death row means "no death recorded" [18, A3]. Storm deaths are markers, not a heatmap [19].
 - The README's coordinate transform and constants are used unchanged, with the real image sizes; orientation is proven, scale and origin are right to about 1 to 2% [20, 21, A8]. Elevation is kept in the app's data.
 - Public ids are 8-character prefixes of player and match ids (unique: 245 and 796). No full player UUID is committed.
+- Commit messages carry no `Co-Authored-By` line (user's choice, 2026-11-22; the rule is in `CLAUDE.md`). Earlier commit messages were rewritten to remove it.
 - Proposed in PLAN.md, not yet approved: the scope ladder, one data bundle per map, heatmaps binned in the browser, first deployment right after Phase 3.
 
 ## Open questions for the user
@@ -90,7 +94,7 @@ Not available yet: data rebuild (`make data`, Phase 2); dev server and `npm run 
 
 ## Known issues / TODO later
 
-- Commits made after the first push stay local until the user approves the next push.
+- Local `main` diverges from `origin/main` until the user force-pushes the rewritten history (see "Exactly where I stopped"). After that, commits stay local until the user approves each push.
 - No CI yet (planned in Phase 2).
 - The README's map constants may be 1.5 to 2% too large in x on two maps (open question 5). The proof images use the README constants.
 - 56 of the profiler's 231 metrics were added after the blind cross-check and were not re-derived by it (the cleaning counts among them were confirmed by a skeptic).

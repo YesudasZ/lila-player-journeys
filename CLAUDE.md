@@ -85,7 +85,7 @@ Measured unless marked as an assumption (A1 to A8 in DATA_NOTES.md).
 - **TypeScript:** `strict`, no `any`, pure functions in `web/src/lib/` with Vitest tests, small components, state in Zustand, the playback clock outside React.
 - **Styling:** Tailwind v4 with the tokens below only; no ad-hoc hex values in components.
 - **Docs:** short, tables where they help, real numbers only, each number traceable to `docs/profile/`.
-- **Commits:** small and working; subject starts with `phase-N:` (or `chore:`, `docs:`, `fix:`) and says what changed; the body says why when it is not obvious.
+- **Commits:** small and working; subject starts with `phase-N:` (or `chore:`, `docs:`, `fix:`) and says what changed; the body says why when it is not obvious. No `Co-Authored-By` line or any other attribution trailer (user's decision, 2026-11-22).
 
 ## Design tokens ("LILA Night")
 
