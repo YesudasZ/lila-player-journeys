@@ -9,6 +9,7 @@ A browser tool for Level Designers to see how players move, fight, loot and die 
 | [docs/BRIEF.md](docs/BRIEF.md) | what the assignment asks for, as a checklist |
 | [docs/DATA_NOTES.md](docs/DATA_NOTES.md) | what the data really contains, where the dataset README is wrong, and what the pipeline does about it |
 | [docs/profile/profile_report.md](docs/profile/profile_report.md) | every measurement, with the exact definition used |
+| [docs/profile/crosscheck.md](docs/profile/crosscheck.md) | how those measurements and decisions were checked independently |
 | [docs/img/](docs/img/) | proof that world coordinates land on the right minimap pixels |
 | [docs/PLAN.md](docs/PLAN.md) | the build plan, phase by phase |
 

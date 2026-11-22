@@ -61,9 +61,9 @@ Measured by the profiler on the raw files (topic `cleaning`). The pipeline's cle
 
 What is left: 1,242 journeys (798 human, of which 17 anonymous; 444 bot). Position 50,931, BotPosition 21,712, Loot 12,829, BotKill 2,406, BotKilled 697, KilledByStorm 39, Killed 3, Kill 0. 739 journeys have a death row, none has two, and no `ts` goes backwards.
 
-## Claims we were warned about, tested
+## Outside claims about this dataset, tested
 
-Other candidates' public write-ups were treated as hypotheses only.
+Claims heard before profiling were treated as hypotheses only. None was used without being measured.
 
 | Claim | Verdict | Numbers |
 |---|---|---|
