@@ -25,7 +25,7 @@ Status key: ☐ not started · ◐ in progress · ☑ done and verified.
 | R5 | Filter by map, date and/or match | All three, plus human/bot and event toggles | 5 | ☐ |
 | R6 | Timeline or playback to watch a match unfold | Play/pause, speeds, scrubber with an event-density strip | 6 | ☐ |
 | R7 | Heatmap overlays for kill zones, death zones or high-traffic areas | All three, plus storm deaths and never-visited areas | 7 | ☐ |
-| R8 | Hosted and reachable through a shareable link | Static site on Vercel, deep links for every view | 9 | ☐ |
+| R8 | Hosted and reachable through a shareable link | Static site on Vercel, deep links for every view | 9 | ◐ hosted at https://lila-player-journeys-psi.vercel.app, production follows `main`; deep links come in Phase 5 |
 
 ## Not prescribed (our choice, to be justified in ARCHITECTURE.md)
 
@@ -64,7 +64,7 @@ One GitHub repository link that contains everything. Links to documents or drive
 | # | Item | Detail | Status |
 |---|---|---|---|
 | S1 | Source code | All of it, in the repo | ◐ |
-| S2 | Working deployment | A deployed URL, written in the repo (top of the README), that the reviewers can open and use | ☐ |
+| S2 | Working deployment | A deployed URL, written in the repo (top of the README), that the reviewers can open and use | ◐ live, and written at the top of the README; it shows each phase once it is merged |
 | S3 | README | Tech stack, setup steps, environment variables | ◐ setup for the app and the pipeline written; tech stack and walkthrough in Phase 10 |
 | S4 | ARCHITECTURE.md, one page | (a) what it is built with and why; (b) data flow from parquet to screen; (c) how game coordinates are mapped to the minimap, walked through; (d) assumptions where the data was ambiguous; (e) major trade-offs, a simple table is fine | ◐ first draft |
 | S5 | INSIGHTS.md, three things learned about the game, using the tool we built | For each: (a) what caught the eye; (b) evidence: a pattern or statistic; (c) is it actionable, which metrics move, what to do; (d) why a Level Designer should care | ☐ |
@@ -73,7 +73,7 @@ One GitHub repository link that contains everything. Links to documents or drive
 
 | # | Check | Status |
 |---|---|---|
-| C1 | Tool is live at the hosted URL | ☐ |
+| C1 | Tool is live at the hosted URL | ◐ live since 23 Nov with the first screen; checked again in step 9.2 |
 | C2 | Player paths render correctly on the minimap | ☐ |
 | C3 | Humans can be told apart from bots visually | ☐ |
 | C4 | Kill, death, loot and storm events are marked | ☐ |

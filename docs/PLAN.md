@@ -220,7 +220,7 @@ Contrast of the tokens used (WCAG): `text` 16.25 and `text-muted` 6.73 on `surfa
 
 ## Phase 9: Deployment (0.5 h, in two steps)
 
-- **9.1, right after the Phase 3 pull request is merged** (before that, `main` has no `web/` folder to build). You create the Vercel project from the GitHub repo with root directory `web` (one-time, in the browser). Production follows `main`, so only merged phases are live; every later pull request gets its own preview link. The URL goes into the repo's About field and, through a one-line pull request, to the top of the README.
+- **9.1, right after the Phase 3 pull request is merged** (before that, `main` has no `web/` folder to build). You create the Vercel project from the GitHub repo with root directory `web` (one-time, in the browser). Production follows `main`, so only merged phases are live; every later pull request gets its own preview link. The URL goes into the repo's About field and, through a one-line pull request, to the top of the README. **Done on 23 Nov:** https://lila-player-journeys-psi.vercel.app. Vercel offered the whole repo as a multi-service project, the Python pipeline next to the app; the `web` folder was imported as a single project with the Vite preset instead. The plain project name was taken, hence the `-psi` in the address.
 - **9.2, on Thursday.** The site and three deep links open in a private window; on a phone the page loads and shows the desktop notice.
 
 ## Phase 10: Insights and docs (2 h, spread over Wednesday and Thursday)
