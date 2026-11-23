@@ -22,6 +22,8 @@ import pyarrow.parquet as pq
 DAY_FOLDER_GLOB = "February_*"
 PARQUET_MAGIC = b"PAR1"
 COLUMNS = ["user_id", "match_id", "map_id", "x", "y", "z", "ts", "event"]
+# The eight event types of the dataset README. The position in this tuple is the event's code in the app's data.
+EVENTS = ("Position", "BotPosition", "Kill", "Killed", "BotKill", "BotKilled", "KilledByStorm", "Loot")
 MOVEMENT_EVENTS = ("Position", "BotPosition")
 DEATH_EVENTS = ("Killed", "BotKilled", "KilledByStorm")
 UNDECODABLE = "<undecodable>"

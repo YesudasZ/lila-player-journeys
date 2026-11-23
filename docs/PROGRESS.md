@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-23 10:48 IST
+Last updated: 2026-11-23 10:46 IST
 
 ## Current phase
 
@@ -30,7 +30,7 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 
 Phase 2 deliverables and acceptance numbers are in PLAN.md, "Phase 2".
 
-- [ ] 2.1 `pipeline/clean.py`: the four cleaning rules, with tests
+- [x] 2.1 `pipeline/clean.py`: the four cleaning rules, with 14 tests. On the real data: 88, 190, 3 and 206 rows removed, 88,617 left, as expected
 - [ ] 2.2 `pipeline/journeys.py`: actor, anonymous flag, death event, public ids, match table, with tests
 - [ ] 2.3 Integer encoding of positions (`pipeline/encode.py`) and the inverse projection, with tests
 - [ ] 2.4 `pipeline/build_data.py`: manifest, map bundles, minimaps, cleaning report, projection fixtures, validation; end-to-end test on synthetic files; `make data`
@@ -43,9 +43,9 @@ Phase 2 deliverables and acceptance numbers are in PLAN.md, "Phase 2".
 
 ## Exactly where I stopped
 
-- Phase 2 has just started. Nothing of it exists yet: no `pipeline/clean.py`, no `web/` folder.
-- The working tree is clean. Two local commits are not pushed: `84b47f3` (contributors note) and the Phase 2 start.
-- **NEXT:** 2.1. Write `pipeline/clean.py` (four pure functions and `clean()`), and `pipeline/tests/test_clean.py` on small in-memory frames. Expected on the real data: 88, 190, 3 and 206 rows removed; 88,617 left.
+- Last completed: 2.1 (this commit). `make test` passes with 36 tests. The working tree is clean.
+- Local commits since the last push are not pushed.
+- **NEXT:** 2.2. Write `pipeline/journeys.py`: `actor_by_file` (Position means human, BotPosition means bot), `journey_table` (anonymous flag, death event, public ids) and `match_table` (counts per match as defined in PLAN.md), with tests in `pipeline/tests/test_journeys.py`. Then 2.3: `pipeline/encode.py` and `uv_to_world` in `pipeline/maps.py`.
 
 ## Decisions and assumptions made
 
@@ -80,7 +80,7 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 |---|---|---|
 | `unzip _inbox/player_data.zip -d data/raw` | restores the raw data | 2026-11-22 |
 | `make setup` | creates `.venv`, installs pinned dependencies | 2026-11-22, in a fresh clone |
-| `make test` | 22 unit tests, no raw data needed | 2026-11-22 23:38 |
+| `make test` | 36 unit tests, no raw data needed | 2026-11-23 10:46 |
 | `make profile` | measures the raw data → `docs/profile/` (231 metrics) | 2026-11-22 23:39 |
 | `make overlay` | proof images → `docs/img/`, about 30 s | 2026-11-22 23:33 |
 
