@@ -6,11 +6,12 @@ import { fetchBundle } from "../data/fetchBundle.ts";
 import { fetchManifest } from "../data/fetchManifest.ts";
 import { loadImage } from "../data/loadImage.ts";
 import type { LayerKey, Shown } from "../lib/drawList.ts";
-import { onChosenDays } from "../lib/filters.ts";
+import { matchesWithFates, onChosenDays } from "../lib/filters.ts";
 import type { Journey } from "../lib/journeys.ts";
 import { DEFAULT_LINK, checkedLink, type Link } from "../lib/link.ts";
 import type { Manifest, MapEntry } from "../lib/manifest.ts";
 import type { View } from "../lib/view.ts";
+import { selectDrawList } from "./shown.ts";
 
 /** A load that failed. Its kind decides what the screen advises; `retrying` is true while another try is under way. */
 interface Failed {
@@ -182,10 +183,9 @@ export const useAppStore = create<AppState>()((set, get) => ({
     const state = get();
     const loaded = state.journeys[map.id];
     if (loaded?.status !== "ready" || state.mapId !== map.id) return;
-    const matches = matchesLeft(state, manifest.value, state.days, state.fates);
-    const open = matches[map.id];
-    const focused = loaded.value.some((journey) => journey.id === state.focus && (open === undefined || journey.match === open));
-    set({ matches, focus: focused ? state.focus : null });
+    set({ matches: matchesLeft(state, manifest.value, state.days, state.fates) });
+    const drawn = selectDrawList(get())?.journeys.some((each) => each.journey.id === state.focus) ?? false;
+    if (!drawn) set({ focus: null }); // a focus that came with a link stays only when its journey is drawn
   },
 
   selectMap: (mapId) => {
@@ -199,15 +199,22 @@ export const useAppStore = create<AppState>()((set, get) => ({
 
   selectMatch: (mapId, matchId) => {
     const { manifest } = get();
-    const { days } = get();
+    const { days, fates, journeys } = get();
     const known = manifest.status === "ready" && manifest.value.matches.some((match) => match.id === matchId && match.map === mapId && onChosenDays(match, days));
-    if (matchId !== null && !known) return;
+    const loaded = journeys[mapId];
+    const left = matchId === null || loaded?.status !== "ready" || (matchesWithFates(loaded.value, fates)?.has(matchId) ?? true); // the chosen fates have to leave something of it
+    if (matchId !== null && (!known || !left)) return;
     set((state) => ({ matches: matchId === null ? without(state.matches, mapId) : { ...state.matches, [mapId]: matchId }, focus: null }));
   },
 
   setShown: (layer, shown) => {
     const hidesJourneys = !shown && (layer === "humans" || layer === "bots"); // a journey that is no longer drawn cannot stay focused
-    set((state) => ({ choices: { ...state.choices, [layer]: shown }, focus: hidesJourneys ? null : state.focus }));
+    // Only loot follows the view. For the others "shown" is what they are anyway, so that choice is forgotten and stays out of a link.
+    const forgotten = shown && layer !== "loot";
+    set((state) => ({
+      choices: forgotten ? Object.fromEntries(Object.entries(state.choices).filter(([each]) => each !== layer)) : { ...state.choices, [layer]: shown },
+      focus: hidesJourneys ? null : state.focus,
+    }));
   },
 
   setFocus: (journeyId) => {

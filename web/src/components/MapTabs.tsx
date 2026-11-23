@@ -1,6 +1,7 @@
 import { useRef, type KeyboardEvent } from "react";
 
 import type { MapEntry } from "../lib/manifest.ts";
+import { counted } from "../lib/labels.ts";
 import { useAppStore } from "../state/store.ts";
 import { MAP_PANEL_ID, tabId } from "./tabIds.ts";
 
@@ -37,6 +38,7 @@ export function MapTabs({ maps, counts }: { maps: MapEntry[]; counts: ReadonlyMa
             type="button"
             role="tab"
             id={tabId(map.id)}
+            aria-label={`${map.name}, ${counted(counts.get(map.id) ?? 0, "match", "matches")}`}
             aria-selected={selected}
             aria-controls={MAP_PANEL_ID}
             tabIndex={selected ? 0 : -1}

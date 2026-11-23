@@ -432,3 +432,61 @@ describe("a link", () => {
     expect([state().mapId, state().fates]).toEqual(["Lockdown", ["killed"]]);
   });
 });
+
+describe("filters and links, as the review asked to pin them", () => {
+  const open = async (query = "") => {
+    fetched.mockResolvedValue(manifest);
+    loaded.mockResolvedValue(IMAGE);
+    await state().loadManifest(decodeLink(query));
+    await vi.waitFor(() => {
+      expect(Object.values(state().journeys)[0]?.status).toBe("ready");
+    });
+    return encodeLink(selectLink(state()) ?? decodeLink(""));
+  };
+
+  it("do not open a match that the chosen fates rule out", async () => {
+    await open();
+    state().toggleFate("killed_by_storm");
+    state().selectMatch("AmbroseValley", "a476eb57"); // its one journey has no death recorded
+    expect(selectMatchId(state())).toBeNull();
+    state().selectMatch("AmbroseValley", "5a081fe4"); // this one ends in the storm
+    expect(selectMatchId(state())).toBe("5a081fe4");
+  });
+
+  it.each([
+    ["a match without a journey of the linked fate", "?match=a476eb57&fate=killed_by_storm", "?fate=killed_by_storm"],
+    ["a focus on a journey of another match", "?match=fbbc5d02&journey=a476eb57-bf5be0f1", "?match=fbbc5d02"],
+    ["a focus on a journey that a switch hides", "?match=fbbc5d02&journey=fbbc5d02-bot1440&hide=bots", "?match=fbbc5d02&hide=bots"],
+    ["a focus on a journey that the fates rule out", "?journey=fbbc5d02-anon&fate=killed_by_bot", "?fate=killed_by_bot"],
+    ["a view that no window could show", "?match=fbbc5d02&view=1024,1024,0", "?match=fbbc5d02"],
+  ])("drop %s once the journeys are there", async (_, query, kept) => {
+    expect(await open(query)).toBe(kept);
+  });
+
+  it("keep a linked focus that is drawn", async () => {
+    expect(await open("?match=fbbc5d02&journey=fbbc5d02-bot1440")).toBe("?match=fbbc5d02&journey=fbbc5d02-bot1440");
+  });
+
+  it("leave the open map alone when the journeys of another map arrive", async () => {
+    await open("?match=fbbc5d02&journey=fbbc5d02-anon");
+    await state().loadJourneys(lockdown); // not the open map: its journeys say nothing about this focus
+    expect([state().focus, selectMatchId(state())]).toEqual(["fbbc5d02-anon", "fbbc5d02"]);
+  });
+
+  it("drop the focus when a day is chosen", async () => {
+    await open();
+    state().setFocus("fbbc5d02-anon");
+    state().toggleDay("February_12");
+    expect(state().focus).toBeNull();
+  });
+
+  it("forget a switch that is put back to shown, so it stays out of a link; loot is kept, since it follows the view", async () => {
+    await open();
+    state().setShown("kill", false);
+    state().setShown("kill", true);
+    expect(state().choices).toEqual({});
+    state().setShown("loot", true);
+    state().setShown("bots", false);
+    expect(encodeLink(selectLink(state()) ?? decodeLink(""))).toBe("?show=loot&hide=bots");
+  });
+});

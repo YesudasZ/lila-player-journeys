@@ -46,6 +46,7 @@ describe("a view as a link", () => {
 
   it.each([
     ["two numbers", "?view=10,20"],
+    ["four numbers", "?view=1,2,3,4"],
     ["a word", "?view=10,up,2"],
     ["an empty part", "?view=10,,2"],
     ["not a number at all", "?view=NaN,1,1"],
@@ -78,6 +79,9 @@ describe("a link from outside, checked against the data", () => {
     ["a match of another map", "?map=Lockdown&match=fbbc5d02", { ...DEFAULT_LINK, map: "Lockdown" }],
     ["a match outside the chosen days", "?match=fbbc5d02&days=February_10", { ...DEFAULT_LINK, days: ["February_10"] }],
     ["a broken view", "?map=Lockdown&view=1,2", { ...DEFAULT_LINK, map: "Lockdown" }],
+    ["a view that is not closer than fit", "?map=Lockdown&view=1024,1024,0", { ...DEFAULT_LINK, map: "Lockdown" }],
+    ["a view beside the image", "?view=-5,10,3", DEFAULT_LINK],
+    ["a view absurdly close", "?view=1000,900,9999", DEFAULT_LINK],
   ])("drops %s and keeps the rest", (_, query, expected) => {
     expect(checked(query)).toEqual(expected);
   });

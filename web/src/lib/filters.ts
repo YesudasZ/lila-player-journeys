@@ -1,4 +1,5 @@
 /** The day filter and what the filters leave. Pure. */
+import type { Journey } from "./journeys.ts";
 import type { Manifest, MatchEntry } from "./manifest.ts";
 
 /**
@@ -18,6 +19,12 @@ export function matchCounts(manifest: Manifest, days: readonly string[]): Map<st
 export function allowedMatches(manifest: Manifest, mapId: string, days: readonly string[]): ReadonlySet<string> | null {
   if (days.length === 0) return null;
   return new Set(manifest.matches.filter((match) => match.map === mapId && days.includes(match.day)).map((match) => match.id));
+}
+
+/** The ids of the matches that have a journey of one of the chosen fates; null when no fate is chosen, which leaves them all. */
+export function matchesWithFates(journeys: readonly Journey[], fates: readonly string[]): ReadonlySet<string> | null {
+  if (fates.length === 0) return null;
+  return new Set(journeys.filter((journey) => fates.includes(journey.fate)).map((journey) => journey.match));
 }
 
 /** A list in words: "a", "a or b", "a, b or c". */

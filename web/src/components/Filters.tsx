@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 
 import { dayLabel, fateLabel } from "../lib/labels.ts";
 import type { Manifest } from "../lib/manifest.ts";
@@ -28,6 +28,7 @@ export function Filters({ manifest }: { manifest: Manifest }) {
   const toggleDay = useAppStore((state) => state.toggleDay);
   const toggleFate = useAppStore((state) => state.toggleFate);
   const clearFilters = useAppStore((state) => state.clearFilters);
+  const daysLabel = useRef<HTMLParagraphElement>(null);
 
   return (
     <section aria-labelledby="filters-heading" className="border-b border-border px-4 pt-3 pb-3">
@@ -36,13 +37,19 @@ export function Filters({ manifest }: { manifest: Manifest }) {
           Filters
         </h2>
         {(days.length > 0 || fates.length > 0) && (
-          <button type="button" onClick={clearFilters} className="rounded-sm text-xs text-accent-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+          <button
+            type="button"
+            onClick={() => {
+              clearFilters();
+              daysLabel.current?.focus(); // the button is gone once nothing is chosen: the keyboard focus stays in the filters
+            }}
+            className="rounded-sm text-xs text-accent-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
             Clear filters
           </button>
         )}
       </div>
       <div role="group" aria-labelledby="filter-days" className="mt-2">
-        <p id="filter-days" className="text-xs text-text-muted">
+        <p id="filter-days" ref={daysLabel} tabIndex={-1} className="rounded-sm text-xs text-text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
           Days (UTC)
         </p>
         <div className="mt-1 flex flex-wrap gap-1.5">
@@ -55,7 +62,7 @@ export function Filters({ manifest }: { manifest: Manifest }) {
               }}
             >
               {dayLabel(day.date)}
-              {day.partial && <span className="ml-1 text-[10px] text-text-muted">partial</span>}
+              {day.partial && <span className="text-[10px] text-text-muted"> partial</span>}
             </Chip>
           ))}
         </div>

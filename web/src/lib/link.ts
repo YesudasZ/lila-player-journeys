@@ -29,6 +29,11 @@ export const DEFAULT_LINK: Link = { map: null, days: [], match: null, journey: n
 const tenth = (value: number): number => Math.round(value * 10) / 10;
 const thousandth = (value: number): number => Math.round(value * 1000) / 1000;
 const isLayer = (text: string): text is LayerKey => (LAYER_KEYS as readonly string[]).includes(text);
+/** A view from a link is kept when it can be one: closer than fit, not absurdly close, and centred on the image. */
+const MOST_ZOOM = 64;
+const possible = (view: View, image: { width: number; height: number }): boolean =>
+  view.zoom > 1 && view.zoom <= MOST_ZOOM && view.x >= 0 && view.x <= image.width && view.y >= 0 && view.y <= image.height;
+
 const listOf = (value: string | null): string[] => (value === null || value === "" ? [] : value.split(","));
 
 /** A view as a link holds it: the point to a tenth of an image pixel, the zoom to a thousandth. */
@@ -84,7 +89,7 @@ export function decodeLink(query: string): Link {
 
 /**
  * A link with everything dropped that the data does not have: an unknown map, day or fate, and a
- * match that is not on that map or not on the chosen days. Days and fates come back in the order
+ * match that is not on that map or not on the chosen days, a view that no window could show. Days and fates come back in the order
  * of the manifest and the first map as null, so that what is applied is what is written back.
  * The focused journey cannot be checked before the journeys of the map have arrived.
  */
@@ -101,6 +106,6 @@ export function checkedLink(link: Link, manifest: Manifest): Link {
     journey: link.journey,
     choices: link.choices,
     fates,
-    view: link.view && roundedView(link.view),
+    view: link.view && possible(link.view, map.minimap) ? roundedView(link.view) : null,
   };
 }
