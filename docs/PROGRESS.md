@@ -1,12 +1,12 @@
 # Progress Log
 
-Last updated: 2026-11-23 23:06 IST
+Last updated: 2026-11-23 23:52 IST
 
 ## Current phase
 
-Phase 4, Journeys, humans versus bots, markers. Status: **DONE (awaiting my review)** in pull request [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3), from the branch `phase-4-journeys` (last code commit `acae5fa`). Pushed and opened on 23 Nov with the user's yes.
+Phase 5, Filters and URL state. Status: **DONE (awaiting my review)** on the branch `phase-5-filters`, pull request [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4), last code commit `d44647d`. Pushed; it waits for the user's review and merge.
 
-Phases 1 to 3 and step 9.1 are merged: pull requests [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) (Phase 3) and [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) (step 9.1) were reviewed and merged by the user on 23 Nov. The tool is live at https://lila-player-journeys-psi.vercel.app; production on Vercel follows `main`.
+Phases 1 to 4 and step 9.1 are merged: pull requests [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) (Phase 3), [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) (step 9.1) and [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3) (Phase 4) were reviewed and merged by the user on 23 Nov. The tool is live at https://lila-player-journeys-psi.vercel.app and shows Phase 4; production on Vercel follows `main`.
 
 Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 
@@ -17,8 +17,8 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 | 1 | Data discovery and repo setup | APPROVED | `bc63f0e` |
 | 2 | Pipeline | APPROVED | `ccc2369` |
 | 3 | App shell and map canvas (ends with the first deployment, step 9.1) | APPROVED (merged and hosted) | pull request [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) |
-| 4 | Journeys, humans versus bots, markers | DONE (awaiting my review) | pull request [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3), branch `phase-4-journeys` |
-| 5 | Filters and URL state | NOT STARTED | |
+| 4 | Journeys, humans versus bots, markers | APPROVED (merged) | pull request [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3) |
+| 5 | Filters and URL state | DONE (awaiting my review) | pull request [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4), branch `phase-5-filters`, `d44647d` |
 | 6 | Timeline and playback | NOT STARTED | |
 | 7 | Heatmaps | NOT STARTED | |
 | 8 | Polish | NOT STARTED | |
@@ -30,30 +30,33 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 
 ## Current phase task list
 
-Phase 4 deliverables and acceptance criteria are in PLAN.md, "Phase 4". The task lists of Phases 2 and 3 and of step 9.1 are in the history of this file (`git log -p docs/PROGRESS.md`).
+Phase 5 deliverables and acceptance criteria are in PLAN.md, "Phase 5". The task lists of Phases 2 to 4 and of step 9.1 are in the history of this file (`git log -p docs/PROGRESS.md`).
 
-- [x] 4.0 The user's go for Phase 4, in this session (23 Nov). Branch `phase-4-journeys` cut from `main` at `83d973c`. This file corrected: step 9.1 is merged as pull request #2
-- [x] 4.1 Plan approved by the user in plan mode (23 Nov, 22:10) and recorded in PLAN.md, "Phase 4" and its last section. Approved with it: the sidebar arrives now; every legend row is a switch; hover also on paths; a map's journeys load when its tab opens; no new dependency; one review by two agents with a fixed budget
-- [x] 4.2 lib: `journeys.ts` (types, `parseBundle`: a bundle is checked against the manifest that came with it); `reader.ts` (the field-by-field reader, shared with the manifest; its error is now `DataError`); the elevation decoder back in `projection.ts`
-- [x] 4.3 lib: `drawList.ts`, `pick.ts`, `labels.ts`, `matches.ts`, `markerShapes.ts`. 270 tests. The draw lists of the committed data match the manifest for all 796 matches; 29 one-line faults put into the new modules are all noticed (4 were not at first, and the tests were tightened)
-- [x] 4.4 Store and data: `fetchBundle.ts`; the store holds journeys per map (loaded when a map is first opened), the open match per map, the switches set by hand and the focused journey; `state/shown.ts` gives one draw list per state. 281 tests
-- [x] 4.5 Map surface: a list of layers (`components/layers/`): minimap, journeys, and the ring around what is under the pointer on a canvas of its own, so a moving pointer redraws no journey. Hover (marker within 10 pixels, else path within 6), click to focus, Esc or a click on empty map to clear. Markers are drawn once and stamped
-- [x] 4.6 Sidebar (`Sidebar`, `MatchList`, `JourneyList`, `Legend`, `Samples`) and `MapTooltip`. 285 tests
-- [x] 4.7 Checked in the preview at 1280 x 800 (22:35), no console error:
-  - Legend against the manifest: all of Ambrose Valley 568 humans, 268 bots, 1,789 kills, 487 deaths, 17 storm deaths, 9,902 loot (hidden by default); `fbbc5d02` 2, 14, 5, 8, 0, 7 with 16 journeys listed, one "human (no account id)"; `a476eb57` 1 human, 10 kills, 58 loot; `5a081fe4` 4 kills, 1 storm death, 37 loot, "killed by storm"
-  - Hover on a kill reads "Kill, bot 1440, at 1:28, x 111 z 69, elevation 105"; a click on a path focuses its journey and its row in the list; Esc, a click on empty map and a second press on the row clear; a drag is not a click
-  - Greyscale on `fbbc5d02`: the loot square could not be told from a bot's square head, so loot is now a ring, as PLAN.md provided for
-  - Redraw of the journeys layer, Ambrose Valley, all matches, default switches: 4.7 to 8.8 ms at fit and about 5 ms while panning at zoom 1.5 (target under 16 ms). With loot switched on by hand: 25 ms at fit, 10 to 12 ms at zoom 1.5, 7 to 9 ms at zoom 3.4. `fbbc5d02`: 0.9 ms. Read from the `journeys-draw` user timing; device pixel ratio 2, map area 960 x 752
-- [x] 4.8 Independent review by two agents, each held to 40 tool calls (48 used together, about half the cost of the Phase 3 review). No blocker; 6 findings to fix and 9 small ones, several raised by both. Fixed in `acae5fa`; what changed and what was left, with reasons, is PLAN.md's last section. Each fix was checked again in the preview with real input. Raw result: `.local/phase4-review-result.raw`
-- [x] 4.9 PLAN.md, BRIEF.md and the README describe Phase 4 as built; phase-end checks pass (23:04)
-- [x] 4.10 Pushed and pull request #3 opened with the user's yes (23 Nov, 23:06); recorded here. CI and Vercel's preview run on the pull request
+- [x] 5.0 The user's go for Phase 5, in this session (23 Nov). Branch `phase-5-filters` cut from `main` at `fb2aa02`. This file corrected: Phase 4 is merged as pull request #3; the live site shows it (checked after the merge: legend and counts as on the branch, no failed request, empty console)
+- [x] 5.1 Plan approved by the user in plan mode (23 Nov, 23:12) and recorded in PLAN.md, "Phase 5". Approved with it: no `mode` in the URL (a link with a match shows that match); filters always hold (a filter that excludes the open match closes it); the fate filter works on journeys of humans and bots; the URL is rewritten in place, 300 ms after the last change; numbers in a link are rounded; no new dependency; one review by two agents held to 40 tool calls each
+- [x] 5.2 lib: `link.ts` (encode, decode, check against the manifest), `filters.ts` (matches on the chosen days, counts for the tabs, wording of the empty note), the draw list takes allowed matches and fates. 318 tests; 11 of 11 one-line faults in the new code are noticed
+- [x] 5.3 Store: `days`, `fates`, `toggleDay`, `toggleFate`, `clearFilters`; `loadManifest(link)` opens the view a link asks for and keeps the link for a retry; a filter that rules the open match out closes it; a focus from a link is checked when the journeys arrive. `shown.ts`: the draw list follows the filters, and `selectLink` gives the view as a link. 326 tests
+- [x] 5.4 `state/linkSync.ts` (the address follows the view, rewritten in place 300 ms after the last change; `currentAddress` for the copy button) and the components `Filters`, `CopyLink`, `EmptyNote`; counts on `MapTabs`; the day filter in `MatchList`. `npm run check` (326 tests) and the build pass; not yet looked at in the preview
+- [x] 5.5 Checked in the preview at 1280 x 800 (23:20), no console error:
+  - Day chip "14 Feb": the tabs read 24, 8 and 5, the list holds 24 matches, the legend "24 matches, 44 journeys", the address `?days=February_14`; with the fate "killed by storm" as well: "1 match, 1 journey"
+  - Lockdown with the fate "killed by player": the note "No journey on Lockdown has the fate “killed by player”." with "Clear filters", which brings back 171 matches and 295 journeys
+  - A link with a match, a focused journey, loot switched on, a view and a day, given in another order, opens exactly that view and is rewritten in the canonical order; a link with an unknown map, match, day and a broken view keeps only its fate
+  - "Copy link": the preview pane refuses clipboard access, so only the refusal message could be seen there ("Copy the address from the address bar"); the address it would copy equals the address bar's
+- [x] 5.6 Independent review by two agents, each held to 40 tool calls (51 used together). No blocker; 6 findings to fix and 7 small ones, several raised by both. Fixed in `ac23e1b`; what changed and what was left is PLAN.md's last section. Raw result: `.local/phase5-review-result.raw`
+- [x] 5.7 PLAN.md, BRIEF.md and the README describe Phase 5 as built; phase-end checks pass (23:35): `npm run check` (345 tests), `npm run build`, `make test` (237 tests)
+- [x] 5.8 The review's fixes checked once more (23 Nov, 23:46):
+  - Of eight one-line faults put into the fixed lines the tests noticed six. Two tests added in `53a0d7d` (a view at fit is no view; the journeys of a map that is not open leave the focus alone, also when they arrive first); both faults are noticed now
+  - In the preview at 1280 x 800, no console message: with the fate "killed by storm" the list holds 17 matches on Ambrose Valley, as the manifest has, and the legend reads "17 matches, 17 journeys"; a link to a match that the fate rules out (`a476eb57`) opens all matches; the tabs are named "Ambrose Valley, 566 matches"; "Clear filters" leaves the keyboard focus on "Days (UTC)", and from the note over the map on the map; a switch turned off and on leaves the address bare; `view=-1e9,1e12,9999` is dropped
+  - Two faults of the list's fix were seen there and fixed in `d44647d`: an empty list said "No match id contains “”.", and one match left read "All 1 matches". Now "No match on Lockdown passes the filters." and "All matches (1)"
+  - Checks at 23:46: `npm run check` (347 tests), `npm run build`, `make test` (237 tests)
+- [x] 5.9 On the user's yes (23 Nov, 23:52): the branch is pushed and pull request [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4) is open. Its description gives the evidence for each acceptance criterion, what differs from the plan and what was not verified. CI runs on the pull request and is read there
 
 ## Exactly where I stopped
 
-- Branch `phase-4-journeys`, cut from `main` at `83d973c`, is pushed; pull request #3 into `main` is open. `main` equals `origin/main`.
-- Everything of Phase 4 is committed and pushed. `npm run check` (289 tests), `npm run build` and `make test` (237 tests) pass.
-- Waiting for the user's review of pull request #3. Vercel adds a preview link to it; the user merges on GitHub.
-- **NEXT:** nothing until the user has reviewed. If a check fails on the pull request: read the failing step, repair it on this branch, ask before pushing. After the user's merge and go: `git switch main`, `git pull --ff-only`, look at the live site, then Phase 5 (filters and URL state) on a new branch cut from the updated `main`. Start it in a fresh session with the resume protocol: this conversation is at the end of its context.
+- Branch `phase-5-filters`, cut from `main` at `fb2aa02`, is pushed; pull request [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4) into `main` is open. `main` equals `origin/main`.
+- Everything of Phase 5 is committed and pushed. At 23:46: `npm run check` (347 tests), `npm run build` and `make test` (237 tests) pass. The review's fixes were looked at in the preview (step 5.8).
+- Waiting for the user's review and merge of pull request #4. "Copy link" still needs one click on the pull request's Vercel preview: the preview pane refuses clipboard access, so only its refusal message was seen.
+- **NEXT:** changes asked for in the review go onto this branch. After the user's merge and go: `git switch main`, `git pull --ff-only`, look at the live site, then Phase 6 on a new branch (a fresh session keeps the usage low; the user decides).
 
 ## Decisions and assumptions made
 
@@ -135,6 +138,21 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 - A double-click zooms and leaves the focus alone. Each list in the sidebar is one Tab stop with arrow keys inside.
 - Hiding humans or bots clears the focus. What a tooltip says about a single event has no keyboard route until Phase 8.
 
+2026-11-23, after Phase 4:
+- Pull request #3 was merged with a merge commit, like #1 and #2; `main` is at `fb2aa02`. Open question 6 stands.
+- The user chose again to do the next phase in the same session ("Do this task here").
+- After a switch of branches the dev server of the preview has to be restarted: Vite lost its styles once after one.
+
+2026-11-23, from the Phase 5 review (each is in PLAN.md's last section and waits for the user's review):
+- The match list offers only what the day and fate filters leave, and a match they rule out cannot be opened.
+- A linked focus is kept only when its journey is drawn; a view from a link has to be closer than fit, at most 64 times, and on the image; a switch put back to shown is forgotten.
+- "Clear filters" hands the keyboard focus to the filters or to the map.
+- Left: a reload within 300 ms of a change loses that change.
+
+2026-11-23, from looking at the review's fixes in the preview:
+- An empty match list says why: the filters left no match on the map, or no id contains what was typed. The button above the list reads "All matches (566)", so that a single match left is not "All 1 matches".
+- The note over the map is part of the map view and appears once the minimap is there; until then the match list and the legend say that nothing is left. In the hidden preview pane Lockdown's image took more than 4 s, so a check of the note has to wait until "Loading Lockdown…" is gone.
+
 ## Open questions for the user
 
 1. Should `docs/PROGRESS.md`, `CLAUDE.md` and `.claude/` stay in the repo at submission? They show how the work was run with Claude Code, which the brief allows; they are also working notes in a public repo.
@@ -150,9 +168,9 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 |---|---|---|
 | `unzip _inbox/player_data.zip -d data/raw` | restores the raw data | 2026-11-22 |
 | `make setup` | creates `.venv`, installs pinned dependencies | 2026-11-22, in a fresh clone |
-| `make test` | 237 tests, no raw data needed; creates `.venv` on first use | 2026-11-23 23:04 |
-| `cd web && npm run check` | type check, ESLint with no warning allowed, 289 Vitest tests | 2026-11-23 23:04 |
-| `cd web && npm run build` | production build into `web/dist/` (not committed); JavaScript 82.98 kB gzipped | 2026-11-23 23:04 |
+| `make test` | 237 tests, no raw data needed; creates `.venv` on first use | 2026-11-23 23:46 |
+| `cd web && npm run check` | type check, ESLint with no warning allowed, 347 Vitest tests | 2026-11-23 23:46 |
+| `cd web && npm run build` | production build into `web/dist/` (not committed); JavaScript 85.48 kB gzipped | 2026-11-23 23:46 |
 | `cd web && npm run dev` | the app on http://localhost:5173 | 2026-11-23 17:41 |
 | `make profile` | measures the raw data → `docs/profile/` (235 metrics) | 2026-11-23 13:10 |
 | `make data` | builds `web/public/data/` and the projection fixtures; writes nothing unless every check passes, the profile report included; 3 s | 2026-11-23 13:16 |

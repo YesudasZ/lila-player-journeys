@@ -11,6 +11,7 @@ import { mountMapSurface, type MapSurface } from "./mapSurface.ts";
 import { MapTooltip } from "./MapTooltip.tsx";
 import { MAP_SURFACE_ID } from "./tabIds.ts";
 import { ZoomControls } from "./ZoomControls.tsx";
+import { EmptyNote } from "./EmptyNote.tsx";
 
 const KEYS_ID = "map-keys";
 
@@ -86,6 +87,7 @@ export function MapView({ map, image, manifest }: { map: MapEntry; image: HTMLIm
         zoom, zero fits the map to the window, Escape clears the focus.
       </p>
       <MapTooltip hover={hover} map={map} manifest={manifest} />
+      <EmptyNote map={map} manifest={manifest} />
       <MapReadout x={xRef} z={zRef} bar={barRef} label={labelRef} />
       <ZoomControls
         limits={limits}

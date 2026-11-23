@@ -6,9 +6,12 @@ import { fetchBundle } from "../data/fetchBundle.ts";
 import { fetchManifest } from "../data/fetchManifest.ts";
 import { loadImage } from "../data/loadImage.ts";
 import type { LayerKey, Shown } from "../lib/drawList.ts";
+import { matchesWithFates, onChosenDays } from "../lib/filters.ts";
 import type { Journey } from "../lib/journeys.ts";
+import { DEFAULT_LINK, checkedLink, type Link } from "../lib/link.ts";
 import type { Manifest, MapEntry } from "../lib/manifest.ts";
 import type { View } from "../lib/view.ts";
+import { selectDrawList } from "./shown.ts";
 
 /** A load that failed. Its kind decides what the screen advises; `retrying` is true while another try is under way. */
 interface Failed {
@@ -36,9 +39,19 @@ export interface AppState {
   choices: Partial<Shown>;
   /** The id of the focused journey, if there is one. */
   focus: string | null;
+  /** The chosen day folders, in the order of the manifest. None means all days. */
+  days: string[];
+  /** The chosen fates, in the order of the manifest. None means all. */
+  fates: string[];
+  /** The link the page was opened with, kept for a retry of the manifest. */
+  asked: Link;
 
-  /** Fetch the manifest, open its first map, and load that map's minimap and journeys and then the other minimaps. */
-  loadManifest: () => Promise<void>;
+  /**
+   * Fetch the manifest and open the view that a link asks for, as far as the data has it: the first
+   * map and no filter when it asks for nothing. Load that map's minimap and journeys, then the other
+   * minimaps. A later call without a link, a retry, keeps the link of the first call.
+   */
+  loadManifest: (link?: Link) => Promise<void>;
   /** Load a map's minimap unless it is loading or loaded already. Asking again after a failure tries again. */
   loadMinimap: (map: MapEntry) => Promise<void>;
   /** The same for a map's journeys. They are loaded when the map is first opened. */
@@ -51,12 +64,36 @@ export interface AppState {
   setShown: (layer: LayerKey, shown: boolean) => void;
   /** Focus a journey by its id; null clears the focus. */
   setFocus: (journeyId: string | null) => void;
+  /** Choose a day, or take it out again. A filter that rules the open match out closes it. */
+  toggleDay: (dayId: string) => void;
+  /** The same for a fate. */
+  toggleFate: (fate: string) => void;
+  /** Back to all days and all fates. */
+  clearFilters: () => void;
   /** Set the view of a map; null goes back to fit. */
   setView: (mapId: string, view: View | null) => void;
 }
 
 /** The fetch of the manifest that is under way, so that asking twice loads once. */
 let manifestOnItsWay: Promise<void> | null = null;
+
+/** `chosen` with one entry toggled, in the order of `all`: the order of the data, so a link always reads the same. */
+const toggled = (all: readonly string[], chosen: readonly string[], entry: string): string[] => all.filter((each) => (each === entry) !== chosen.includes(each));
+
+/**
+ * Filters always hold: the open match of a map stays open only while the chosen days and fates
+ * leave something of it. Whether a fate leaves something can be told once the journeys are there.
+ */
+function matchesLeft(state: AppState, manifest: Manifest, days: readonly string[], fates: readonly string[]): AppState["matches"] {
+  return Object.fromEntries(
+    Object.entries(state.matches).filter(([mapId, matchId]) => {
+      const match = manifest.matches.find((entry) => entry.id === matchId);
+      if (!match || !onChosenDays(match, days)) return false;
+      const journeys = state.journeys[mapId];
+      return fates.length === 0 || journeys?.status !== "ready" || journeys.value.some((journey) => journey.match === matchId && fates.includes(journey.fate));
+    }),
+  );
+}
 
 /** The state of a load that just failed. The reason itself goes to the console, where a developer finds it. */
 function failed(error: unknown): Failed {
@@ -87,19 +124,33 @@ export const useAppStore = create<AppState>()((set, get) => ({
   matches: {},
   choices: {},
   focus: null,
+  days: [],
+  fates: [],
+  asked: DEFAULT_LINK,
 
-  loadManifest: () => {
+  loadManifest: (link) => {
+    if (link) set({ asked: link });
     manifestOnItsWay ??= (async () => {
       const before = get().manifest;
       const again = before.status === "error";
       set({ manifest: again ? { ...before, retrying: true } : { status: "loading" } });
       try {
         const manifest = await fetchManifest(again);
-        const [first, ...others] = manifest.maps;
-        set({ manifest: { status: "ready", value: manifest }, mapId: first.id });
-        void get().loadJourneys(first); // alongside its minimap: neither download waits for the other
-        await get().loadMinimap(first);
-        for (const map of others) void get().loadMinimap(map);
+        const view = checkedLink(get().asked, manifest);
+        const open = manifest.maps.find((map) => map.id === view.map) ?? manifest.maps[0];
+        set({
+          manifest: { status: "ready", value: manifest },
+          mapId: open.id,
+          days: view.days,
+          fates: view.fates,
+          matches: view.match === null ? {} : { [open.id]: view.match },
+          focus: view.journey,
+          choices: view.choices,
+          views: view.view ? { [open.id]: view.view } : {},
+        });
+        void get().loadJourneys(open); // alongside its minimap: neither download waits for the other
+        await get().loadMinimap(open);
+        for (const map of manifest.maps) if (map !== open) void get().loadMinimap(map);
       } catch (error) {
         set({ manifest: failed(error) });
       } finally {
@@ -128,6 +179,13 @@ export const useAppStore = create<AppState>()((set, get) => ({
       },
       (afterFailure) => fetchBundle(map, manifest.value, afterFailure),
     );
+    // Only now can a focus that came with a link be checked, and a fate filter against the open match.
+    const state = get();
+    const loaded = state.journeys[map.id];
+    if (loaded?.status !== "ready" || state.mapId !== map.id) return;
+    set({ matches: matchesLeft(state, manifest.value, state.days, state.fates) });
+    const drawn = selectDrawList(get())?.journeys.some((each) => each.journey.id === state.focus) ?? false;
+    if (!drawn) set({ focus: null }); // a focus that came with a link stays only when its journey is drawn
   },
 
   selectMap: (mapId) => {
@@ -141,18 +199,48 @@ export const useAppStore = create<AppState>()((set, get) => ({
 
   selectMatch: (mapId, matchId) => {
     const { manifest } = get();
-    const known = manifest.status === "ready" && manifest.value.matches.some((match) => match.id === matchId && match.map === mapId);
-    if (matchId !== null && !known) return;
+    const { days, fates, journeys } = get();
+    const known = manifest.status === "ready" && manifest.value.matches.some((match) => match.id === matchId && match.map === mapId && onChosenDays(match, days));
+    const loaded = journeys[mapId];
+    const left = matchId === null || loaded?.status !== "ready" || (matchesWithFates(loaded.value, fates)?.has(matchId) ?? true); // the chosen fates have to leave something of it
+    if (matchId !== null && (!known || !left)) return;
     set((state) => ({ matches: matchId === null ? without(state.matches, mapId) : { ...state.matches, [mapId]: matchId }, focus: null }));
   },
 
   setShown: (layer, shown) => {
     const hidesJourneys = !shown && (layer === "humans" || layer === "bots"); // a journey that is no longer drawn cannot stay focused
-    set((state) => ({ choices: { ...state.choices, [layer]: shown }, focus: hidesJourneys ? null : state.focus }));
+    // Only loot follows the view. For the others "shown" is what they are anyway, so that choice is forgotten and stays out of a link.
+    const forgotten = shown && layer !== "loot";
+    set((state) => ({
+      choices: forgotten ? Object.fromEntries(Object.entries(state.choices).filter(([each]) => each !== layer)) : { ...state.choices, [layer]: shown },
+      focus: hidesJourneys ? null : state.focus,
+    }));
   },
 
   setFocus: (journeyId) => {
     set({ focus: journeyId });
+  },
+
+  toggleDay: (dayId) => {
+    const { manifest } = get();
+    if (manifest.status !== "ready") return;
+    set((state) => {
+      const days = toggled(manifest.value.days.map((day) => day.id), state.days, dayId);
+      return { days, matches: matchesLeft(state, manifest.value, days, state.fates), focus: null }; // what was focused may be gone
+    });
+  },
+
+  toggleFate: (fate) => {
+    const { manifest } = get();
+    if (manifest.status !== "ready") return;
+    set((state) => {
+      const fates = toggled(manifest.value.fates, state.fates, fate);
+      return { fates, matches: matchesLeft(state, manifest.value, state.days, fates), focus: null };
+    });
+  },
+
+  clearFilters: () => {
+    set({ days: [], fates: [] });
   },
 
   setView: (mapId, view) => {

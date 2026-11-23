@@ -96,8 +96,19 @@ function positions(journey: Journey, { steps, image }: Grid): Pick<DrawnJourney,
   return { x, y };
 }
 
-/** The draw list for one match (`match` is its id) or for all matches of the map (`match` is null). */
-export function buildDrawList(all: readonly Journey[], match: string | null, shown: Shown, kinds: EventKinds, grid: Grid): DrawList {
+/** What the day and fate filters leave: the ids of the matches and the fates that pass. Null lets all pass. */
+export interface Only {
+  matches: ReadonlySet<string> | null;
+  fates: ReadonlySet<string> | null;
+}
+
+const EVERYTHING: Only = { matches: null, fates: null };
+
+/**
+ * The draw list for one match (`match` is its id) or for all matches of the map (`match` is null),
+ * of the journeys that the filters leave.
+ */
+export function buildDrawList(all: readonly Journey[], match: string | null, shown: Shown, kinds: EventKinds, grid: Grid, only: Only = EVERYTHING): DrawList {
   const counts: Record<LayerKey, number> = { humans: 0, bots: 0, kill: 0, death: 0, storm_death: 0, loot: 0 };
   const journeys: DrawnJourney[] = [];
   const markers: Marker[] = [];
@@ -105,6 +116,8 @@ export function buildDrawList(all: readonly Journey[], match: string | null, sho
 
   for (const journey of all) {
     if (match !== null && journey.match !== match) continue;
+    if (only.matches && !only.matches.has(journey.match)) continue;
+    if (only.fates && !only.fates.has(journey.fate)) continue;
     matches.add(journey.match);
     const actor = journey.actor === "human" ? "humans" : "bots";
     counts[actor] += 1;
