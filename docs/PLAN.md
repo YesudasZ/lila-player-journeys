@@ -147,7 +147,7 @@ Contrast of the tokens used (WCAG): `text` 16.25 and `text-muted` 6.73 on `surfa
 
 **Deliverables**
 - Path layer, cached per filter state. Humans: solid sky-blue line, round head. Bots: dashed orange line, square head. Until Phase 6 a head sits at the end of its path. Lines are thinner and half transparent in the all-matches view, so density reads.
-- Markers by shape and colour, at one size on screen at every zoom, each with a dark outline: kill triangle, death cross, storm-death diamond, small loot ring (a ring, not the square first planned: see the acceptance). While all matches are open, heads and markers are drawn at 70% of that size, so that hundreds of them leave the paths visible. Identical events of one journey at the same spot and second collapse into one marker with a count: in the tooltip, and in a single match also as a small number beside the marker.
+- Markers by shape and colour, at one size on screen at every zoom, each with a dark outline: kill triangle, death cross, storm-death diamond, small loot ring (a ring, not the square first planned: see the acceptance). While all matches are open, heads and markers are drawn at 70% of that size, so that hundreds of them leave the paths visible. The events of one kind that one journey has at one spot are one marker with a count, whatever their second (changed after the review, see the last section): in the tooltip, with the first and the last time, and in a single match also as a small number beside the marker.
 - The sidebar, in the 320 px column the page grid has reserved since Phase 3 (moved here from Phase 5):
   - **Matches:** "All matches" or one match; a box to find a match by typing its id; every match of the open map, busiest first (most journeys, then most rows), each with its id, day, number of journeys and its bots.
   - **Journeys**, when one match is open: "human 5e3a91c2", "human (no account id)", "bot 1432", each with its fate in words. Choosing one focuses it on the map, so focus also works by keyboard.
@@ -244,7 +244,7 @@ web/src/components/                Sidebar, MatchList, JourneyList, Legend, MapT
 
 ## Phase 8: Polish (1 h)
 
-**Deliverables:** an "About the data" panel in plain language (what the README gets wrong, what the tool does about it, what "anonymous" and "no death recorded" mean); loading and error states; visible focus and labels on every sidebar, top-bar and timeline control; a notice on small screens that the tool is built for desktop; a pass over all UI text. From the Phase 3 review: the panel says that the read-out's `x` and `z` are the ground plane and `y` is height; the map's keys are shown where a sighted keyboard user finds them (today they are in the buttons' tooltips and in the text for screen readers); decide whether pinch on a touch screen and Safari's trackpad pinch are supported or named as limits in the desktop notice.
+**Deliverables:** an "About the data" panel in plain language (what the README gets wrong, what the tool does about it, what "anonymous" and "no death recorded" mean); loading and error states; visible focus and labels on every sidebar, top-bar and timeline control; a notice on small screens that the tool is built for desktop; a pass over all UI text. From the Phase 3 review: the panel says that the read-out's `x` and `z` are the ground plane and `y` is height; the map's keys are shown where a sighted keyboard user finds them (today they are in the buttons' tooltips and in the text for screen readers); decide whether pinch on a touch screen and Safari's trackpad pinch are supported or named as limits in the desktop notice. From the Phase 4 review: the events of a focused journey as text in the sidebar, so that what a tooltip says can also be reached by keyboard.
 
 **Acceptance:** Lighthouse performance at least 90 on the hosted URL (desktop preset); no console errors; sidebar, top bar and timeline fully usable by keyboard, including choosing a journey from the list.
 
@@ -377,3 +377,29 @@ Left as it is:
 | Loot as a small square | Loot as a small ring | The greyscale check of the acceptance: a square could not be told from a bot's square head |
 | Markers at one size | At 70% of it while all matches are open | At full size the 1,772 kill markers of Ambrose Valley hid the paths |
 | Markers drawn as shapes on every frame | Drawn once and stamped; the hover ring on a canvas of its own | With loot switched on, 8,988 markers took 28 ms a frame, and every move of the pointer redrew them |
+
+## Changed after the Phase 4 review (23 Nov 2026), for your review
+
+Two independent reviewers checked Phase 4, each held to 40 tool calls: one in a real browser against the data, one on code quality, accessibility and the strength of the tests. No blocker. 6 findings to fix and 9 small ones, several raised by both. The review took about half of what the Phase 3 review did.
+
+What held, as the reviewers measured it: the legend equals the manifest for all three maps and seven matches; marker positions on the non-square Grand Rift map agree with a computation by hand to 0.01 px; every path ends at its death row; picking agrees with an independent computation in 36 probes at two zooms; the default view of Ambrose Valley redraws in 2.5 to 4.4 ms; 11 of 12 one-line faults of the reviewer's own were noticed by the tests.
+
+| Was | Now | Why |
+|---|---|---|
+| One marker for identical events of a journey in the same second at the same spot | One marker for the events of one kind that a journey has at one spot, with their count and their first and last time | Markers at one spot in different seconds lay exactly on top of each other: 1,522 of 14,747, about a tenth, could never be hovered, and the map showed one marker where the legend counted several. **This changes a rule of the approved plan** |
+| Of two markers at one spot the tooltip named the later row | It names the one drawn on top | A kill over a loot read "Loot" |
+| The tooltip opened to the right unless within 260 px of the edge | It opens toward the middle of the map | Tooltips are up to 303 px wide and were cut off |
+| A double-click cleared or changed the focus | It zooms and leaves the focus as it was | Its two clicks each counted as a click |
+| Every match was a stop for the Tab key | Each list is one stop; the arrow keys, Home and End move inside it | Up to 566 presses of Tab lay between the search box and the legend |
+| The journey list offered journeys that are hidden | It lists the drawn ones; hiding humans or bots clears the focus | The focus could point at a journey that is not drawn |
+| The legend repeated the canvas's stroke sizes | One set of sizes for both | They could drift apart |
+| The first map's journeys waited for its minimap | Both are fetched at once | There was no reason to wait |
+| No test for a change of match alone | A test opens one match after another | Removing the match from the draw list's memo left every test green |
+
+Left as it is:
+
+| Finding | Decision | Why |
+|---|---|---|
+| What a tooltip says has no way in by keyboard | Phase 8 | The journey list gives who and fate; a journey's events as text belong with the keyboard pass of Phase 8 |
+| With loot switched on by hand, all matches of Ambrose Valley redraw in 14 to 25 ms at fit | Left | The default view takes 2.5 to 9 ms; a moving pointer no longer redraws journeys; only zooming at fit with loot on is slower than a frame |
+| Hiding humans or bots clears the focus even when the focused journey is of the other kind | Left | One click brings the focus back; telling the kinds apart would need a search through the journeys in the store |

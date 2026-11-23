@@ -1,10 +1,10 @@
 # Progress Log
 
-Last updated: 2026-11-23 22:37 IST
+Last updated: 2026-11-23 23:04 IST
 
 ## Current phase
 
-Phase 4, Journeys, humans versus bots, markers. Status: **IN PROGRESS** on the branch `phase-4-journeys` (plan approved; no pull request yet).
+Phase 4, Journeys, humans versus bots, markers. Status: **DONE (awaiting my review)** on the branch `phase-4-journeys`, last code commit `acae5fa`. Not pushed yet: the push and the pull request wait for the user's yes.
 
 Phases 1 to 3 and step 9.1 are merged: pull requests [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) (Phase 3) and [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) (step 9.1) were reviewed and merged by the user on 23 Nov. The tool is live at https://lila-player-journeys-psi.vercel.app; production on Vercel follows `main`.
 
@@ -17,7 +17,7 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 | 1 | Data discovery and repo setup | APPROVED | `bc63f0e` |
 | 2 | Pipeline | APPROVED | `ccc2369` |
 | 3 | App shell and map canvas (ends with the first deployment, step 9.1) | APPROVED (merged and hosted) | pull request [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) |
-| 4 | Journeys, humans versus bots, markers | IN PROGRESS | branch `phase-4-journeys` |
+| 4 | Journeys, humans versus bots, markers | DONE (awaiting my review) | branch `phase-4-journeys`, `acae5fa`; pull request not opened yet |
 | 5 | Filters and URL state | NOT STARTED | |
 | 6 | Timeline and playback | NOT STARTED | |
 | 7 | Heatmaps | NOT STARTED | |
@@ -44,15 +44,16 @@ Phase 4 deliverables and acceptance criteria are in PLAN.md, "Phase 4". The task
   - Hover on a kill reads "Kill, bot 1440, at 1:28, x 111 z 69, elevation 105"; a click on a path focuses its journey and its row in the list; Esc, a click on empty map and a second press on the row clear; a drag is not a click
   - Greyscale on `fbbc5d02`: the loot square could not be told from a bot's square head, so loot is now a ring, as PLAN.md provided for
   - Redraw of the journeys layer, Ambrose Valley, all matches, default switches: 4.7 to 8.8 ms at fit and about 5 ms while panning at zoom 1.5 (target under 16 ms). With loot switched on by hand: 25 ms at fit, 10 to 12 ms at zoom 1.5, 7 to 9 ms at zoom 3.4. `fbbc5d02`: 0.9 ms. Read from the `journeys-draw` user timing; device pixel ratio 2, map area 960 x 752
-- [ ] 4.8 Independent review by two agents with a fixed budget of 40 tool calls each (behaviour in a real browser against the data; code quality, accessibility and the strength of the tests). Launched at 22:37 as the background workflow `phase4-review`; results not in yet; fixes follow
-- [ ] 4.9 Docs, phase-end checks; ask once to push the branch and open the pull request; stop
+- [x] 4.8 Independent review by two agents, each held to 40 tool calls (48 used together, about half the cost of the Phase 3 review). No blocker; 6 findings to fix and 9 small ones, several raised by both. Fixed in `acae5fa`; what changed and what was left, with reasons, is PLAN.md's last section. Each fix was checked again in the preview with real input. Raw result: `.local/phase4-review-result.raw`
+- [x] 4.9 PLAN.md, BRIEF.md and the README describe Phase 4 as built; phase-end checks pass (23:04)
+- [ ] 4.10 On the user's yes: push the branch, open the pull request, record it here, read the first CI run. Then stop for the review
 
 ## Exactly where I stopped
 
-- Branch `phase-4-journeys`, cut from `main` at `83d973c`; local only. `main` equals `origin/main`.
-- Done and committed: 4.2 to 4.7. Phase 4 is built and checked in the preview; `npm run check` (285 tests), `npm run build` and `make test` (237 tests) pass.
-- In flight: 4.8, the review workflow `phase4-review` (two agents, read-only on the project; one drives the dev server on port 5183 in the preview pane). Its result goes to `.local/phase4-review-result.raw`. PLAN.md, BRIEF.md and the README already describe Phase 4 as built.
-- **NEXT:** when the review reports: reproduce each finding, fix what holds, re-run `npm run check`, `npm run build` and `make test`, commit. Then 4.9 (phase-end checks, status, ask to push the branch and open the pull request).
+- Branch `phase-4-journeys`, cut from `main` at `83d973c`; local only, nothing pushed. `main` equals `origin/main`.
+- Everything of Phase 4 is committed. At 23:04: `npm run check` (289 tests), `npm run build` and `make test` (237 tests) pass.
+- Waiting for the user's yes to push the branch and open the pull request.
+- **NEXT:** on yes: `git push -u origin phase-4-journeys`; `gh pr create` into `main` (what the phase delivers, the evidence for each acceptance criterion, what changed from the plan, how to verify; no attribution line; no screenshots, and why); record the pull request here in one docs commit and push it; read the first CI run. Then stop. After the user's merge and go: `git switch main`, `git pull --ff-only`, look at the live site, then Phase 5 on a new branch.
 
 ## Decisions and assumptions made
 
@@ -128,6 +129,12 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 - Markers are drawn once and stamped, and the ring around the hovered thing has a canvas of its own: with shapes drawn every frame the 8,988 loot markers took 28 ms.
 - In the preview pane the page draws about one frame a second while the pane is hidden, so a test there has to wait more than a second after each event before it reads the page. The app itself reacts on the next frame.
 
+2026-11-23, from the Phase 4 review (each is in PLAN.md's last section and waits for the user's review):
+- One marker stands for the events of one kind that a journey has at one spot, whatever their second. The approved plan said "same spot and second"; with that rule a tenth of the markers lay hidden under another one.
+- The draw list holds the markers in drawing order (loot, storm deaths, deaths, kills), so the pointer finds the marker on top.
+- A double-click zooms and leaves the focus alone. Each list in the sidebar is one Tab stop with arrow keys inside.
+- Hiding humans or bots clears the focus. What a tooltip says about a single event has no keyboard route until Phase 8.
+
 ## Open questions for the user
 
 1. Should `docs/PROGRESS.md`, `CLAUDE.md` and `.claude/` stay in the repo at submission? They show how the work was run with Claude Code, which the brief allows; they are also working notes in a public repo.
@@ -143,9 +150,9 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 |---|---|---|
 | `unzip _inbox/player_data.zip -d data/raw` | restores the raw data | 2026-11-22 |
 | `make setup` | creates `.venv`, installs pinned dependencies | 2026-11-22, in a fresh clone |
-| `make test` | 237 tests, no raw data needed; creates `.venv` on first use | 2026-11-23 19:49 |
-| `cd web && npm run check` | type check, ESLint with no warning allowed, 196 Vitest tests | 2026-11-23 19:49 |
-| `cd web && npm run build` | production build into `web/dist/` (not committed); JavaScript 76 kB gzipped | 2026-11-23 19:49 |
+| `make test` | 237 tests, no raw data needed; creates `.venv` on first use | 2026-11-23 23:04 |
+| `cd web && npm run check` | type check, ESLint with no warning allowed, 289 Vitest tests | 2026-11-23 23:04 |
+| `cd web && npm run build` | production build into `web/dist/` (not committed); JavaScript 82.98 kB gzipped | 2026-11-23 23:04 |
 | `cd web && npm run dev` | the app on http://localhost:5173 | 2026-11-23 17:41 |
 | `make profile` | measures the raw data → `docs/profile/` (235 metrics) | 2026-11-23 13:10 |
 | `make data` | builds `web/public/data/` and the projection fixtures; writes nothing unless every check passes, the profile report included; 3 s | 2026-11-23 13:16 |
