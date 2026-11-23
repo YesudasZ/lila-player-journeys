@@ -17,6 +17,7 @@ OTHER_MATCH = "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff.nakama-0"
 THIRD_MATCH = "cccccccc-dddd-4eee-8fff-000000000000.nakama-0"
 LATE_MATCH = "0d0d0d0d-eeee-4fff-8000-111111111111.nakama-0"  # sorts before the others by id
 FIRST_TS = 1_770_727_161  # 2026-02-10 12:39:21 UTC when read as seconds
+DAY = 86_400  # seconds. rows_of counts from FIRST_TS, so rows for the folder February_12 start at 2 * DAY
 
 
 def rows_of(day: str, user_id: str, match_id: str, events: list[tuple], map_id: str = "AmbroseValley") -> pd.DataFrame:

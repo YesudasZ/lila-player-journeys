@@ -13,7 +13,12 @@ ROOT = Path(__file__).resolve().parents[2]
 RAW_INPUT = re.compile(r"\.(nakama-0|parquet|pdf|zip)$|^(_inbox|data/raw)/")
 FULL_ID_IN_BYTES = re.compile(FULL_ID.pattern.encode())
 # The ids the tests are built from. They are made up, and helpers.py is the only place allowed to hold a full id.
-MADE_UP_IDS = {found.group() for value in vars(helpers).values() if isinstance(value, str) and (found := FULL_ID.search(value))}
+MADE_UP_IDS = {
+    found.group()
+    for name, value in vars(helpers).items()
+    if not name.startswith("_") and isinstance(value, str) and (found := FULL_ID.search(value))
+}
+MAX_LINE_LENGTH = 140
 
 
 def full_ids_in(content: bytes) -> set[str]:
@@ -54,6 +59,17 @@ def test_a_full_id_would_be_caught_in_text_and_in_a_binary_file():
 
 def test_no_raw_data_or_brief_is_tracked(tracked_files):
     assert [name for name in tracked_files if RAW_INPUT.search(name)] == []
+
+
+def test_no_line_of_python_is_longer_than_the_limit(tracked_files):
+    too_long = [
+        f"{name}:{number}"
+        for name in tracked_files
+        if name.endswith(".py")
+        for number, line in enumerate((ROOT / name).read_text().splitlines(), 1)
+        if len(line) > MAX_LINE_LENGTH
+    ]
+    assert too_long == []
 
 
 def test_no_full_player_or_match_id_is_tracked(tracked_files):

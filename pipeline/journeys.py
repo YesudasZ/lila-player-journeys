@@ -91,6 +91,9 @@ def journey_table(rows: pd.DataFrame) -> pd.DataFrame:
 
 def check_journeys(journeys: pd.DataFrame) -> None:
     """Raise ValueError when the journeys break something the app relies on."""
+    lettered = journeys.index[(journeys["actor"] == "bot") & (journeys["id_kind"] != "numeric")]
+    if len(lettered):
+        raise ValueError(short_ids(f"{len(lettered)} bot journeys carry an account id instead of a number, e.g. {lettered[0]}"))
     for actor, found in (("none", "no movement row left after cleaning"), ("mixed", "both Position and BotPosition rows")):
         odd = journeys.index[journeys["actor"] == actor]
         if len(odd):

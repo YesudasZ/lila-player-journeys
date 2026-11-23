@@ -24,6 +24,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from datetime import date
+
 import numpy as np
 import pandas as pd
 from PIL import Image
@@ -48,13 +50,13 @@ from pipeline.encode import ELEVATION_STEPS_PER_UNIT, UV_STEPS, decode_elevation
 from pipeline.journeys import FATES, MATCH_COUNTS, check_journeys, journey_table, match_table
 from pipeline.maps import MAPS, README_EXAMPLE, uv_to_pixel, uv_to_world, world_to_uv
 from pipeline.minimap import load_minimap
+from pipeline.profile.cleaning import EVENTS_COUNTED_PER_ACTOR
 
 MINIMAP_WIDTH = 2048
 WEBP_QUALITY = 82
 MAX_BUNDLE_GZIP_BYTES = 700_000
 PARTIAL_DAYS = frozenset({"February_14"})  # the dataset README: collection was still running on this day
 EVENT_CODE = {event: code for code, event in enumerate(EVENTS)}
-EVENTS_COUNTED_PER_ACTOR = ("BotKill", "BotKilled", "Killed", "KilledByStorm", "Loot")  # the profiler counts these for humans and for bots
 
 Json = dict[str, Any]  # a JSON object on its way to a file
 
@@ -67,9 +69,33 @@ def _is_day_folder(name: str) -> bool:
     return True
 
 
+def misfiled(rows: pd.DataFrame, dates: dict[str, str]) -> list[str]:
+    """Files whose last row is not from the date of their day folder or the day before (docs/DATA_NOTES.md, row 13)."""
+    last = rows.groupby("file").agg(day=("day", "first"), ts=("ts", "max"))
+    last_date = pd.to_datetime(last["ts"], unit="s", utc=True).dt.date
+    days_early = [(date.fromisoformat(dates[day]) - found).days for day, found in zip(last["day"], last_date)]
+    return [f"{file} (last row {found})" for file, found, early in zip(last.index, last_date, days_early) if early not in (0, 1)]
+
+
+def check_days(rows: pd.DataFrame) -> list[str]:
+    """What is wrong with the day folders. The check needs rows whose ts is known to be Unix seconds."""
+    dates = day_dates(rows)
+    problems = []
+    if len(set(dates.values())) < len(dates):
+        problems.append(f"several day folders stand for one date: {dates}")
+    if not_last := sorted(PARTIAL_DAYS & set(list(dates)[:-1])):
+        problems.append(f"{not_last} is marked as a partial day in PARTIAL_DAYS but is not the last day folder")
+    if elsewhere := misfiled(rows, dates):
+        what = "hold rows that are not from their day folder's date or the day before"
+        problems.append(f"{len(elsewhere)} files {what}, e.g. {elsewhere[0]}")
+    return problems
+
+
 def check_raw(data: RawData) -> None:
     """Raise ValueError when the raw files are not what this pipeline was built for."""
     rows, problems = data.rows, []
+    if data.unexpected:
+        problems.append(f"the data folder holds something that is neither a day folder's file nor the README: {data.unexpected}")
     not_parquet = [f for f in data.files if not f.schema or not f.has_magic]
     if not_parquet:
         first = not_parquet[0]
@@ -95,10 +121,10 @@ def check_raw(data: RawData) -> None:
         problems.append("a file is not named <user_id>_<match_id>")
     if (rows["id_kind"] == "other").any():
         problems.append("a user_id is neither a UUID nor a number")
+    if not problems:  # only now is it certain that the folders are days and that ts can be read as a date
+        problems = check_days(rows)
     if problems:
         raise ValueError(short_ids("raw data check failed: " + "; ".join(problems)))
-    if not_last := sorted(PARTIAL_DAYS & set(list(day_dates(rows))[:-1])):
-        raise ValueError(f"raw data check failed: {not_last} is marked as a partial day in PARTIAL_DAYS but is not the last day folder")
 
 
 def with_uv(rows: pd.DataFrame) -> pd.DataFrame:
@@ -312,6 +338,17 @@ def counts_to_reconcile(report: Json) -> dict[tuple[str, str], float]:
     return counts
 
 
+def read_profile(path: Path) -> Json:
+    """The profiler's report. A file that holds anything else is a ValueError that names the file."""
+    try:
+        profile = json.loads(path.read_text())
+    except ValueError as error:  # not JSON, or not text
+        raise ValueError(f"{path} is not a profile report: {error}") from None
+    if not isinstance(profile, dict) or not isinstance(profile.get("metrics"), dict):
+        raise ValueError(f"{path} is not a profile report: it has no metrics")
+    return profile
+
+
 def differences_from_profile(report: Json, profile: Json) -> list[str]:
     """One line for every count that the profiler's report and this build disagree on."""
     lines = []
@@ -338,6 +375,7 @@ def build(raw_root: Path, out_dir: Path, fixtures_dir: Path, profile: Path | Non
     Returns the cleaning report plus the size of each map bundle. Any failed
     check is a ValueError and leaves ``out_dir`` and ``fixtures_dir`` as they were.
     """
+    expected = read_profile(profile) if profile is not None else None
     data = load_raw(raw_root)
     check_raw(data)
     cleaned = clean(data.rows)
@@ -360,8 +398,8 @@ def build(raw_root: Path, out_dir: Path, fixtures_dir: Path, profile: Path | Non
     texts[fixtures_dir / "projection.json"] = json.dumps(projection_fixtures(rows, minimap_sizes), indent=2) + "\n"
 
     check_output(texts, bundle_bytes)
-    if profile is not None:
-        differences = differences_from_profile(report, json.loads(profile.read_text()))
+    if expected is not None:
+        differences = differences_from_profile(report, expected)
         if differences:
             raise ValueError("the counts differ from the profiler's report:\n  " + "\n  ".join(differences))
     for path, content in (images | {path: text.encode() for path, text in texts.items()}).items():
@@ -380,8 +418,8 @@ def main() -> None:
 
     try:
         report = build(args.raw, args.out, args.fixtures, args.profile)
-    except (ValueError, FileNotFoundError) as error:
-        sys.exit(f"build failed, nothing was written: {error}")
+    except (ValueError, OSError) as error:  # OSError: a folder or file that is missing, unreadable or not an image
+        sys.exit(short_ids(f"build failed, nothing was written: {error}"))
     removed = ", ".join(f"{count} {name.replace('_', ' ')}" for name, count in report["removed"].items())
     print(f"rows: {report['rows_in']:,} in, {report['rows_out']:,} out (removed: {removed})")
     print(f"journeys: {report['journeys']}; matches: {report['matches']}")

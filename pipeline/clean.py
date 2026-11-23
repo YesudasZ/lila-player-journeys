@@ -29,6 +29,11 @@ def repeats_itself(file_rows: pd.DataFrame) -> bool:
     return file_rows.iloc[:half].reset_index(drop=True).equals(file_rows.iloc[half:].reset_index(drop=True))
 
 
+def files_written_twice(rows: pd.DataFrame) -> pd.Series:
+    """For every file, whether it ``repeats_itself``. The rows may come in any order."""
+    return rows.sort_values(["file", "row"]).groupby("file", sort=False)[COLUMNS].apply(repeats_itself)
+
+
 def _written_once(rows: pd.DataFrame, file: str) -> pd.DataFrame:
     """A file's rows in file order, without the second half of a file written twice (rule 2)."""
     content = rows.loc[rows["file"] == file].sort_values("row")[COLUMNS].reset_index(drop=True)
@@ -57,10 +62,9 @@ def keep_one_copy_per_journey(rows: pd.DataFrame) -> pd.DataFrame:
 
 def keep_first_half_of_files_written_twice(rows: pd.DataFrame) -> pd.DataFrame:
     """Rule 2. A file whose second half repeats its first half, row for row, keeps the first half."""
-    written_twice = rows.sort_values(["file", "row"]).groupby("file", sort=False)[COLUMNS].apply(repeats_itself)
     by_file = rows.groupby("file", sort=False)["row"]
     place_in_file = by_file.rank(method="first") - 1
-    in_second_half = rows["file"].map(written_twice) & (place_in_file >= by_file.transform("size") // 2)
+    in_second_half = rows["file"].map(files_written_twice(rows)) & (place_in_file >= by_file.transform("size") // 2)
     return rows[~in_second_half]
 
 

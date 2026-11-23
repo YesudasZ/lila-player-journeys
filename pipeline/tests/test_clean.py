@@ -4,6 +4,7 @@ import pandas as pd
 import pytest
 
 from pipeline.clean import (
+    after_death,
     clean,
     drop_kills_mirroring_a_death,
     end_paths_at_death,
@@ -105,6 +106,12 @@ def test_kill_without_a_twin_is_kept():
     assert len(drop_kills_mirroring_a_death(frame(elsewhere, earlier))) == 6
 
 
+def test_only_a_kill_row_and_a_killed_row_make_a_twin():
+    bot_kill = rows_of("February_10", HUMAN, MATCH, [(0, "Position"), (5, "BotKill", 3.0, 4.0), (5, "Killed", 3.0, 4.0)])
+    bot_killed = rows_of("February_10", OTHER_HUMAN, MATCH, [(0, "Position"), (5, "Kill", 3.0, 4.0), (5, "BotKilled", 3.0, 4.0)])
+    assert len(drop_kills_mirroring_a_death(frame(bot_kill, bot_killed))) == 6
+
+
 def test_kill_at_another_elevation_is_not_a_twin():
     rows = rows_of("February_10", HUMAN, MATCH, [(0, "Position"), (5, "Kill", 3.0, 4.0), (5, "Killed", 3.0, 4.0)])
     rows.loc[rows["event"] == "Killed", "y"] = np.float32(50.0)
@@ -132,6 +139,14 @@ def test_storm_death_ends_the_path():
 def test_bot_path_ends_at_its_death_too():
     rows = rows_of("February_10", "1440", MATCH, [(5, "BotPosition"), (10, "BotKilled"), (15, "BotPosition")])
     assert events(end_paths_at_death(rows)) == [(0, "BotPosition"), (5, "BotKilled")]
+
+
+def test_after_death_is_true_behind_the_death_row_and_false_on_it():
+    rows = frame(
+        rows_of("February_10", HUMAN, MATCH, [(0, "Position"), (5, "BotKilled"), (5, "Position"), (9, "BotKill")]),
+        rows_of("February_10", OTHER_HUMAN, MATCH, [(0, "Position"), (5, "Loot")]),
+    )
+    assert after_death(rows).tolist() == [False, False, True, True, False, False]
 
 
 def test_journey_without_a_death_keeps_every_row():
@@ -177,6 +192,30 @@ def test_twin_inside_a_file_written_twice_is_counted_under_both_rules_in_order()
     }
 
 
+def test_spare_copy_that_was_written_twice_is_counted_whole_under_rule_1_and_the_rules_run_in_order():
+    cleaned = clean(frame(rows_of("February_10", HUMAN, MATCH, WALK), rows_of("February_11", HUMAN, MATCH, WALK + WALK)))
+    assert list(cleaned.removed.items()) == [
+        ("spare_copy_of_journey", 6),
+        ("second_half_of_file_written_twice", 0),
+        ("kill_mirroring_killed", 0),
+        ("movement_after_death", 0),
+    ]
+
+
+def test_rules_do_not_rely_on_the_order_of_the_rows_in_the_frame():
+    once = WALK + [(10, "Loot"), (10, "BotKill")]
+    in_file_order = frame(
+        rows_of("February_10", HUMAN, MATCH, once),
+        rows_of("February_11", HUMAN, MATCH, once + once),
+        rows_of("February_11", "1440", MATCH, BOT_WALK),
+        rows_of("February_11", "1444", MATCH, BOT_WALK),
+    )
+    mixed = in_file_order.sort_values(["x", "row"], ascending=[True, False])  # files interleaved, each one back to front inside a second
+    cleaned = clean(mixed)
+    assert (cleaned.removed["spare_copy_of_journey"], cleaned.removed["second_half_of_file_written_twice"]) == (5, 5)
+    assert events(cleaned.rows[cleaned.rows["user_id"] == HUMAN]) == once
+
+
 def test_rules_do_not_rely_on_row_labels():
     files = [
         rows_of("February_10", HUMAN, MATCH, WALK + WALK),
@@ -196,9 +235,16 @@ def test_file_written_three_times_is_an_error_not_a_shuffled_path():
     assert HUMAN not in str(failure.value)
 
 
-def test_journey_with_two_death_rows_is_an_error():
-    with pytest.raises(ValueError, match="1 journeys have more than one death row"):
+def test_journey_with_two_death_rows_is_an_error_that_names_the_file_by_its_public_ids():
+    with pytest.raises(ValueError) as failure:
         clean(rows_of("February_10", HUMAN, MATCH, WALK + [(12, "BotKilled"), (12, "KilledByStorm")]))
+    assert str(failure.value) == "1 journeys have more than one death row, e.g. February_10/1a2b3c4d_aaaaaaaa.nakama-0"
+
+
+def test_killed_row_stored_twice_is_reported_as_two_death_rows():
+    stored_twice = [(0, "Position"), (5, "Kill", 3.0, 4.0), (5, "Killed", 3.0, 4.0), (5, "Killed", 3.0, 4.0)]
+    with pytest.raises(ValueError, match="1 journeys have more than one death row"):
+        clean(rows_of("February_10", HUMAN, MATCH, stored_twice))
 
 
 def test_identical_loot_rows_are_kept():

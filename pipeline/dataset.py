@@ -11,7 +11,7 @@ Parquet without a .parquet extension. Two columns need care:
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from datetime import date, datetime, timezone
 from pathlib import Path
 
@@ -21,6 +21,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 NOT_DAY_FOLDERS = frozenset({"minimaps"})  # every other sub-folder of the dataset holds the files of one day
+NOT_DATA_FILES = frozenset({"README.md"})  # the only file that lies beside the folders
 PARQUET_MAGIC = b"PAR1"
 # Every file of the dataset has this schema (docs/DATA_NOTES.md, row 2). A file with another one is not loaded.
 SCHEMA = pa.schema(
@@ -58,6 +59,7 @@ UNDECODABLE = "<undecodable>"
 
 PUBLIC_ID_LENGTH = 8  # leading characters of a player or match id that are published
 FULL_ID = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
+_FULL_ID_IN_ANY_CASE = re.compile(FULL_ID.pattern, re.IGNORECASE)  # what a message must never show
 
 
 def id_kind(user_id: str) -> str:
@@ -71,12 +73,18 @@ def id_kind(user_id: str) -> str:
 
 def short_ids(text: str) -> str:
     """The text with every full player or match id cut to its public prefix, for messages."""
-    return FULL_ID.sub(lambda found: found.group()[:PUBLIC_ID_LENGTH], text)
+    return _FULL_ID_IN_ANY_CASE.sub(lambda found: found.group()[:PUBLIC_ID_LENGTH], text)
 
 
 def day_date(day: str, year: int) -> date:
-    """The date of a day folder such as 'February_10' in a given year. Any other name is a ValueError."""
-    return datetime.strptime(f"{year} {day}", "%Y %B_%d").date()
+    """The date of a day folder such as 'February_10' in a given year. Any other name is a ValueError that names it."""
+    try:
+        found = datetime.strptime(f"{year} {day}", "%Y %B_%d").date()
+    except ValueError:
+        found = None
+    if found is None or not day.startswith(f"{found:%B}_"):  # strptime would also take 'february_10'
+        raise ValueError(f"folder {day!r} is not a day of {year} named like February_10")
+    return found
 
 
 def day_dates(rows: pd.DataFrame) -> dict[str, str]:
@@ -116,6 +124,7 @@ class RawData:
     rows: pd.DataFrame  # every row of every loaded file, in file order
     files: list[FileInfo]
     undecodable_events: int  # rows whose event bytes are not valid UTF-8
+    unexpected: list[str] = field(default_factory=list)  # see unexpected_entries
 
 
 def list_files(raw_root: Path) -> list[Path]:
@@ -125,6 +134,23 @@ def list_files(raw_root: Path) -> list[Path]:
     """
     in_day_folders = (p for p in raw_root.glob("*/*") if p.parent.name not in NOT_DAY_FOLDERS and not p.parent.name.startswith("."))
     return sorted(p for p in in_day_folders if p.is_file() and not p.name.startswith("."))
+
+
+def unexpected_entries(raw_root: Path) -> list[str]:
+    """What ``list_files`` passes over although it is neither hidden, the minimaps folder nor the README.
+
+    A file beside the day folders, or a folder or a broken link inside one, may be data in a layout this loader does not read.
+    """
+    found = []
+    for entry in sorted(raw_root.iterdir()):
+        if entry.name.startswith(".") or entry.name in NOT_DAY_FOLDERS | NOT_DATA_FILES:
+            continue
+        if not entry.is_dir():
+            found.append(entry.name)
+            continue
+        inside = (inner for inner in sorted(entry.iterdir()) if not inner.name.startswith("."))
+        found += [f"{entry.name}/{inner.name}" for inner in inside if not inner.is_file()]
+    return found
 
 
 def _has_magic(path: Path) -> bool:
@@ -155,8 +181,8 @@ def _read_file(path: Path, cache: dict[bytes, str]) -> tuple[FileInfo, pd.DataFr
         file=file_id,
         day=path.parent.name,
         name=path.name,
-        size_bytes=path.stat().st_size,
-        has_magic=_has_magic(path),
+        size_bytes=0,
+        has_magic=False,
         rows=0,
         created_by="",
         schema="",
@@ -164,9 +190,10 @@ def _read_file(path: Path, cache: dict[bytes, str]) -> tuple[FileInfo, pd.DataFr
         error=None,
     )
     try:
+        info = replace(info, size_bytes=path.stat().st_size, has_magic=_has_magic(path))
         parquet = pq.ParquetFile(path)
         table = parquet.read()
-    except (pa.ArrowException, OSError) as exc:  # reported by the caller, never skipped silently
+    except (pa.ArrowException, OSError) as exc:  # cannot be opened or is not Parquet: reported by the caller, never skipped
         return replace(info, error=repr(exc)), None
     ts_index = table.schema.get_field_index("ts")
     info = replace(
@@ -200,7 +227,10 @@ def load_raw(raw_root: Path) -> RawData:
         if frame is not None:
             frames.append(frame)
     if not frames:
-        raise ValueError(f"None of the {len(paths)} files in {raw_root} could be loaded: not Parquet, or not the expected schema")
+        first = infos[0]
+        why = short_ids(f"{first.file}: {first.error}{', ' + first.schema if first.schema else ''}")
+        raise ValueError(f"None of the {len(paths)} files in {raw_root} could be loaded, e.g. {why}")
     rows = pd.concat(frames, ignore_index=True)
     rows["id_kind"] = rows["user_id"].map(id_kind)
-    return RawData(rows=rows, files=infos, undecodable_events=int((rows["event"] == UNDECODABLE).sum()))
+    undecodable = int((rows["event"] == UNDECODABLE).sum())
+    return RawData(rows=rows, files=infos, undecodable_events=undecodable, unexpected=unexpected_entries(raw_root))

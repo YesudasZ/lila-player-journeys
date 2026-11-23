@@ -7,8 +7,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from pipeline.clean import repeats_itself
-from pipeline.dataset import COLUMNS
+from pipeline.clean import files_written_twice
 from pipeline.profile import sampling
 from pipeline.profile.metrics import Entries, Metrics, Section, joined
 from pipeline.profile.values import short_file, spread, utc
@@ -56,7 +55,7 @@ def timestamps(rows: pd.DataFrame, files: pd.DataFrame) -> Section:
     step = ts_steps(rows)
     file_span = files["last_ts"] - files["first_ts"]
     span = match_span(rows)
-    written_twice = rows.groupby("file", sort=False)[COLUMNS].apply(repeats_itself)
+    written_twice = files_written_twice(rows)
     off_date = _files_off_their_folder_date(files)
     gap = sampling.gaps_in_file_order(rows)
     pairs = sampling.movement_pairs(rows)

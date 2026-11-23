@@ -7,7 +7,7 @@
 | `manifest.json` | constants, the three maps, the five day folders, totals, one line per match | 169 kB, 17 kB gzipped |
 | `maps/<Map>.json` | every journey of one map as integer arrays, one journey per line | 470, 54 and 162 kB gzipped |
 | `minimaps/<Map>.webp` | the minimap, 2048 pixels wide | 177, 165 and 193 kB |
-| `cleaning_report.json` | rows in, rows removed per rule, rows left. Not loaded by the app | 1 kB |
+| `cleaning_report.json` | rows in, rows removed per rule, rows left. The app does not need it | 1 kB |
 
 The pipeline also writes `web/src/lib/__fixtures__/projection.json`, the reference points for the app's projection tests.
 
@@ -32,12 +32,12 @@ The pipeline also writes `web/src/lib/__fixtures__/projection.json`, the referen
 |---|---|
 | `id` | the first 8 characters of the match id. Unique. Always text: 14 ids are digits only (`03359228`) and 13 read as a number with an exponent (`5e373986`) |
 | `map` | the map id |
-| `day` | the day folder: the UTC day on which the match's files were written. Filters use this field. A match filed under two folders would belong to the later one; after cleaning there is none |
+| `day` | the day folder, which is consistent with the UTC day on which the match's files were written ([DATA_NOTES.md](DATA_NOTES.md), row 13). The day filter has to use this field. A match filed under two folders would belong to the later one; after cleaning there is none |
 | `start` | Unix seconds, UTC, of the first recorded row. For 5 matches that started just before midnight its date is the day before `day` |
 | `span` | seconds from `start` to the last row left after cleaning: 380 at the median, 887 at most. It is what was recorded, not the length of the match |
 | `humans` | journeys of humans, the anonymous ones included |
 | `anonymous` | of those, the journeys without an account id |
-| `bots` | journeys of bots. `humans + bots` is the number of journeys, which is the number of files |
+| `bots` | journeys of bots. `humans + bots` is the number of journeys of the match: one per file, once the spare copy of the journey stored twice is gone |
 | `kills` | Kill and BotKill rows of human journeys: the kill markers of humans |
 | `deaths` | Killed and BotKilled rows of human journeys: deaths in combat. Storm deaths are not included |
 | `storm_deaths` | KilledByStorm rows of all journeys (in this dataset only humans have them) |
@@ -56,7 +56,7 @@ Every marker is counted once: a match shows `kills + bot_kills` kill markers, `d
 | `id` | `<match>-<player>` for an identified human, `<match>-anon` for an anonymous one, `<match>-bot<number>` for a bot. Unique in the dataset and the same on every build |
 | `match` | the `id` of its match entry |
 | `player` | a human's public id (the first 8 characters of the account id), a bot's number, or `null` for an anonymous human. A bot number is not an identity: other matches reuse it |
-| `actor` | `"human"` or `"bot"`. Never guess it from `player`: 21 human ids are digits only |
+| `actor` | `"human"` or `"bot"`. Never guess it from `player`: 21 human journeys carry a public id made of digits only (10 different ids) |
 | `anonymous` | true for a human journey without an account id; the same as `actor` human and `player` null |
 | `fate` | `killed_by_bot`, `killed_by_player`, `killed_by_storm` or `no_death_recorded` for a human; `killed`, `killed_by_storm` or `no_death_recorded` for a bot. `killed_by_player` is the README's reading of a Killed row; none of the 3 can be verified ([DATA_NOTES.md](DATA_NOTES.md), row 10) |
 | `t` | seconds since the `start` of the match, never decreasing |

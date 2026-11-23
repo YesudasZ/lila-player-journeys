@@ -1,5 +1,7 @@
 """The whole build, on a small synthetic dataset that contains every case the cleaning rules cover."""
+import gzip
 import json
+import os
 import sys
 
 import numpy as np
@@ -14,6 +16,7 @@ from pipeline.encode import decode_uv
 from pipeline.journeys import journey_table
 from pipeline.maps import MAPS, uv_to_world
 from pipeline.tests.helpers import (
+    DAY,
     FIRST_TS,
     HUMAN,
     LATE_MATCH,
@@ -158,6 +161,33 @@ def test_manifest_totals_and_match_entry(built):
     }
 
 
+def test_days_are_listed_by_date_not_by_folder_name(tmp_path):
+    walk = [(0, "Position"), (5, "Position")]
+    rows = frame(on_day(10, HUMAN, MATCH, walk), on_day(9, HUMAN, OTHER_MATCH, walk))
+    report = build(make_raw(tmp_path / "player_data", rows), tmp_path / "out", tmp_path / "fixtures")
+    assert [day["id"] for day in read(tmp_path / "out" / "manifest.json")["days"]] == ["February_9", "February_10"]
+    assert list(report["matches_by_day"].items()) == [("February_9", 1), ("February_10", 1)]
+
+
+def test_february_29_is_a_day_folder(tmp_path):
+    leap_day = 64_668_039  # seconds from FIRST_TS to 2028-02-29 00:00:00 UTC
+    walk = [(leap_day, "Position", 10.0, -20.0), (leap_day + 5, "Position", 15.0, -20.0)]
+    raw = make_raw(tmp_path / "player_data", rows_of("February_29", HUMAN, MATCH, walk))
+    build(raw, tmp_path / "out", tmp_path / "fixtures")
+    assert read(tmp_path / "out" / "manifest.json")["days"] == [{"id": "February_29", "date": "2028-02-29", "partial": False, "matches": 1}]
+
+
+def test_manifest_keeps_the_matches_of_a_map_together_when_another_map_starts_earlier(tmp_path):
+    rows = frame(
+        rows_of("February_10", HUMAN, MATCH, [(30, "Position"), (35, "Position")]),
+        rows_of("February_10", OTHER_HUMAN, OTHER_MATCH, [(0, "Position"), (5, "Position")], map_id="Lockdown"),
+        rows_of("February_10", OTHER_HUMAN, THIRD_MATCH, [(60, "Position"), (65, "Position")]),
+    )
+    build(make_raw(tmp_path / "player_data", rows), tmp_path / "out", tmp_path / "fixtures")
+    listed = [(match["map"], match["id"]) for match in read(tmp_path / "out" / "manifest.json")["matches"]]
+    assert listed == [("AmbroseValley", "aaaaaaaa"), ("AmbroseValley", "cccccccc"), ("Lockdown", "bbbbbbbb")]
+
+
 def test_manifest_lists_matches_by_map_then_by_start(built):
     manifest = read(built[0] / "out" / "manifest.json")
     listed = [(m["id"], m["start"] - FIRST_TS, m["span"]) for m in manifest["matches"]]
@@ -190,11 +220,18 @@ def test_manifest_maps_and_days(built):
     ]
 
 
+def on_day(day, user_id, match_id, moves, map_id="AmbroseValley"):
+    """A file in the folder February_<day> that walks along x at (second, event) of that very day."""
+    since_the_10th = (day - 10) * DAY
+    events = [(since_the_10th + second, event, 10.0 + second, -20.0) for second, event in moves]
+    return rows_of(f"February_{day}", user_id, match_id, events, map_id)
+
+
 def test_partial_day_is_flagged_and_has_to_be_the_last(tmp_path):
-    raw = make_raw(tmp_path / "player_data", rows_of("February_14", HUMAN, MATCH, [(0, "Position"), (5, "Position")]))
+    raw = make_raw(tmp_path / "player_data", on_day(14, HUMAN, MATCH, [(0, "Position"), (5, "Position")]))
     build(raw, tmp_path / "out", tmp_path / "fixtures")
     assert [(day["id"], day["partial"]) for day in read(tmp_path / "out" / "manifest.json")["days"]] == [("February_14", True)]
-    write_files(raw, rows_of("February_15", HUMAN, OTHER_MATCH, [(0, "Position")]))
+    write_files(raw, on_day(15, HUMAN, OTHER_MATCH, [(0, "Position")]))
     with pytest.raises(ValueError, match="'February_14'\\] is marked as a partial day in PARTIAL_DAYS but is not the last day folder"):
         build(raw, tmp_path / "out", tmp_path / "fixtures")
 
@@ -216,6 +253,45 @@ def test_minimap_wider_than_the_limit_is_downscaled_keeping_its_aspect(tmp_path,
     for entry in read(tmp_path / "out" / "manifest.json")["maps"]:
         with Image.open(tmp_path / "out" / entry["minimap"]["file"]) as image:
             assert image.size == (entry["minimap"]["width"], entry["minimap"]["height"]) == downscaled[entry["id"]]
+
+
+def test_minimap_wider_than_2048_pixels_is_downscaled_to_2048(tmp_path):
+    raw = make_raw(tmp_path / "player_data", dataset())
+    Image.new("RGB", (4096, 8), (30, 60, 90)).save(raw / "minimaps" / MAPS["AmbroseValley"].minimap_file)
+    build(raw, tmp_path / "out", tmp_path / "fixtures")
+    minimaps = {entry["id"]: entry["minimap"] for entry in read(tmp_path / "out" / "manifest.json")["maps"]}
+    assert (minimaps["AmbroseValley"]["width"], minimaps["AmbroseValley"]["height"]) == (2048, 4)
+    assert (minimaps["GrandRift"]["width"], minimaps["GrandRift"]["height"]) == (40, 38)
+
+
+def test_journeys_are_listed_by_match_then_humans_by_public_id_then_bots_by_number(tmp_path):
+    walk, bot_walk = [(0, "Position"), (5, "Position")], [(5, "BotPosition"), (10, "BotPosition")]
+    rows = frame(
+        rows_of("February_10", OTHER_HUMAN, MATCH, walk),
+        rows_of("February_11", HUMAN, MATCH, walk),  # the same match, filed under another day folder
+        rows_of("February_10", "1429", MATCH, walk),  # an anonymous human: a number as id, Position rows
+        rows_of("February_10", "999", MATCH, bot_walk),
+        rows_of("February_10", "0", MATCH, bot_walk),
+        rows_of("February_10", HUMAN, OTHER_MATCH, walk),
+        rows_of("February_10", "7", OTHER_MATCH, bot_walk),
+    )
+    build(make_raw(tmp_path / "player_data", rows), tmp_path / "out", tmp_path / "fixtures")
+    assert [journey["id"] for journey in read(tmp_path / "out" / "maps" / "AmbroseValley.json")["journeys"]] == [
+        "aaaaaaaa-anon",
+        "aaaaaaaa-1a2b3c4d",
+        "aaaaaaaa-9f8e7d6c",
+        "aaaaaaaa-bot0",
+        "aaaaaaaa-bot999",
+        "bbbbbbbb-1a2b3c4d",
+        "bbbbbbbb-bot7",
+    ]
+
+
+def test_row_exactly_on_the_edge_of_the_minimap_is_on_the_map(tmp_path):
+    corners = [(0, "Position", -370.0, -473.0), (5, "Position", 530.0, 427.0)]
+    build(make_raw(tmp_path / "player_data", rows_of("February_10", HUMAN, MATCH, corners)), tmp_path / "out", tmp_path / "fixtures")
+    (journey,) = read(tmp_path / "out" / "maps" / "AmbroseValley.json")["journeys"]
+    assert (journey["u"], journey["v"]) == ([0, 65_535], [0, 65_535])
 
 
 def test_journeys_of_a_match_are_listed_humans_first_then_bots_by_number(built):
@@ -290,6 +366,22 @@ def test_fixture_points_are_the_extremes_of_each_map_on_its_own_image_size(built
     assert (points["Lockdown, largest z"]["x"], points["Lockdown, largest z"]["z"]) == (1.0, 1.0)
     assert points["Lockdown, smallest z"]["z"] == -20.0
     assert (points["Lockdown, largest x"]["x"], points["Lockdown, smallest x"]["x"]) == (50.0, 1.0)
+
+
+def test_fixture_points_carry_u_and_v_and_the_constants_of_a_map_with_two_different_origins(built):
+    fixtures = read(built[0] / "fixtures" / "projection.json")
+    points = {point["name"]: point for point in fixtures["points"]}
+    example, rift = points["README worked example"], points["GrandRift, largest x"]
+    assert (example["u"], example["v"]) == (0.076166667, 0.1305)
+    assert (rift["u"], rift["v"]) == (0.559380379, 0.464716007)
+    assert fixtures["maps"]["AmbroseValley"] == {"scale": 900.0, "origin_x": -370.0, "origin_z": -473.0}
+
+
+def test_fixture_elevation_is_what_its_code_decodes_to(tmp_path):
+    rows = rows_of("February_10", HUMAN, MATCH, [(0, "Position"), (5, "Position")]).assign(y=np.float32(8.14))
+    build(make_raw(tmp_path / "player_data", rows), tmp_path / "out", tmp_path / "fixtures")
+    point = read(tmp_path / "fixtures" / "projection.json")["points"][1]
+    assert (round(point["y"], 2), point["y_code"], point["y_from_code"]) == (8.14, 81, 8.1)
 
 
 def test_fixture_points_carry_the_integer_codes_and_what_they_decode_to(built):
@@ -397,8 +489,9 @@ def test_build_refuses_to_write_a_full_id(tmp_path, monkeypatch):
 
     monkeypatch.setattr(build_data, "journey_table", leaky)
     raw = make_raw(tmp_path / "player_data", dataset())
-    with pytest.raises(ValueError, match="AmbroseValley.json would contain a full id: 1a2b3c4d..."):
+    with pytest.raises(ValueError) as failure:
         build(raw, tmp_path / "out", tmp_path / "fixtures")
+    assert str(failure.value) == "AmbroseValley.json would contain a full id: 1a2b3c4d..."
     assert written(tmp_path) == []
 
 
@@ -408,6 +501,52 @@ def test_bundle_over_the_size_limit_fails_the_build_before_anything_is_written(t
     with pytest.raises(ValueError, match="map bundles over 50 bytes gzipped"):
         build(raw, tmp_path / "out", tmp_path / "fixtures")
     assert written(tmp_path) == []
+
+
+def test_size_limit_is_on_the_gzipped_size_and_a_bundle_exactly_at_the_limit_passes(tmp_path, monkeypatch):
+    raw = make_raw(tmp_path / "player_data", dataset())
+    sizes = build(raw, tmp_path / "out", tmp_path / "fixtures")["bundles"]
+    content = (tmp_path / "out" / "maps" / "AmbroseValley.json").read_bytes()
+    largest = len(gzip.compress(content, mtime=0))
+    assert sizes["AmbroseValley"] == {"bytes": len(content), "gzip_bytes": largest}
+    assert largest < len(content) and largest == max(size["gzip_bytes"] for size in sizes.values())
+    monkeypatch.setattr(build_data, "MAX_BUNDLE_GZIP_BYTES", largest)
+    build(raw, tmp_path / "out", tmp_path / "fixtures")
+    monkeypatch.setattr(build_data, "MAX_BUNDLE_GZIP_BYTES", largest - 1)
+    with pytest.raises(ValueError, match="gzipped: \\['AmbroseValley'\\]"):
+        build(raw, tmp_path / "out", tmp_path / "fixtures")
+
+
+def counted_from_zero():
+    rows = rows_of("February_12", OTHER_HUMAN, OTHER_MATCH, [(0, "Position"), (5, "Position")])
+    return rows.assign(ts=rows["ts"] - rows["ts"].min())
+
+
+def two_maps_in_one_file():
+    rows = rows_of("February_12", OTHER_HUMAN, THIRD_MATCH, [(0, "Position"), (5, "Position")])
+    rows.loc[1, "map_id"] = "Lockdown"
+    return rows
+
+
+def two_matches_in_one_file():
+    rows = rows_of("February_12", OTHER_HUMAN, OTHER_MATCH, [(0, "Position"), (5, "Position")])
+    rows.loc[1, "match_id"] = THIRD_MATCH
+    return rows
+
+
+def third_copy_with_another_user_in_one_row():
+    rows = rows_of("February_12", HUMAN, MATCH, HUMAN_EVENTS)
+    rows.loc[1, "user_id"] = OTHER_HUMAN
+    return rows
+
+
+def two_rows_off_the_map():
+    return rows_of("February_10", OTHER_HUMAN, MATCH, [(0, "Position", 9999.0, 0.0), (5, "Position", 8888.0, 0.0)])
+
+
+def same_date_in_two_folders():
+    on_the_9th = on_day(9, OTHER_HUMAN, OTHER_MATCH, [(0, "Position")])
+    return frame(on_the_9th, on_the_9th.assign(day="February_09", file=f"February_09/{OTHER_HUMAN}_{OTHER_MATCH}"))
 
 
 def in_milliseconds():
@@ -434,6 +573,30 @@ def two_ids_in_one_file():
         (two_ids_in_one_file(), "a file holds several user, match or map ids"),
         (renamed_file(), "a file is not named <user_id>_<match_id>"),
         (rows_of("February_12", "guest", OTHER_MATCH, [(0, "Position")]), "neither a UUID nor a number"),
+        (rows_of("February_12", OTHER_HUMAN, OTHER_MATCH, [(0, "Position")]).assign(y=np.float32("inf")), "null or non-finite values"),
+        (two_maps_in_one_file(), "a file holds several user, match or map ids"),
+        (two_matches_in_one_file(), "a file holds several user, match or map ids"),
+        (third_copy_with_another_user_in_one_row(), "raw data check failed: a file holds several user, match or map ids"),
+        (counted_from_zero(), "ts runs from 0 to 1770727201, which is not Unix seconds"),
+        (two_rows_off_the_map(), "2 rows are off the minimap, e.g. x 9999.0, z 0.0"),
+        (
+            rows_of("February_10", "1444", MATCH, [(5, "BotPosition"), (10, "BotPosition")], map_id="GrandRift"),
+            "1 matches are on several maps, e.g. aaaaaaaa.nakama-0",
+        ),
+        (
+            rows_of("February_10", OTHER_HUMAN, MATCH, [(5, "BotPosition"), (10, "BotPosition")]),
+            "1 bot journeys carry an account id instead of a number, e.g. February_10/9f8e7d6c_aaaaaaaa.nakama-0",
+        ),
+        (
+            rows_of("February_12", OTHER_HUMAN, OTHER_MATCH, [(0, "Position")]),  # written on the 10th, filed two days later
+            "1 files hold rows that are not from their day folder's date or the day before, "
+            "e.g. February_12/9f8e7d6c_bbbbbbbb.nakama-0 \\(last row 2026-02-10\\)",
+        ),
+        (
+            rows_of("February_9", OTHER_HUMAN, OTHER_MATCH, [(0, "Position")]),  # written on the 10th, filed a day early
+            "e.g. February_9/9f8e7d6c_bbbbbbbb.nakama-0 \\(last row 2026-02-10\\)",
+        ),
+        (same_date_in_two_folders(), "several day folders stand for one date: {'February_09': '2026-02-09', 'February_9': '2026-02-09',"),
         (rows_of("unsorted", OTHER_HUMAN, OTHER_MATCH, [(0, "Position")]), "not day folders such as February_10: \\['unsorted'\\]"),
         (in_milliseconds(), "which is not Unix seconds"),
         (
@@ -448,6 +611,81 @@ def test_build_fails_on_data_it_was_not_built_for(tmp_path, extra, message):
     with pytest.raises(ValueError, match=message):
         build(raw, tmp_path / "out", tmp_path / "fixtures")
     assert written(tmp_path) == []
+
+
+def test_build_fails_on_something_in_the_data_folder_that_the_loader_does_not_read(tmp_path):
+    raw = make_raw(tmp_path / "player_data", dataset())
+    (raw / "README.md").write_text("what the dataset says about itself")
+    (raw / f"1444_{MATCH}").write_bytes(b"a data file beside the day folders")
+    (raw / "February_10" / "February_10").mkdir()
+    message = "neither a day folder's file nor the README: \\['1444_aaaaaaaa.nakama-0', 'February_10/February_10'\\]"
+    with pytest.raises(ValueError, match=message):
+        build(raw, tmp_path / "out", tmp_path / "fixtures")
+    assert written(tmp_path) == []
+
+
+def test_build_fails_on_a_file_that_has_both_magics_but_cannot_be_read(tmp_path):
+    raw = make_raw(tmp_path / "player_data", dataset())
+    (raw / "February_10" / "hollow.nakama-0").write_bytes(b"PAR1" + bytes(20) + b"PAR1")
+    with pytest.raises(ValueError, match="1 files are not readable Parquet, e.g. February_10/hollow.nakama-0: OSError") as failure:
+        build(raw, tmp_path / "out", tmp_path / "fixtures")
+    assert "expected schema" not in str(failure.value) and "hold no rows" not in str(failure.value)
+    assert written(tmp_path) == []
+
+
+def test_build_fails_on_a_file_that_can_be_read_but_does_not_start_with_the_magic(tmp_path):
+    raw = make_raw(tmp_path / "player_data", dataset())
+    path = raw / "February_10" / f"999_{MATCH}"
+    path.write_bytes(b"XXXX" + path.read_bytes()[4:])
+    with pytest.raises(ValueError, match="1 files are not readable Parquet, e.g. February_10/999_aaaaaaaa.nakama-0: no PAR1 magic bytes"):
+        build(raw, tmp_path / "out", tmp_path / "fixtures")
+    assert written(tmp_path) == []
+
+
+@pytest.mark.skipif(os.geteuid() == 0, reason="root can read any file")
+def test_main_reports_a_file_it_may_not_open_without_a_traceback_and_without_its_full_id(tmp_path, monkeypatch):
+    raw = make_raw(tmp_path / "player_data", dataset())
+    (raw / "February_10" / f"{HUMAN}_{MATCH}").chmod(0)
+    with pytest.raises(SystemExit) as stopped:
+        run_main(monkeypatch, tmp_path, raw, profile_file(tmp_path))
+    message = str(stopped.value.code)
+    assert "1 files are not readable Parquet, e.g. February_10/1a2b3c4d_aaaaaaaa.nakama-0: PermissionError" in message
+    assert HUMAN not in message and MATCH not in message
+
+
+@pytest.mark.parametrize(
+    ("content", "message"),
+    [
+        ("not json at all", "profile_report.json is not a profile report: Expecting value"),
+        ("[1, 2]", "profile_report.json is not a profile report: it has no metrics"),
+    ],
+)
+def test_main_names_a_profile_file_that_is_not_a_profile_report(tmp_path, monkeypatch, content, message):
+    raw = make_raw(tmp_path / "player_data", dataset())
+    profile = tmp_path / "profile_report.json"
+    profile.write_text(content)
+    with pytest.raises(SystemExit) as stopped:
+        run_main(monkeypatch, tmp_path, raw, profile)
+    assert str(stopped.value.code).startswith("build failed, nothing was written: ") and message in str(stopped.value.code)
+    assert written(tmp_path) == ["profile_report.json"]
+
+
+def test_main_reports_a_minimap_that_is_not_an_image_and_a_profile_that_is_a_folder(tmp_path, monkeypatch):
+    raw = make_raw(tmp_path / "player_data", dataset())
+    with pytest.raises(SystemExit) as stopped:
+        run_main(monkeypatch, tmp_path, raw, tmp_path)
+    assert str(stopped.value.code).startswith("build failed, nothing was written: ")
+    (raw / "minimaps" / MAPS["GrandRift"].minimap_file).write_text("not an image")
+    with pytest.raises(SystemExit) as stopped:
+        run_main(monkeypatch, tmp_path, raw, profile_file(tmp_path))
+    assert "build failed, nothing was written: cannot identify image file" in str(stopped.value.code)
+    assert written(tmp_path) == ["profile_report.json"]
+
+
+def test_build_names_a_day_folder_that_is_no_day_of_its_year(tmp_path):
+    raw = make_raw(tmp_path / "player_data", rows_of("February_29", HUMAN, MATCH, [(0, "Position")]))
+    with pytest.raises(ValueError, match="folder 'February_29' is not a day of 2026 named like February_10"):
+        build(raw, tmp_path / "out", tmp_path / "fixtures")
 
 
 def test_build_fails_on_an_unreadable_file_and_says_why(tmp_path):

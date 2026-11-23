@@ -8,7 +8,9 @@ The other tests hold what docs/DATA_FORMAT.md promises the app.
 """
 import gzip
 import json
+import re
 from collections import Counter
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -186,3 +188,51 @@ def test_projection_fixture_agrees_with_the_projection_code(manifest):
         assert (point["px"], point["py"]) == pytest.approx((px, py), abs=1e-5), point["name"]
         assert abs(point["px_from_codes"] - px) < 0.05 and abs(point["py_from_codes"] - py) < 0.05, point["name"]
         assert abs(point["x_from_codes"] - point["x"]) < 0.01 and abs(point["z_from_codes"] - point["z"]) < 0.01, point["name"]
+
+
+def test_matches_days_and_journeys_are_in_the_documented_order(manifest, journeys):
+    matches = [(match["map"], match["start"], match["id"]) for match in manifest["matches"]]
+    assert matches == sorted(matches)
+    assert [day["date"] for day in manifest["days"]] == sorted(day["date"] for day in manifest["days"])
+    for entry in manifest["maps"]:
+        listed = [journey for journey in journeys if journey["map"] == entry["id"]]
+        bots = [(journey["match"], int(journey["player"])) for journey in listed if journey["actor"] == "bot"]
+        assert [journey["match"] for journey in listed] == sorted(journey["match"] for journey in listed), entry["id"]
+        assert bots == sorted(bots), entry["id"]
+        for earlier, later in zip(listed, listed[1:]):
+            assert not (earlier["match"] == later["match"] and earlier["actor"] == "bot" and later["actor"] == "human"), later["id"]
+
+
+def test_projection_fixture_holds_u_v_elevation_and_the_map_constants_of_the_pipeline(manifest):
+    fixture = read(ROOT / "web" / "src" / "lib" / "__fixtures__" / "projection.json")
+    constants = {map_id: {"scale": cfg.scale, "origin_x": cfg.origin_x, "origin_z": cfg.origin_z} for map_id, cfg in MAPS.items()}
+    assert fixture["maps"] == constants
+    per_unit = manifest["encoding"]["elevation_steps_per_unit"]
+    for point in fixture["points"]:
+        assert (point["u"], point["v"]) == pytest.approx(world_to_uv(point["map"], point["x"], point["z"]), abs=1e-9), point["name"]
+        if "y" in point:
+            assert point["y_from_code"] == point["y_code"] / per_unit and abs(point["y_from_code"] - point["y"]) <= 0.05, point["name"]
+
+
+def test_numbers_quoted_in_the_data_format_document(manifest, journeys):
+    ids = [match["id"] for match in manifest["matches"]]
+    assert sum(match_id.isdigit() for match_id in ids) == 14
+    assert sum(bool(re.fullmatch(r"\d+e\d+", match_id)) for match_id in ids) == 13
+    digit_ids = [journey["player"] for journey in journeys if journey["actor"] == "human" and (journey["player"] or "").isdigit()]
+    assert (len(digit_ids), len(set(digit_ids))) == (21, 10)
+    date_of = {day["id"]: day["date"] for day in manifest["days"]}
+    started = {match["id"]: datetime.fromtimestamp(match["start"], timezone.utc).date().isoformat() for match in manifest["matches"]}
+    assert sorted(match["id"] for match in manifest["matches"] if started[match["id"]] != date_of[match["day"]]) == [
+        "7364fb6c",
+        "7971ea81",
+        "ac049b28",
+        "de642f4b",
+        "e325a53a",
+    ]
+    deaths = manifest["event_groups"]["death"] + manifest["event_groups"]["storm_death"]
+    names_after_death = []
+    for journey in journeys:
+        died = next((index for index, code in enumerate(journey["e"]) if code in deaths), None)
+        if died is not None:
+            names_after_death += [manifest["events"][code] for code in journey["e"][died + 1 :]]
+    assert names_after_death == ["BotKill", "BotKill"]

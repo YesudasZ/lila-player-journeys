@@ -86,7 +86,7 @@ Measured unless marked as an assumption (A1 to A8 in DATA_NOTES.md).
 
 ## Coding conventions
 
-- **Python:** type hints, small pure functions, pathlib, no bare `except`, no notebooks. Tests in `pipeline/tests/` must run without the raw data.
+- **Python:** type hints, small pure functions, pathlib, no bare `except`, no notebooks, no line over 140 characters (a test checks it). Tests in `pipeline/tests/` must run without the raw data.
 - **TypeScript:** `strict`, no `any`, pure functions in `web/src/lib/` with Vitest tests, small components, state in Zustand, the playback clock outside React.
 - **Styling:** Tailwind v4 with the tokens below only; no ad-hoc hex values in components.
 - **Docs:** short, tables where they help, real numbers only, each number traceable to `docs/profile/`.

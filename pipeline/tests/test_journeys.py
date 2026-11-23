@@ -141,10 +141,31 @@ def test_match_filed_under_two_day_folders_belongs_to_the_later_date():
     assert match_table(table).loc[MATCH[:8], ["day", "date"]].tolist() == ["February_10", "2026-02-10"]
 
 
-def test_match_on_two_maps_is_rejected():
+def test_match_on_two_maps_is_rejected_and_named_by_its_public_id():
     table = journeys_of(rows_of("February_10", HUMAN, MATCH, WALK), rows_of("February_10", "1440", MATCH, BOT_WALK, map_id="GrandRift"))
-    with pytest.raises(ValueError, match="1 matches are on several maps, e.g. aaaaaaaa"):
+    with pytest.raises(ValueError) as failure:
         check_journeys(table)
+    assert str(failure.value) == "1 matches are on several maps, e.g. aaaaaaaa.nakama-0"
+
+
+def test_bot_journey_under_an_account_id_is_rejected():
+    table = journeys_of(rows_of("February_10", HUMAN, MATCH, WALK), rows_of("February_10", OTHER_HUMAN, MATCH, BOT_WALK))
+    with pytest.raises(ValueError) as failure:
+        check_journeys(table)
+    assert str(failure.value) == "1 bot journeys carry an account id instead of a number, e.g. February_10/9f8e7d6c_aaaaaaaa.nakama-0"
+
+
+def test_storm_deaths_and_loot_of_a_bot_are_counted_too():
+    bot = rows_of("February_10", "1440", MATCH, BOT_WALK + [(11, "Loot"), (12, "KilledByStorm")])
+    table = match_table(journeys_of(rows_of("February_10", HUMAN, MATCH, WALK), bot))
+    assert table.loc[MATCH[:8], ["storm_deaths", "loot", "deaths", "bot_deaths"]].tolist() == [1, 1, 0, 0]
+
+
+def test_bot_number_equal_to_a_public_player_id_is_not_a_collision():
+    digits_only = "12345678" + HUMAN[8:]
+    table = journeys_of(rows_of("February_10", digits_only, MATCH, WALK), rows_of("February_10", "12345678", MATCH, BOT_WALK))
+    check_journeys(table)
+    assert sorted(table["id"]) == ["aaaaaaaa-12345678", "aaaaaaaa-bot12345678"]
 
 
 def test_colliding_public_player_ids_are_rejected():
