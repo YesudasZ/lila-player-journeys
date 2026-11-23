@@ -1,10 +1,10 @@
 # Progress Log
 
-Last updated: 2026-11-23 17:43 IST
+Last updated: 2026-11-23 19:23 IST
 
 ## Current phase
 
-Phase 3, App shell and map canvas. Status: **IN PROGRESS** on the branch `phase-3-app-shell` (no pull request yet)
+Phase 3, App shell and map canvas. Status: **DONE (awaiting my review)** on the branch `phase-3-app-shell`, last code commit `73cb25f`. Not pushed yet: the push and the pull request wait for the user's yes.
 
 Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 
@@ -14,7 +14,7 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 |---|---|---|---|
 | 1 | Data discovery and repo setup | APPROVED | `bc63f0e` |
 | 2 | Pipeline | APPROVED | `ccc2369` |
-| 3 | App shell and map canvas (ends with the first deployment, step 9.1) | IN PROGRESS | branch `phase-3-app-shell` |
+| 3 | App shell and map canvas (ends with the first deployment, step 9.1) | DONE (awaiting my review) | branch `phase-3-app-shell`, `73cb25f`; pull request not opened yet |
 | 4 | Journeys, humans versus bots, markers | NOT STARTED | |
 | 5 | Filters and URL state | NOT STARTED | |
 | 6 | Timeline and playback | NOT STARTED | |
@@ -30,24 +30,24 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 
 Phase 3 deliverables, the screen design, the package versions and the acceptance criteria are in PLAN.md, "Phase 3". The task list of Phase 2 is in the history of this file (`git log -p docs/PROGRESS.md`).
 
-- [x] 3.0 Plan approved by the user on 23 Nov (plan mode). Decided: ESLint with TypeScript 6.0.3; double-click zooms in; the artwork is fitted, with its box written into the manifest by the pipeline; fonts bundled; a two-agent review at the end. Branch cut from `main` at `24559ce`. Nothing installed yet
-- [x] 3.1 Pipeline: `black_surround` now lives in `pipeline/minimap.py` (one implementation, also used by the proof images); `artwork_box` gives each minimap's artwork as fractions of the image; the manifest holds it as `minimap.artwork`. Boxes: Ambrose Valley 0.022 / 0.0396 / 0.8037 / 0.9517, Grand Rift 0.0767 / 0.1911 / 0.9556 / 0.8773, Lockdown 0.0605 / 0.0327 / 0.8989 / 0.8926 (left / top / right / bottom), pinned in `test_committed_data.py`, which also checks that every recorded position lies inside its box. 237 tests; `make data` changed only `manifest.json`; `make overlay` output unchanged
-- [x] 3.2 `web/` scaffolded: 21 packages at exactly the approved versions (239 in the lockfile), TypeScript 6.0.3 strict, ESLint 10 with type-aware rules and the React hooks rules, Vitest, Tailwind v4 with the LILA Night tokens and no default palette, fonts bundled. `npm run check` and `npm run build` pass (JavaScript 75 kB gzipped)
-- [x] 3.3 `web/src/lib/`: `projection.ts`, `view.ts`, `scaleBar.ts`, `manifest.ts`; 111 Vitest tests. All 13 fixture points match from their integer codes
+- [x] 3.0 Plan approved by the user on 23 Nov (plan mode). Decided: ESLint with TypeScript 6.0.3; double-click zooms in; the artwork is fitted, with its box written into the manifest by the pipeline; fonts bundled; a two-agent review at the end. Branch cut from `main` at `24559ce`
+- [x] 3.1 Pipeline: `black_surround` now lives in `pipeline/minimap.py` (one implementation, also used by the proof images); `artwork_box` gives each minimap's artwork as fractions of the image; the manifest holds it as `minimap.artwork`. Boxes: Ambrose Valley 0.022 / 0.0396 / 0.8037 / 0.9517, Grand Rift 0.0767 / 0.1911 / 0.9556 / 0.8773, Lockdown 0.0605 / 0.0327 / 0.8989 / 0.8926 (left / top / right / bottom), pinned in `test_committed_data.py`, which also checks that every recorded position lies inside its box. `make data` changed only `manifest.json`; `make overlay` output unchanged
+- [x] 3.2 `web/` scaffolded: 21 packages at exactly the approved versions (239 in the lockfile), TypeScript 6.0.3 strict, ESLint 10 with type-aware rules and the React hooks rules, Vitest, Tailwind v4 with the LILA Night tokens and no default palette, fonts bundled
+- [x] 3.3 `web/src/lib/`: `projection.ts`, `view.ts`, `scaleBar.ts`, `manifest.ts`, and after the review `readout.ts` and `mapKeys.ts`. All 13 fixture points match from their integer codes
 - [x] 3.4 `state/store.ts` (Zustand) and `data/`: the manifest, then the open map's image, then the other two; a retry after a failure asks the server afresh
-- [x] 3.5 Components: `TopBar`, `MapTabs`, `MapPanel`, `MapView` with `mapSurface.ts` (plain DOM code: canvas in device pixels, wheel, drag, double-click, keys), `MapReadout`, `ZoomControls`, `StatusMessage`
-- [x] 3.7 Checked in the preview pane at 1280 x 800 on all three maps: the artwork fits; the README's example point reads x -302, z -354 under the cursor (1 screenshot pixel is 2 units there); wheel zoom and drag keep the point under the cursor; double-click, the keys `+ - 0` and the arrows, and the three buttons work, with the buttons unavailable at their limits; tabs by click and by arrow keys; keyboard focus ring on the map; both error states with "Try again"; no console error. No screenshot files: the preview's screenshots cannot be written into the repo (see Known issues)
+- [x] 3.5 Components: `TopBar`, `MapTabs`, `MapPanel`, `MapView` with `mapSurface.ts` (plain DOM code: canvas in device pixels, wheel, drag, double-click, keys), `MapReadout`, `ZoomControls`, `StatusMessage`, `ErrorBoundary`
 - [x] 3.6 CI: a second job (`npm ci`, `npm run check`, `npm run build` on Node 22); `checkout`, `setup-python` and `setup-node` at v7. Not run yet: it runs on the pull request
-- [ ] 3.7 Check in the preview pane on all three maps; screenshots for the pull request
-- [ ] 3.8 Independent review with two agents, launched 17:43 IST as background workflow `phase3-review` (behaviour in a real browser and view maths; code quality and accessibility). Results not in yet; fixes follow
-- [ ] 3.9 README "run the app", BRIEF.md statuses, phase-end checks; ask once to push the branch and open the pull request; stop
+- [x] 3.7 Checked in the preview pane at 1280 x 800 on all three maps: the artwork fits; the README's example point reads x -302, z -354 under the cursor (1 screenshot pixel is 2 units there); wheel zoom and drag keep the point under the cursor; double-click, the keys `+ - 0` and the arrows, and the three buttons work, with the buttons unavailable at their limits; tabs by click and by arrow keys; keyboard focus ring on the map; the error states; no console error. No screenshot files: the preview's screenshots cannot be written into the repo (see Known issues)
+- [x] 3.8 Independent review by two agents (behaviour in a real browser and view maths; code quality and accessibility). No blocker; 7 findings to fix and 25 small ones, several raised by both. Fixed in `f0ad05d`, `4df79b5` and `73cb25f`; what was left as it is, and why, is in PLAN.md's last section. Every fix was checked again in the preview with real clicks and keys, the three failure screens included (a data file moved away and put back; `git status` clean after). Raw result: `.local/phase3-review-result.raw`
+- [x] 3.9 README "run the app" and BRIEF.md statuses (`c78c13d`); PLAN.md and this file; phase-end checks pass
+- [ ] 3.10 On the user's yes: push the branch, open the pull request, record it here, read the first CI run (the app job and the v7 actions have not run yet). Then stop for the review
 
 ## Exactly where I stopped
 
 - Branch `phase-3-app-shell`, cut from `main` at `24559ce`; local only, nothing pushed. `main` equals `origin/main`.
-- Last completed: 3.1 to 3.5 and 3.7. The app runs: `cd web && npm run dev`. `npm run check` (111 tests), `npm run build` and `make test` (237 tests) pass.
-- In flight: 3.8, the review workflow `phase3-review` (two agents, read-only on the project; one drives the dev server on port 5183 in the preview pane). Its result goes to `.local/phase3-review-result.raw`.
-- **NEXT:** when the review reports: reproduce each finding, fix what holds, re-run `npm run check`, `npm run build` and `make test`, commit. Then 3.9 (README "run the app", BRIEF.md, phase-end checks, ask to push the branch and open the pull request).
+- Everything of Phase 3 is committed. At 19:23: `npm run check` (196 tests), `npm run build` and `make test` (237 tests) pass.
+- Waiting for the user's yes to push the branch and open the pull request.
+- **NEXT:** on yes: `git push -u origin phase-3-app-shell`; `gh pr create` into `main` (what the phase delivers, the evidence for each acceptance criterion, how to verify; no attribution line; say that no screenshots are attached and why); record the pull request here in one docs commit and push it; read the first CI run and repair the workflow if a set-up step fails. Then stop. After the user's merge and go: `git switch main`, `git pull --ff-only`, then step 9.1 (the user creates the Vercel project with root directory `web`).
 
 ## Decisions and assumptions made
 
@@ -76,10 +76,20 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 - The map surface is plain DOM code (`web/src/components/mapSurface.ts`), not React: it draws, listens and writes the read-out without a render. React renders the frame around it.
 - Double requests and slow image decodes seen in the preview pane were the pane running hidden, not the app.
 
+2026-11-23, from the Phase 3 review (each is in PLAN.md's last section and waits for the user's review):
+- The map's keys act while the focus is on the map or on one of its buttons, not on the map alone.
+- A failed load keeps its kind. No answer: "Try again", which stays in place while it runs; when it works, the focus goes to the map. A data file this version cannot read: "Reload". A fault in the page: a message from an error boundary. The reason goes to the console.
+- The manifest check also refuses values that would draw a wrong map: a size or scale of zero, an artwork box outside its image, two maps with one id, an event code that stands for no event.
+- `noUncheckedIndexedAccess` stays off: Phases 4 to 7 read typed arrays in tight loops, where every read would need a fallback that hides a fault instead of catching it. The manifest's shape is checked where it enters the app.
+- Minimap images stay in the store: nothing serialises it, and the URL of Phase 5 takes chosen fields.
+- Pinch on a touch screen and Safari's trackpad pinch are not handled; decided in Phase 8. Neither can be tried in the preview pane.
+- The elevation decoder left `projection.ts` until Phase 4 brings the tooltip that uses it (no dead code).
+- `mapSurface.ts` (events and drawing) has no unit test: that needs a DOM test library, a new dependency. Its logic moved to `web/src/lib/` with tests; the rest was checked in the preview with real input.
+
 2026-11-23, git flow (user's choice "Yes, per phase"):
 - From Phase 3 on, each phase is done on its own branch and reaches `main` through one pull request that the user merges after review ("Rebase and merge"). `main` holds reviewed work only; once Vercel is connected, `main` is what is live and each pull request gets a preview link. Pull request descriptions carry no attribution line. Step 9.1 (creating the Vercel project) moves to right after the Phase 3 pull request is merged.
 
-2026-11-23, from the Phase 2 review (each is described in PLAN.md's last section or in DATA_FORMAT.md, and waits for the user's review):
+2026-11-23, from the Phase 2 review (each is described in PLAN.md's last sections or in DATA_FORMAT.md, and waits for the user's review):
 - Every row is a point of its owner's path, not only the movement rows; a journey's path ends at its death row.
 - kills count Kill and BotKill rows; bots' kills are counted as `bot_kills`. Every marker is counted once in the manifest.
 - A journey has a `fate` from a closed list instead of the raw death event, and an `id`.
@@ -97,7 +107,7 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 2. The "Outside claims about this dataset, tested" table in DATA_NOTES.md shows that claims from outside were checked. Keep it, or drop it before submission?
 3. `/resume` is also the name of a built-in Claude Code command (reopen a past conversation). Keep the name, or rename it (for example `/where`)?
 4. At what hour on Thu 26 Nov is the submission due?
-5. The review asked for a linter and a type checker in CI (ruff and mypy, development-only dependencies). Add them? The code already keeps to one line length and has type hints, but nothing checks them. Not blocking.
+5. The Phase 2 review asked for a linter and a type checker in CI (ruff and mypy, development-only dependencies). Add them? The code already keeps to one line length and has type hints, but nothing checks them. Not blocking.
 
 ## Commands that work
 
@@ -105,22 +115,22 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 |---|---|---|
 | `unzip _inbox/player_data.zip -d data/raw` | restores the raw data | 2026-11-22 |
 | `make setup` | creates `.venv`, installs pinned dependencies | 2026-11-22, in a fresh clone |
-| `make test` | 237 tests, no raw data needed; creates `.venv` on first use |
-| `cd web && npm run check` | type check, ESLint and 111 Vitest tests | 2026-11-23 17:41 |
-| `cd web && npm run build` | production build into `web/dist/` (not committed) | 2026-11-23 17:41 |
-| `cd web && npm run dev` | the app on http://localhost:5173 | 2026-11-23 17:41 | 2026-11-23 13:16 |
+| `make test` | 237 tests, no raw data needed; creates `.venv` on first use | 2026-11-23 19:23 |
+| `cd web && npm run check` | type check, ESLint with no warning allowed, 196 Vitest tests | 2026-11-23 19:23 |
+| `cd web && npm run build` | production build into `web/dist/` (not committed); JavaScript 76 kB gzipped | 2026-11-23 19:23 |
+| `cd web && npm run dev` | the app on http://localhost:5173 | 2026-11-23 17:41 |
 | `make profile` | measures the raw data → `docs/profile/` (235 metrics) | 2026-11-23 13:10 |
 | `make data` | builds `web/public/data/` and the projection fixtures; writes nothing unless every check passes, the profile report included; 3 s | 2026-11-23 13:16 |
 | `make overlay` | proof images → `docs/img/`, about 30 s | 2026-11-23 13:10 |
 
-
 ## Known issues / TODO later
 
 - Commits stay local until the user approves each push.
+- CI: the app job and the `@v7` actions have not run yet; they run on the pull request. The versions were looked up on 23 Nov (checkout v7.0.1, setup-python v7.1.0, setup-node v7.1.0). Read the first run.
 - Screenshots for pull requests and for the walkthrough: the preview pane's screenshots are not files the repo can hold. Phase 10 needs a way to write them (Playwright, a development dependency: ask first).
-- The preview pane of this session reads `~/YesudasZ/.claude/launch.json`, where the entry `lila-web` (port 5183) was added. `.claude/launch.json` in this repo (entry `web`, port 5173) is for sessions started in this folder.
-- Usage: the 5-hour limit was reached on 23 Nov shortly before 17:00 IST while three planning agents ran next to a long conversation. Keep agent use low (a two-agent review per phase), and prefer a fresh session per phase, started with the resume protocol.
-- CI prints a warning, not a failure: `actions/checkout@v4` and `actions/setup-python@v5` target a deprecated Node version. Look up the current versions and update them with the next change to the workflow (Phase 3 adds `npm run check` to it).
+- The preview pane of this session reads `~/YesudasZ/.claude/launch.json`, where the entry `lila-web` (port 5183) was added. `.claude/launch.json` in this repo (entry `web`, port 5173) is for sessions started in this folder. Vite reloads the page when a file under `web/public/` changes, so a failure test that moves a data file away cannot show the retry working; set the failure in the app's own store instead.
+- Usage: the 5-hour limit was reached on 23 Nov shortly before 17:00 IST while three planning agents ran next to a long conversation, and the two-agent review of Phase 3 took about 40% of a window. Keep agent use low, and prefer a fresh session per phase, started with the resume protocol.
+- One of the reviewers' one-line faults is still not noticed by a test: removing the guard in `scaleBar` for `Math.log10` landing just under a whole number. No input reaches it in this JavaScript engine.
 - GitHub's "Contributors" box still showed two contributors on 2026-11-23 10:45 IST, about 11 hours after the rewrite was pushed; GitHub's API lists one. The user chose to wait. Recheck before submission (also a Phase 11 check). Fallbacks: recreate the repo, or GitHub Support.
 - `ARCHITECTURE.md` is a first draft of about 1,000 words. It has to fit one printed page by Phase 10: trim it then.
 - The README's map constants may be 1.5 to 2% too large in x on two maps (`docs/profile/crosscheck.md`, section 4). Kept as documented, by the user's decision.

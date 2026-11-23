@@ -27,7 +27,7 @@ pipeline/     offline data code: dataset.py (loader), clean.py (the four rules),
               encode.py, minimap.py, build_data.py (writes web/public/data/), profile_data.py and profile/ (measurements, one module per topic),
               verify_overlay.py (mapping proof), tests/
 analysis/     statistics behind INSIGHTS.md (Phase 10)
-web/          the app: src/lib/ (pure functions with their Vitest files), src/state/ (Zustand), src/data/ (loading), src/components/
+web/          the app: src/lib/ (pure functions with their Vitest files), src/state/ (Zustand), src/data/ (loading), src/testing/ (the committed manifest for tests), src/components/
               (React frame; mapSurface.ts is the plain DOM code that draws and handles input); public/data/ is written by `make data` and committed
 docs/         PROGRESS.md (status, single source of truth), BRIEF.md, DATA_NOTES.md, DATA_FORMAT.md (the files the app loads), PLAN.md, profile/ (measurements), img/ (mapping proof)
 .claude/      settings.json (permission rules), commands/resume.md

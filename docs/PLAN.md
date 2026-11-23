@@ -101,10 +101,12 @@ TypeScript is 6.0.3, not the newest 7.0.2: typescript-eslint 8.73 accepts TypeSc
 **Files**
 
 ```
-web/src/lib/         projection.ts, view.ts, scaleBar.ts, manifest.ts: pure functions, each with a Vitest file beside it
-web/src/state/       store.ts: manifest load state, selected map, one view per map (Zustand)
-web/src/data/        fetch of the manifest, loading of a minimap image
-web/src/components/  TopBar, MapTabs, MapView with useCanvasLayer, MapReadout, ZoomControls, StatusMessage
+web/src/lib/         projection.ts, view.ts, scaleBar.ts, manifest.ts, readout.ts, mapKeys.ts: pure functions, each with a Vitest file beside it
+web/src/state/       store.ts: manifest load state, selected map, one view per map (Zustand), with a test file
+web/src/data/        fetch of the manifest, loading of a minimap image, the kind of a failure
+web/src/components/  TopBar, MapTabs, MapPanel, MapView, MapReadout, ZoomControls, StatusMessage, ErrorBoundary;
+                     mapSurface.ts is plain DOM code: it draws the canvas and handles pointer, wheel and keys without a React render
+web/src/testing/     the committed manifest, for tests
 ```
 
 **The screen**
@@ -112,10 +114,10 @@ web/src/components/  TopBar, MapTabs, MapView with useCanvasLayer, MapReadout, Z
 - Page grid, fixed now so later phases slot in without moving the map: columns `320px | 1fr`, rows `48px | 1fr | auto`. In Phase 3 the map cell spans both columns. The sidebar (Phase 5) takes column 1 and the timeline (Phase 6) row 3; both are grid tracks, never overlays.
 - Top bar, 48 px, on `surface` with a `border` line below. Brand cell 320 px wide: "LILA BLACK" (Space Grotesk 600, 15 px, letter-spacing 0.08em) and "Player Journeys" (Inter 13 px, `text-muted`). The tabs start at x = 320.
 - Tabs: the three map names from the manifest, Inter 500 14 px. Rest: label `text-muted`. Hover: label `text` on a `surface-2` pill. Selected: label `text` and a 2 px `accent` line. Focus: 2 px `accent` outline. Left and Right move and wrap, Home and End jump; selection follows focus. No match count yet: it arrives with the match list in Phase 5.
-- Map cell on `bg`. The image is drawn with the `lighten` blend, so its pure black surround becomes exactly `bg` and no square edge shows. Cursor: crosshair, and a closed hand while dragging. The focus ring is drawn inside the cell: 2 px `accent` with 2 px `bg` inside it.
-- Bottom left, 16 px in: a fixed panel (216 by 54, `surface`, `border`, radius 6, JetBrains Mono 12 px) that the pointer passes through. Row 1: `x  123  z  −57` in whole world units, `—` when the pointer is off the image. Row 2: the scale bar and its label, for example `100 units`. The bar is the largest of 1, 2 or 5 times a power of ten that is at most 120 px long.
+- Map cell on `bg`. The image is drawn with the `lighten` blend, so its pure black surround becomes exactly `bg` and no square edge shows. Cursor: crosshair, and a closed hand while a drag moves the map. The focus ring is drawn inside the cell: 2 px `accent` with 2 px `bg` inside it.
+- Bottom left, 16 px in: a fixed panel (216 by 56, `surface`, `border`, radius 6, JetBrains Mono 12 px) that the pointer passes through. Row 1: `x  123  z  −57` in whole world units, `—` when the pointer is off the image. Row 2: the scale bar and its label, for example `100 units`. The bar is the largest of 1, 2 or 5 times a power of ten that is at most 120 px long.
 - Bottom right, 16 px in: zoom in over zoom out, then `Fit`; each 32 by 32. Tooltips: `Zoom in (+)`, `Zoom out (−)`, `Fit map to window (0)`. At a zoom limit the button is marked unavailable but stays focusable.
-- Centre of the cell: loading and error states. `Loading maps…`, `Loading Grand Rift…` (shown only after 250 ms). `The maps did not load` or `Grand Rift did not load`, then `Check your connection and try again.` and a `Try again` button. No spinner, no skeleton, no toast.
+- Centre of the cell: loading and error states. `Loading maps…`, `Loading Grand Rift…` (shown only after 250 ms). `The maps did not load` or `Grand Rift did not load`, then `Check your connection and try again.` and a `Try again` button, which stays in place while it runs; when the retry works, the keyboard focus goes to the map. A data file this version cannot read gets `The map data does not fit this version of the tool. Reload the page to get the current version.` and a `Reload` button. A fault in the page itself shows `Something went wrong` with `Reload`, not an empty page. The reason of a failure is written to the console. No spinner, no skeleton, no toast.
 - Page title: `Ambrose Valley · LILA BLACK Player Journeys`.
 
 Contrast of the tokens used (WCAG): `text` 16.25 and `text-muted` 6.73 on `surface`; `text-muted` 7.16 on `bg`; `accent` 4.60 on `surface` and 4.90 on `bg`. `border` is 1.4 on `bg`: decoration only, no control depends on it.
@@ -123,9 +125,9 @@ Contrast of the tokens used (WCAG): `text` 16.25 and `text-muted` 6.73 on `surfa
 **How the map view works**
 
 - A view is the image point at the centre of the viewport plus a zoom relative to "fit" (1 = the artwork fits with 24 px free on every side). It does not depend on the window size: a resize keeps the framing, and Phase 5 can put the view into the URL.
-- Wheel: zoom by `exp(-deltaY * 0.0015)` about the pointer, `0.01` for a trackpad pinch (wheel with ctrl). The listener is native and not passive, so the page neither scrolls nor zooms. Double-click: zoom in by 2 about the pointer. Buttons and `+` `-`: by 1.5 about the centre. Arrows: 64 px. `0` and Fit: back to fit. Keys act only without Ctrl, Cmd or Alt. A drag starts after 3 px.
-- Zoom runs from fit to 4 screen pixels per image pixel. The centre of the viewport is kept inside the artwork box, so the map cannot be lost.
-- The canvas is sized in device pixels and resized when the window moves to another screen. Layers are stacked canvases sharing one view; Phase 3 has one, the minimap.
+- Wheel: zoom by `exp(-deltaY * 0.0015)` about the pointer, `0.01` for a trackpad pinch (wheel with ctrl). The listener is native and not passive, so the page neither scrolls nor zooms. Double-click: zoom in by 2 about the pointer. Buttons and `+` `-`: by 1.5 about the centre. Arrows: 64 px. `0` and Fit: back to fit. Keys act only without Ctrl, Cmd or Alt, and while the focus is on the map or on one of its buttons. A drag starts after 3 px.
+- Zoom runs from fit to 4 screen pixels per image pixel. No side ever shows more empty space than the fitted map has there, so the centre of the viewport stays inside the artwork box and the map cannot be lost.
+- The canvas is sized in device pixels and resized when the window moves to another screen. Layers are stacked canvases sharing one view; Phase 3 has one, the minimap. From Phase 4 the surface holds a list of layers, one canvas and one draw function each, all drawn with the same view; a layer is redrawn when the view, the size or its own data changed, and a pointer that only moves redraws none.
 - Pan and zoom cause no React render: the canvas listens to the store, and the coordinates are written straight into the page.
 - Loading order: the manifest, the image of the open map (decoded before its first draw), then the other two. Each map remembers its view.
 - Accessibility: `header` with the `h1` and the tab list; `main` with one tab panel; the map is focusable, named after its map, with its keys described; the coordinates are not announced; loading is a status, an error an alert.
@@ -147,7 +149,7 @@ Contrast of the tokens used (WCAG): `text` 16.25 and `text-muted` 6.73 on `surfa
 - Path layer, cached per filter state. Humans: solid sky-blue line, round head. Bots: dashed orange line, square head.
 - Markers by shape and colour: kill, death, storm death, loot. Identical events at the same spot and second collapse into one marker with a count.
 - Loot markers are on in single-match view and off in all-matches view; the toggle is always visible in the legend.
-- Hover tooltip: event, who, time, world coordinates and elevation. An anonymous journey reads "human (no account id)". Click a journey to focus it and dim the rest. Legend.
+- Hover tooltip: event, who, time, world coordinates and elevation. An anonymous journey reads "human (no account id)". Click a journey to focus it and dim the rest. Legend. The decoder of an elevation code comes back into `projection.ts` with this tooltip, tested against the fixture's elevation codes (it left in Phase 3, where nothing used it).
 - Human or bot comes from the journey's `actor`, marker types from the manifest's `event_groups`; no event name or id pattern is repeated in the app.
 
 **Acceptance**, on three named matches: `fbbc5d02` (16 journeys, one of them anonymous), `a476eb57` (one journey, 218 rows), `5a081fe4` (ends in a storm death)
@@ -212,7 +214,7 @@ Contrast of the tokens used (WCAG): `text` 16.25 and `text-muted` 6.73 on `surfa
 
 ## Phase 8: Polish (1 h)
 
-**Deliverables:** an "About the data" panel in plain language (what the README gets wrong, what the tool does about it, what "anonymous" and "no death recorded" mean); loading and error states; visible focus and labels on every sidebar, top-bar and timeline control; a notice on small screens that the tool is built for desktop; a pass over all UI text.
+**Deliverables:** an "About the data" panel in plain language (what the README gets wrong, what the tool does about it, what "anonymous" and "no death recorded" mean); loading and error states; visible focus and labels on every sidebar, top-bar and timeline control; a notice on small screens that the tool is built for desktop; a pass over all UI text. From the Phase 3 review: the panel says that the read-out's `x` and `z` are the ground plane and `y` is height; the map's keys are shown where a sighted keyboard user finds them (today they are in the buttons' tooltips and in the text for screen readers); decide whether pinch on a touch screen and Safari's trackpad pinch are supported or named as limits in the desktop notice.
 
 **Acceptance:** Lighthouse performance at least 90 on the hosted URL (desktop preset); no console errors; sidebar, top bar and timeline fully usable by keyboard, including choosing a journey from the list.
 
@@ -300,3 +302,34 @@ Three independent reviewers checked Phase 2 (recomputation from the raw files, m
 | Phase 3: double-click resets the view | Double-click zooms in at the pointer; the Fit button and `0` reset | Approved with the Phase 3 plan on 23 Nov. It is what web maps do, an accidental double-click should not lose the place, and Phase 4 puts click-to-focus on the same surface |
 | Phase 3: the map is fitted to the screen | The artwork inside the image is fitted; the pipeline writes its box into the manifest | Approved with the Phase 3 plan. The artwork fills only part of each image: fitting it draws the maps 10%, 46% and 16% larger |
 | Every commit pushed to `main` | From Phase 3: one branch and one pull request per phase, merged by you after review; Vercel production follows `main` | Your decision on 23 Nov. Once the site is hosted, `main` is what the reviewers see, so it should hold reviewed work only |
+
+## Changed after the Phase 3 review (23 Nov 2026), for your review
+
+Two independent reviewers checked Phase 3. One drove the app in a real browser and tested the view maths (12,000 random zooms, 9,000 pans, 63 one-line faults put into the code). One read the code for quality and accessibility. No blocker; 7 findings to fix and 25 small ones, several raised by both. All are fixed except the rows of the second table.
+
+| Was | Now | Why |
+|---|---|---|
+| The map's keys act while the map has the focus | They act while the focus is on the map or on one of its buttons | A click on Zoom in moved the focus to the button, and the `+` its tooltip names did nothing |
+| One error message: "Check your connection and try again." | A data file this version cannot read says so and offers Reload; a fault in the page shows a message, not an empty page; the reason is written to the console | A retry cannot repair a file the app refuses, and nobody could see what was refused |
+| "Try again" left the page while it ran | It stays in place; when the retry works, the focus goes to the map | The keyboard focus fell back to the top of the page on every try |
+| The manifest check looked at kinds only | It also refuses a size or scale of zero, an artwork box outside its image, two maps with one id, an event code that stands for no event | These would draw a wrong or empty map without an error |
+| The read-out showed "—" until the pointer moved | It shows the position after a wheel turn or a press as well | A mouse resting on the map, and every tap, read "—" |
+| A drag ended only on release | It also ends when the button is no longer held or the capture is lost; a second finger does not take it over; the closed hand shows only once the map moves | The map could stay glued to the pointer; on a fitted map the hand closed and nothing moved |
+| Every pointer move redrew the canvas | Only a changed view or size does | Phases 4 and 7 stack more layers on the same view |
+| The tabs took Left and Right with any modifier | Keys held with Ctrl, Cmd or Alt stay the browser's | Alt+Left is Back on Windows and Linux |
+| Tests in `web/src/lib/` only (111) | The read-out's chain from pointer to world units, the key table and the zoom limits are pure functions with tests; the store has a test file (196 tests) | A swapped axis in the read-out or a reversed arrow key left the checks green. 25 one-line faults, the reviewers' among them, are now all noticed |
+| `eslint .` | `eslint . --max-warnings 0` | A missing effect dependency is only a warning |
+| Read-out panel 216 by 54 | 216 by 56 | The measured size |
+
+Left as it is:
+
+| Finding | Decision | Why |
+|---|---|---|
+| Turn on `noUncheckedIndexedAccess` | Stays off | Phases 4 to 7 read typed arrays in tight loops, where every read would need a fallback that hides a fault instead of catching it. The manifest's shape is checked where it enters the app |
+| Keep the minimap images out of the store | They stay | Nothing serialises the store; the URL of Phase 5 takes chosen fields |
+| Pinch on a touch screen, Safari's trackpad pinch | Not handled; decided in Phase 8 | Neither can be tried in the preview pane, and nothing ships untested. Wheel, drag, double-click, keys and buttons cover a desktop |
+| Label the read-out as world x and z on the ground plane | In the "About the data" panel (Phase 8) | The panel stays two short rows; `y` is height in this game's data |
+| A unit test for `mapSurface.ts` | None | It needs a DOM test library, a new dependency. Its logic moved to `web/src/lib/`; the events and the drawing were checked in the preview with real clicks and keys |
+| The guard in `scaleBar` for `Math.log10` landing just under a whole number | Kept, without a test | No input reaches it in this JavaScript engine; another engine may round differently |
+| The elevation decoder had no caller in the app | Removed until Phase 4 | It returns with the tooltip that shows elevation |
+| The `@v7` versions of the GitHub actions | Proven by the first run on the pull request | The versions were looked up on 23 Nov; only a run can confirm them |
