@@ -1,10 +1,10 @@
 # Progress Log
 
-Last updated: 2026-11-23 13:12 IST
+Last updated: 2026-11-23 13:16 IST
 
 ## Current phase
 
-Phase 2, Pipeline. Status: **IN PROGRESS**
+Phase 2, Pipeline. Status: **DONE (awaiting my review)**
 
 Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 
@@ -13,7 +13,7 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 | # | Phase | Status | Commit |
 |---|---|---|---|
 | 1 | Data discovery and repo setup | APPROVED | `bc63f0e` |
-| 2 | Pipeline | IN PROGRESS | |
+| 2 | Pipeline | DONE (awaiting my review) | `ccc2369` |
 | 3 | App shell and map canvas (ends with the first deployment, step 9.1) | NOT STARTED | |
 | 4 | Journeys, humans versus bots, markers | NOT STARTED | |
 | 5 | Filters and URL state | NOT STARTED | |
@@ -36,10 +36,10 @@ Phase 2 deliverables and acceptance numbers are in PLAN.md, "Phase 2".
 - [x] 2.4 `pipeline/build_data.py`: manifest, map bundles, minimaps, cleaning report, projection fixtures, validation; 14 end-to-end tests on synthetic files; `make data`
 - [x] 2.5 Real data built in 3 s, byte-identical on a second run. Counts agree with the profiler and with PLAN.md: 796 matches (284/201/162/112/37 per day), 798 human journeys (17 anonymous), 444 bot journeys, 2,236 kills, 404 deaths, 39 storm deaths, 12,829 loot rows, 296 bot deaths. Bundles gzipped: 463, 53 and 160 kB. `web/public/data/` committed
 - [x] 2.6 Profiler uses `clean.py`, `EVENTS` and `actor_by_file` (one implementation of each rule); `make profile` left `docs/profile/` byte-identical
-- [x] 2.7 `.github/workflows/ci.yml` (pytest on Python 3.12 and 3.14) and `pipeline/tests/test_repo_hygiene.py`. The workflow has never run: it needs a push
+- [x] 2.7 `.github/workflows/ci.yml` (pytest on Python 3.12 and 3.14) and `pipeline/tests/test_repo_hygiene.py`. First run, on `2f0d706`: green on both
 - [x] 2.8 `ARCHITECTURE.md` first draft (stack, data flow, coordinate mapping, assumptions, trade-offs); README has a data pipeline section and a CI badge; BRIEF.md statuses updated
 - [x] 2.9 Independent review of the phase (3 reviewers: recomputation, mutation testing, consumer and code quality). No blocker: all 1,242 journeys and 796 match entries were recomputed independently and agree. 59 findings (14 + 19 + 26), saved in `.local/phase2-review-result.raw`. CI run #1 on `2f0d706` is green
-- [ ] 2.9 fixes, in commits of their own:
+- [x] 2.9 fixes, in commits of their own:
   - [x] a. Loader and cleaning rules: one expected schema, every sub-folder read (not only `February_*`), hidden files skipped, `ts` checked to be Unix seconds, a file without rows reported, rules 2 and 3 no longer rely on row labels, rule 1 accepts a copy that was also written twice, the build stops on a file out of time order or a journey with two death rows, messages show 8-character ids. `make data` and `make profile` output unchanged
   - [x] b. Data format for the app, described in the new `docs/DATA_FORMAT.md`: each journey has an `id` and a `fate` (was: the raw death event); match entries and totals gain `bot_kills` (170), so every marker is counted once; the manifest carries `event_groups`, `fates` and `sample_step_seconds`; the projection fixture has the integer codes and what they decode to; a match filed under two day folders goes to the later one instead of stopping the build; bots are listed in numeric order. The row arrays are unchanged. Bundles are now 470, 54 and 162 kB gzipped
   - [x] c. The build writes nothing until the leak, size and profile checks have passed. `pipeline/tests/test_committed_data.py` reads the committed files and holds the accepted numbers as literals, so the check no longer depends on the profiler alone. The profiler gained 4 metrics on the span after cleaning (380 median, 887 max, 162 matches shorter by at most 5 s)
@@ -49,16 +49,16 @@ Phase 2 deliverables and acceptance numbers are in PLAN.md, "Phase 2".
     - The profiler is now `pipeline/profile/` (14 modules, longest function 40 lines) behind the unchanged command `pipeline/profile_data.py`; `make profile` output is byte-identical; 15 tests. Commit `fa27d45`
     - Recomputation without the pipeline's code: 0 differences on 11 fields of 1,242 journeys and 15 fields of 796 matches. 129 builds on odd inputs: 3 should-fix and 8 nits, all fixed (a bot file under an account id, unreadable-file and profile-file messages, stray entries in the data folder, files filed under the wrong day, two wrong sentences in DATA_FORMAT.md)
     - Second mutation run: 347 mutants against 149 tests, 61 gaps, 10 equivalent. Its 31 proposed tests are in, adapted. A test holds the 140-character line limit. 224 tests. Commit `2e28c2d`
-  - [ ] g. Final mutation run: the same 347 mutants against the finished code, started 13:09 IST in the background (`scratchpad/verify2/mutation/rerun_final.py`, see `.local/session-pointers.md`); result not in yet
-- [ ] 2.10 Phase-end checks; status to "DONE (awaiting my review)"; stop
+  - [x] g. Final mutation check on the finished code: 319 of the 347 mutants still apply, and 40 new ones cover the code changed since. 349 are killed by the tests; the 10 that survive are the ones no input can tell apart. 7 tests added for what slipped through. Commit `ccc2369`
+- [x] 2.10 Phase-end checks at 13:16 IST: `make test` 229 passed; `make data` (3 s), `make profile` and `make overlay` pass and leave every committed file unchanged; no unused import; valid Python 3.12 syntax; no private detail in a tracked file. Not checked: CI on these commits, which needs a push
 
 ## Exactly where I stopped
 
-- Last completed: 2.9a to 2.9f, committed (last code commit `2e28c2d`). `make test` (224 tests), `make data`, `make profile` and `make overlay` pass and leave the committed files unchanged.
-- In flight: 2.9g, a last mutation run on the finished code. It only reads the project. If its result is lost, re-run it or skip it: the second run already showed its proposed tests kill every non-equivalent mutant.
-- Then 2.10: add the final run's numbers to `docs/profile/crosscheck.md` section 6, set Phase 2 to "DONE (awaiting my review)", commit, ask before pushing (CI on the new commits is part of the acceptance), stop.
-- Nothing is pushed since `2f0d706`. Ask before pushing.
-- **NEXT:** read the final mutation result, then 2.10.
+- Phase 2 is done and waits for the user's review. Last code commit: `ccc2369`. The working tree is clean.
+- The commits since `2f0d706` are not pushed. CI ("green on `main`" is a Phase 2 acceptance point) has only run on `2f0d706`, where it passed. Ask before pushing.
+- For the review: PLAN.md's last section (lines the review changed after the approval), `docs/DATA_FORMAT.md` (the data contract), `docs/profile/crosscheck.md` section 6 (how the pipeline was checked), and open questions 5 and 6 below.
+- Phase 3 has not been started. Do not start it without the user's go.
+- **NEXT:** wait for the user's review of Phase 2. On "go": push if approved, check CI once, then Phase 3 (app shell, map canvas, first deployment).
 
 ## Decisions and assumptions made
 
@@ -103,10 +103,10 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 |---|---|---|
 | `unzip _inbox/player_data.zip -d data/raw` | restores the raw data | 2026-11-22 |
 | `make setup` | creates `.venv`, installs pinned dependencies | 2026-11-22, in a fresh clone |
-| `make test` | 224 tests, no raw data needed; creates `.venv` on first use | 2026-11-23 11:36 |
-| `make profile` | measures the raw data → `docs/profile/` (235 metrics) | 2026-11-23 11:36 |
-| `make data` | builds `web/public/data/` and the projection fixtures; writes nothing unless every check passes, the profile report included; 3 s | 2026-11-23 11:36 |
-| `make overlay` | proof images → `docs/img/`, about 30 s | 2026-11-22 23:33 |
+| `make test` | 229 tests, no raw data needed; creates `.venv` on first use | 2026-11-23 13:16 |
+| `make profile` | measures the raw data → `docs/profile/` (235 metrics) | 2026-11-23 13:10 |
+| `make data` | builds `web/public/data/` and the projection fixtures; writes nothing unless every check passes, the profile report included; 3 s | 2026-11-23 13:16 |
+| `make overlay` | proof images → `docs/img/`, about 30 s | 2026-11-23 13:10 |
 
 Not available yet: dev server and `npm run check` (Phase 3).
 

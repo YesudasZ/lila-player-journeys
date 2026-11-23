@@ -74,5 +74,6 @@ On 23 Nov 2026 three agents reviewed the finished pipeline. After the fixes two 
 | Recomputation, after the fixes | The same, with the new fields: 11 fields of 1,242 journeys (88,617 rows) and 15 fields of 796 match entries | No difference. A control with 9 damaged values was reported 9 of 9 |
 | Attack | 129 builds on small odd inputs: the 38 that used to fail or pass wrongly, and 91 new ones (a file written four times, folders named differently, ids in capitals) | 3 should-fix and 8 nits, fixed |
 | Mutation testing, second run | 347 single changes, run against the 149 tests of the time | 61 gaps and 10 changes that no input can tell apart; 31 tests added |
+| Mutation testing, on the finished code | The 319 of those changes that still apply, and 40 new ones for the code changed since, run against the 229 tests | 349 caught. The 10 that pass are the ones no input can tell apart |
 
 The decisions that changed are listed in the last section of [PLAN.md](../PLAN.md); the data files are described in [DATA_FORMAT.md](../DATA_FORMAT.md).
