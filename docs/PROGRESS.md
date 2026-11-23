@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-23 19:59 IST
+Last updated: 2026-11-23 20:19 IST
 
 ## Current phase
 
@@ -43,6 +43,7 @@ Step 9.1 is described in PLAN.md, "Phase 9". The task lists of Phases 2 and 3 ar
 - Branch `chore-first-deployment`, cut from `main` at `884e78e`; local only, one docs commit (this file). `main` equals `origin/main`.
 - Waiting for the user: the Vercel project (9.1.1). The import form is open in the user's own browser; the settings it needs were given in the chat (root directory `web`, preset Vite, the rest as detected, then Deploy). The preview pane is not signed in to Vercel and does not need to be: the hosted site is public.
 - Change at 19:59: the user connected Vercel's connector to this session and asked me to create the project with it. Vercel refused the first call (403): the connector has no grant for the user's team yet. A single-use consent link was given in the chat; it is valid for 10 minutes and a new one can be made. After the consent: create the project from the GitHub repo with root directory `web`, check that the preset is Vite and the output `dist` (with the preset "Other" Vercel would serve `web/public/` instead), deploy `main`, then 9.1.2. Nothing paid, no environment variables, no other setting.
+- State at 20:19: the connector could not be used. Vercel refused it for the user's team three times (403, "Not authorized ... under scope"), also after the user had approved two consent links. The connector is signed in as the right Vercel account, and Vercel lists no team for it: the team grant is missing, and Vercel's message says a consent link of this kind does not add it. The grant is given where the connector is authorised (the team has to be chosen on Vercel's consent screen when connecting), which is the user's step. Recommended instead: the user presses Deploy on the import page with root directory `web` and preset Vite; I continue from the live URL.
 - **NEXT:** when the user says the site is live: get its URL (from the user, or from GitHub's list of deployments), open it in the preview pane and check 9.1.2; then 9.1.3 on this branch, the checks, and ask to push and open the pull request. Phase 4 starts only on the user's go, on a new branch cut from the updated `main`.
 
 ## Decisions and assumptions made
