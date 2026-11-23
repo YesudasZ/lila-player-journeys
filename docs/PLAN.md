@@ -147,7 +147,7 @@ Contrast of the tokens used (WCAG): `text` 16.25 and `text-muted` 6.73 on `surfa
 
 **Deliverables**
 - Path layer, cached per filter state. Humans: solid sky-blue line, round head. Bots: dashed orange line, square head. Until Phase 6 a head sits at the end of its path. Lines are thinner and half transparent in the all-matches view, so density reads.
-- Markers by shape and colour, at one size on screen at every zoom, each with a dark outline: kill triangle, death cross, storm-death diamond, small loot square. Identical events of one journey at the same spot and second collapse into one marker with a count: in the tooltip, and in a single match also as a small number beside the marker.
+- Markers by shape and colour, at one size on screen at every zoom, each with a dark outline: kill triangle, death cross, storm-death diamond, small loot ring (a ring, not the square first planned: see the acceptance). While all matches are open, heads and markers are drawn at 70% of that size, so that hundreds of them leave the paths visible. Identical events of one journey at the same spot and second collapse into one marker with a count: in the tooltip, and in a single match also as a small number beside the marker.
 - The sidebar, in the 320 px column the page grid has reserved since Phase 3 (moved here from Phase 5):
   - **Matches:** "All matches" or one match; a box to find a match by typing its id; every match of the open map, busiest first (most journeys, then most rows), each with its id, day, number of journeys and its bots.
   - **Journeys**, when one match is open: "human 5e3a91c2", "human (no account id)", "bot 1432", each with its fate in words. Choosing one focuses it on the map, so focus also works by keyboard.
@@ -178,14 +178,15 @@ web/src/components/                Sidebar, MatchList, JourneyList, Legend, MapT
 - A second canvas above the minimap draws it. Paths are built once per draw list as shapes in image pixels and drawn under the view's transform, so panning and zooming rebuild nothing. Markers and heads are drawn at screen size each frame. The surface holds a list of layers, one canvas and one draw function each.
 - Picking (`pick.ts`, pure) works in image pixels with the reach divided by the scale, so it means the same number of screen pixels at every zoom.
 - Hover stays inside the map surface and reaches React only when the hovered thing changes. The open match, the switches and the focused journey are in the store.
-- The canvas and the legend draw markers from the same shape definitions.
+- The canvas and the legend draw markers from the same shape definitions. On the canvas a marker is drawn once, with its outline, and then stamped wherever it is needed.
+- The ring around what is under the pointer has a canvas of its own, so a pointer that moves redraws no journey.
 
 **Acceptance**, on three named matches: `fbbc5d02` (16 journeys, one of them anonymous), `a476eb57` (one journey, 218 rows), `5a081fe4` (ends in a storm death)
 - For each journey the path's points are its rows up to and including its death row: every row holds where its owner stood ([DATA_FORMAT.md](DATA_FORMAT.md)). A journey with a death therefore ends at the death's position (unit test on the function that builds draw lists).
 - Per marker type, the counts shown add up to the manifest entry of the match: kill markers = kills + bot kills, death markers = deaths + bot deaths. A unit test checks this for all 796 matches on the committed files. In the browser the legend reads: `fbbc5d02` 2 humans, 14 bots, 5 kills, 8 deaths, 7 loot; `a476eb57` 1 human, 10 kills, 58 loot; `5a081fe4` 4 kills, 1 storm death, 37 loot.
-- In a greyscale screenshot of `fbbc5d02`, humans, bots and each marker type can still be told apart. If the loot square and the bot's square head cannot, loot becomes a ring.
+- In a greyscale screenshot of `fbbc5d02`, humans, bots and each marker type can still be told apart. If the loot square and the bot's square head cannot, loot becomes a ring. Checked on 23 Nov: they could not, so loot is a ring; every kind now differs by its form (solid or dashed line, disc or square head, triangle, cross, diamond, ring).
 - Hover picks the nearest marker within 10 screen pixels (unit test).
-- Redrawing the journeys of Ambrose Valley, all matches, takes under 16 ms on the development machine; the reading is written into PROGRESS.md.
+- Redrawing the journeys of Ambrose Valley, all matches, takes under 16 ms on the development machine; the reading is written into PROGRESS.md. Read on 23 Nov: 4.7 to 8.8 ms with the default switches; with loot switched on by hand 25 ms at fit and 10 to 12 ms from a zoom of 1.5.
 
 **Verify locally:** open the three matches and compare the legend counts with `manifest.json`.
 
@@ -373,3 +374,6 @@ Left as it is:
 | Hover on markers | Hover also on a path: who and when | A path without a marker near it would say nothing |
 | All map bundles loaded at the start | A map's journeys load when its tab is first opened | 686 kB gzipped in total, most of it never looked at |
 | A review like Phase 3's | Two agents with a fixed budget, about a third of it | The Phase 3 review took 40% of a usage window |
+| Loot as a small square | Loot as a small ring | The greyscale check of the acceptance: a square could not be told from a bot's square head |
+| Markers at one size | At 70% of it while all matches are open | At full size the 1,772 kill markers of Ambrose Valley hid the paths |
+| Markers drawn as shapes on every frame | Drawn once and stamped; the hover ring on a canvas of its own | With loot switched on, 8,988 markers took 28 ms a frame, and every move of the pointer redrew them |

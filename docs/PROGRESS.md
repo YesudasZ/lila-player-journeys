@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-23 22:35 IST
+Last updated: 2026-11-23 22:37 IST
 
 ## Current phase
 
@@ -44,14 +44,15 @@ Phase 4 deliverables and acceptance criteria are in PLAN.md, "Phase 4". The task
   - Hover on a kill reads "Kill, bot 1440, at 1:28, x 111 z 69, elevation 105"; a click on a path focuses its journey and its row in the list; Esc, a click on empty map and a second press on the row clear; a drag is not a click
   - Greyscale on `fbbc5d02`: the loot square could not be told from a bot's square head, so loot is now a ring, as PLAN.md provided for
   - Redraw of the journeys layer, Ambrose Valley, all matches, default switches: 4.7 to 8.8 ms at fit and about 5 ms while panning at zoom 1.5 (target under 16 ms). With loot switched on by hand: 25 ms at fit, 10 to 12 ms at zoom 1.5, 7 to 9 ms at zoom 3.4. `fbbc5d02`: 0.9 ms. Read from the `journeys-draw` user timing; device pixel ratio 2, map area 960 x 752
-- [ ] 4.8 Independent review by two agents with a fixed budget; fixes
+- [ ] 4.8 Independent review by two agents with a fixed budget of 40 tool calls each (behaviour in a real browser against the data; code quality, accessibility and the strength of the tests). Launched at 22:37 as the background workflow `phase4-review`; results not in yet; fixes follow
 - [ ] 4.9 Docs, phase-end checks; ask once to push the branch and open the pull request; stop
 
 ## Exactly where I stopped
 
 - Branch `phase-4-journeys`, cut from `main` at `83d973c`; local only. `main` equals `origin/main`.
 - Done and committed: 4.2 to 4.7. Phase 4 is built and checked in the preview; `npm run check` (285 tests), `npm run build` and `make test` (237 tests) pass.
-- **NEXT:** 4.8 (the two-agent review with a fixed budget, then fixes), then 4.9 (PLAN.md and BRIEF.md as built, phase-end checks, ask to push and open the pull request).
+- In flight: 4.8, the review workflow `phase4-review` (two agents, read-only on the project; one drives the dev server on port 5183 in the preview pane). Its result goes to `.local/phase4-review-result.raw`. PLAN.md, BRIEF.md and the README already describe Phase 4 as built.
+- **NEXT:** when the review reports: reproduce each finding, fix what holds, re-run `npm run check`, `npm run build` and `make test`, commit. Then 4.9 (phase-end checks, status, ask to push the branch and open the pull request).
 
 ## Decisions and assumptions made
 
