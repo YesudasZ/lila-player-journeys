@@ -24,7 +24,8 @@ Do not redo finished work. If PROGRESS.md and the code disagree, trust the code,
 
 ```
 pipeline/     offline data code: dataset.py (loader), clean.py (the four rules), journeys.py (actor, fate, match counts), maps.py (projection),
-              encode.py, minimap.py, build_data.py (writes web/public/data/), profile_data.py (measurements), verify_overlay.py (mapping proof), tests/
+              encode.py, minimap.py, build_data.py (writes web/public/data/), profile_data.py and profile/ (measurements, one module per topic),
+              verify_overlay.py (mapping proof), tests/
 analysis/     statistics behind INSIGHTS.md (Phase 10)
 web/          the app (Phase 3 onward); web/public/data/ is written by `make data` and committed
 docs/         PROGRESS.md (status, single source of truth), BRIEF.md, DATA_NOTES.md, DATA_FORMAT.md (the files the app loads), PLAN.md, profile/ (measurements), img/ (mapping proof)
