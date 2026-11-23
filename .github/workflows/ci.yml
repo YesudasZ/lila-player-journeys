@@ -17,8 +17,8 @@ jobs:
       matrix:
         python-version: ["3.12", "3.14"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
@@ -26,3 +26,21 @@ jobs:
       - run: pip install -r pipeline/requirements.txt
       # The tests need no raw data. They also check that no raw data, brief or full player id is committed.
       - run: python -m pytest -q
+
+  app:
+    name: App check and build (Node 22)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      # Type check, ESLint and the unit tests; then the production build that the host will run.
+      - run: npm run check
+      - run: npm run build

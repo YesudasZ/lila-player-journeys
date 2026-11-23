@@ -29,12 +29,11 @@ from PIL import Image, ImageDraw, ImageFont
 
 from pipeline.dataset import COMBAT_DEATH_EVENTS, EVENT_GROUPS, KILL_EVENTS, MOVEMENT_EVENTS, load_raw
 from pipeline.maps import MAPS, MapConfig, uv_to_pixel, world_to_uv
-from pipeline.minimap import load_minimap
+from pipeline.minimap import black_surround, load_minimap
 
 OVERLAY_WIDTH = 1600
 PANEL_WIDTH = 480
 SUPERSAMPLE = 2  # markers are drawn at twice the size and scaled down, for smooth edges
-BLACK_BELOW = 14  # a pixel counts as black when all three channels are below this
 MAP_DIM = 0.45  # share of black blended into the minimap so that markers stand out
 
 HUMAN = (86, 180, 233)
@@ -78,22 +77,6 @@ def to_pixels(cfg: MapConfig, part: pd.DataFrame, size: tuple[int, int], orienta
     """Pixel positions of the rows of one map on an image of ``size``."""
     u, v = world_to_uv(cfg.map_id, part["x"].to_numpy(np.float64), part["z"].to_numpy(np.float64))
     return uv_to_pixel(*orientation.apply(u, v), *size)
-
-
-def black_surround(minimap: Image.Image) -> np.ndarray:
-    """Mask of the black area around the map artwork: black pixels connected to the image border.
-
-    Black linework inside the artwork (zone outlines, label strokes) is not part of it.
-    """
-    black = np.asarray(minimap).max(axis=2) < BLACK_BELOW
-    mask = Image.fromarray(black.astype(np.uint8) * 255).copy()  # a copy, because floodfill needs a writable image
-    width, height = mask.size
-    pixels = mask.load()
-    border = [(x, y) for x in range(width) for y in (0, height - 1)] + [(x, y) for y in range(height) for x in (0, width - 1)]
-    for seed in border:
-        if pixels[seed] == 255:
-            ImageDraw.floodfill(mask, seed, 128)
-    return np.asarray(mask) == 128
 
 
 def share_off_map(surround: np.ndarray, px: np.ndarray, py: np.ndarray) -> float:

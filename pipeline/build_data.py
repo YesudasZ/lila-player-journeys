@@ -21,10 +21,10 @@ import gzip
 import io
 import json
 import sys
+from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 from typing import Any
-
-from datetime import date
 
 import numpy as np
 import pandas as pd
@@ -49,7 +49,7 @@ from pipeline.dataset import (
 from pipeline.encode import ELEVATION_STEPS_PER_UNIT, UV_STEPS, decode_elevation, decode_uv, encode_elevation, encode_uv
 from pipeline.journeys import FATES, MATCH_COUNTS, check_journeys, journey_table, match_table
 from pipeline.maps import MAPS, README_EXAMPLE, uv_to_pixel, uv_to_world, world_to_uv
-from pipeline.minimap import load_minimap
+from pipeline.minimap import artwork_box, load_minimap
 from pipeline.profile.cleaning import EVENTS_COUNTED_PER_ACTOR
 
 MINIMAP_WIDTH = 2048
@@ -150,20 +150,30 @@ def _lines(head: Json, key: str, items: list[Json]) -> str:
     return f'{opening},"{key}":[\n{body}\n]}}\n'
 
 
-def minimap_images(raw_root: Path) -> dict[str, bytes]:
-    """Each minimap as a WebP file's content, at most MINIMAP_WIDTH pixels wide."""
-    images = {}
-    for map_id, cfg in MAPS.items():
-        encoded = io.BytesIO()
-        load_minimap(raw_root / "minimaps" / cfg.minimap_file, MINIMAP_WIDTH).save(encoded, "WEBP", quality=WEBP_QUALITY, method=6)
-        images[map_id] = encoded.getvalue()
-    return images
+@dataclass(frozen=True)
+class Minimap:
+    webp: bytes  # the file as it is shipped
+    width: int  # read back from those bytes
+    height: int
+    artwork: dict[str, float]  # see pipeline.minimap.artwork_box
 
 
 def image_size(encoded: bytes) -> tuple[int, int]:
     """Width and height of an encoded image, read back from the bytes that will be shipped."""
     with Image.open(io.BytesIO(encoded)) as image:
         return image.size
+
+
+def shipped_minimaps(raw_root: Path) -> dict[str, Minimap]:
+    """Each minimap as the app gets it: a WebP at most MINIMAP_WIDTH pixels wide, its size, and the box of its artwork."""
+    minimaps = {}
+    for map_id, cfg in MAPS.items():
+        image = load_minimap(raw_root / "minimaps" / cfg.minimap_file, MINIMAP_WIDTH)
+        encoded = io.BytesIO()
+        image.save(encoded, "WEBP", quality=WEBP_QUALITY, method=6)
+        width, height = image_size(encoded.getvalue())
+        minimaps[map_id] = Minimap(encoded.getvalue(), width, height, artwork_box(image))
+    return minimaps
 
 
 def bundle_text(map_id: str, rows: pd.DataFrame, journeys: pd.DataFrame, match_start: pd.Series) -> str:
@@ -196,7 +206,7 @@ def bundle_text(map_id: str, rows: pd.DataFrame, journeys: pd.DataFrame, match_s
     return _lines({"map": map_id}, "journeys", records)
 
 
-def manifest_text(journeys: pd.DataFrame, matches: pd.DataFrame, minimap_sizes: dict[str, tuple[int, int]]) -> str:
+def manifest_text(journeys: pd.DataFrame, matches: pd.DataFrame, minimaps: dict[str, Minimap]) -> str:
     """What the app loads first: constants, maps, day folders, totals and one line per match."""
     maps = [
         {
@@ -205,7 +215,12 @@ def manifest_text(journeys: pd.DataFrame, matches: pd.DataFrame, minimap_sizes: 
             "scale": cfg.scale,
             "origin_x": cfg.origin_x,
             "origin_z": cfg.origin_z,
-            "minimap": {"file": f"minimaps/{map_id}.webp", "width": minimap_sizes[map_id][0], "height": minimap_sizes[map_id][1]},
+            "minimap": {
+                "file": f"minimaps/{map_id}.webp",
+                "width": minimaps[map_id].width,
+                "height": minimaps[map_id].height,
+                "artwork": minimaps[map_id].artwork,
+            },
             "journeys_file": f"maps/{map_id}.json",
             "matches": int((matches["map_id"] == map_id).sum()),
             "journeys": int((journeys["map_id"] == map_id).sum()),
@@ -263,7 +278,7 @@ def cleaning_report(data: RawData, cleaned: Cleaned, journeys: pd.DataFrame, mat
     }
 
 
-def projection_fixtures(rows: pd.DataFrame, minimap_sizes: dict[str, tuple[int, int]]) -> Json:
+def projection_fixtures(rows: pd.DataFrame, minimaps: dict[str, Minimap]) -> Json:
     """Reference points for the app's projection tests, computed with pipeline/maps.py and pipeline/encode.py.
 
     Each point has the exact transform (x, z to u, v to px, py on an image of
@@ -280,7 +295,7 @@ def projection_fixtures(rows: pd.DataFrame, minimap_sizes: dict[str, tuple[int, 
         on_map = rows[rows["map_id"] == map_id]
         if on_map.empty:
             continue
-        width, height = minimap_sizes[map_id]
+        width, height = minimaps[map_id].width, minimaps[map_id].height
         extremes = {
             "smallest x": on_map["x"].idxmin(),
             "largest x": on_map["x"].idxmax(),
@@ -385,17 +400,17 @@ def build(raw_root: Path, out_dir: Path, fixtures_dir: Path, profile: Path | Non
     matches = match_table(journeys)
     report = cleaning_report(data, cleaned, journeys, matches)
 
-    images = {out_dir / "minimaps" / f"{map_id}.webp": image for map_id, image in minimap_images(raw_root).items()}
-    minimap_sizes = {path.stem: image_size(image) for path, image in images.items()}
+    minimaps = shipped_minimaps(raw_root)
+    images = {out_dir / "minimaps" / f"{map_id}.webp": minimap.webp for map_id, minimap in minimaps.items()}
     bundles = {map_id: bundle_text(map_id, rows, journeys, matches["start"]) for map_id in MAPS}
     bundle_bytes = {}
     for map_id, text in bundles.items():
         encoded = text.encode()
         bundle_bytes[map_id] = {"bytes": len(encoded), "gzip_bytes": len(gzip.compress(encoded, mtime=0))}
-    texts = {out_dir / "manifest.json": manifest_text(journeys, matches, minimap_sizes)}
+    texts = {out_dir / "manifest.json": manifest_text(journeys, matches, minimaps)}
     texts |= {out_dir / "maps" / f"{map_id}.json": text for map_id, text in bundles.items()}
     texts[out_dir / "cleaning_report.json"] = json.dumps(report, indent=2) + "\n"
-    texts[fixtures_dir / "projection.json"] = json.dumps(projection_fixtures(rows, minimap_sizes), indent=2) + "\n"
+    texts[fixtures_dir / "projection.json"] = json.dumps(projection_fixtures(rows, minimaps), indent=2) + "\n"
 
     check_output(texts, bundle_bytes)
     if expected is not None:

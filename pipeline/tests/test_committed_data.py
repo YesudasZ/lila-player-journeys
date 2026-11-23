@@ -59,6 +59,11 @@ FATES = {
     ("bot", "no_death_recorded"): 148,
 }
 MINIMAP_SIZES = {"AmbroseValley": (2048, 2048), "GrandRift": (2048, 2046), "Lockdown": (2048, 2048)}
+ARTWORK = {
+    "AmbroseValley": {"left": 0.022, "top": 0.0396, "right": 0.8037, "bottom": 0.9517},
+    "GrandRift": {"left": 0.0767, "top": 0.1911, "right": 0.9556, "bottom": 0.8773},
+    "Lockdown": {"left": 0.0605, "top": 0.0327, "right": 0.8989, "bottom": 0.8926},
+}
 
 
 def read(path):
@@ -118,6 +123,18 @@ def test_minimaps_have_the_size_the_manifest_states(manifest):
         with Image.open(DATA / entry["minimap"]["file"]) as image:
             assert image.format == "WEBP"
             assert image.size == (entry["minimap"]["width"], entry["minimap"]["height"]) == MINIMAP_SIZES[entry["id"]]
+
+
+def test_artwork_boxes_are_the_accepted_ones_and_hold_every_recorded_position(manifest, journeys):
+    steps = manifest["encoding"]["uv_steps"]
+    for entry in manifest["maps"]:
+        box = entry["minimap"]["artwork"]
+        assert box == ARTWORK[entry["id"]]
+        on_map = [journey for journey in journeys if journey["map"] == entry["id"]]
+        across = [code / steps for journey in on_map for code in journey["u"]]
+        down = [1 - code / steps for journey in on_map for code in journey["v"]]
+        assert box["left"] <= min(across) and max(across) <= box["right"], entry["id"]
+        assert box["top"] <= min(down) and max(down) <= box["bottom"], entry["id"]
 
 
 def test_every_bundle_is_under_the_size_limit(manifest):
