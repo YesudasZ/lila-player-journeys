@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-23 19:49 IST
+Last updated: 2026-11-23 19:56 IST
 
 ## Current phase
 
@@ -33,7 +33,7 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 Step 9.1 is described in PLAN.md, "Phase 9". The task lists of Phases 2 and 3 are in the history of this file (`git log -p docs/PROGRESS.md`).
 
 - [x] 9.1.0 Pull request #1 merged by the user; `main` pulled (`884e78e`). `main` holds exactly the reviewed branch: the same tree as the branch's last commit `b972d7d`. On `main`: `npm run check` (196 tests), `npm run build` and `make test` (237 tests) pass
-- [ ] 9.1.1 The user creates the Vercel project in the browser: import the GitHub repo, root directory `web`, everything else as Vercel detects it for Vite (build `npm run build`, output `dist`), no environment variables. Production follows `main`
+- [ ] 9.1.1 The user creates the Vercel project in the browser: import the GitHub repo, root directory `web`, everything else as Vercel detects it for Vite (build `npm run build`, output `dist`), no environment variables. Production follows `main`. State on 23 Nov, 19:56: the user has imported the repo on Vercel's "New Project" page in their own browser, under their personal Vercel account, and has not deployed yet. Vercel's first guess for the preset came from the repo root ("services"), so the form still needs the root directory `web` and the Vite preset before Deploy
 - [ ] 9.1.2 Check the hosted URL: the three maps load, the data files are served, no console errors (the open acceptance line of Phase 3)
 - [ ] 9.1.3 The URL at the top of the README and, with the user's yes, in the repo's About field; statuses in PLAN.md and BRIEF.md
 - [ ] 9.1.4 Ask once to push this branch and open its pull request; stop
@@ -41,7 +41,7 @@ Step 9.1 is described in PLAN.md, "Phase 9". The task lists of Phases 2 and 3 ar
 ## Exactly where I stopped
 
 - Branch `chore-first-deployment`, cut from `main` at `884e78e`; local only, one docs commit (this file). `main` equals `origin/main`.
-- Waiting for the user: the Vercel project (9.1.1). Nothing else is in flight.
+- Waiting for the user: the Vercel project (9.1.1). The import form is open in the user's own browser; the settings it needs were given in the chat (root directory `web`, preset Vite, the rest as detected, then Deploy). The preview pane is not signed in to Vercel and does not need to be: the hosted site is public. Nothing else is in flight.
 - **NEXT:** when the user says the site is live: get its URL (from the user, or from GitHub's list of deployments), open it in the preview pane and check 9.1.2; then 9.1.3 on this branch, the checks, and ask to push and open the pull request. Phase 4 starts only on the user's go, on a new branch cut from the updated `main`.
 
 ## Decisions and assumptions made
