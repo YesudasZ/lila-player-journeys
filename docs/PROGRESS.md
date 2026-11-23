@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-24 00:48 IST
+Last updated: 2026-11-24 00:54 IST
 
 ## Current phase
 
@@ -41,14 +41,22 @@ Phase 6 deliverables and acceptance criteria are in PLAN.md, "Phase 6". The task
 - [x] 6.5 Marker times and picking (24 Nov, 00:42): in `lib/drawList.ts` a marker keeps the time of each of its events (`times`, which replaces `last`); `lib/pick.ts` finds a marker only from its first event on, and a path only as far as it is drawn. The tooltip gets the count of the events that have happened and the time of the last of them
 - [x] 6.6 The layer draws the moment (24 Nov, 00:42): `layers/journeysLayer.ts` listens to the clock. Before the end of a match it draws every path as far as its head has come, the heads where the journeys are, and the markers of what has happened with their counts; what is under a resting pointer is looked up again when the time moves. The whole match and all matches keep their cached paths. Tested in lib: the head of a journey is on its death marker from the second of the death. Not looked at in the preview yet: nothing starts the clock before step 6.7. `npm run check`: 394 tests
 - [x] 6.7 The timeline bar (24 Nov, 00:44): `components/Timeline.tsx` in a third grid row under the map: Play and Pause with the title "Play/Pause (Space when the map or timeline is focused)", the time (`2:05 / 8:43`), the slider with a mark for every kind and second in which something happened, and the speed. The slider and the time are written straight into the page; React renders the bar only when play, pause, speed, the match or the journeys drawn change. Space on the map (`lib/mapKeys.ts`, `mapSurface.ts`); the slider's keys in its title and in a description for assistive technology (the tool has no visible key help); the slider's look in `styles.css`. `App.tsx` starts the clock. `npm run check`: 396 tests; build: 87.68 kB of JavaScript gzipped. Not looked at in the preview yet
-- [ ] 6.8 Checked in the preview, in part (24 Nov, 00:48; pane at 1280 x 800). **Seen:**
+- [x] 6.8 Checked in the preview (24 Nov, 00:46 and 00:54; pane at 1280 x 800, the second time in a fresh tab):
   - `?match=fbbc5d02`: the bar is 56 px high under the map (grid rows 48, 696 and 56 px; the sidebar spans both). Play has the title "Play/Pause (Space when the map or timeline is focused)"; the time reads "8:43 / 8:43"; the slider runs from 0 to 523 with 19 marks; speeds 1x to 60x, 10x chosen
-  - Scrubbing: the journeys layer paints 835 pixels at 0:00 (the heads at their starts), 34,928 at 1:57 and 67,118 for the whole match. The first death of the match (`fbbc5d02-5787de75`, at 118 s): no death colour at its spot at 117 s, death colour there at 118 s
-  - The slider's keys, from 118 s: right 123, Shift+left 122, Page Up 182, Page Down 122, Home 0, End 523, left 518
-  - Space on the slider plays: 27 s of the match in 3.2 s at 10x. The address stays `?match=fbbc5d02&t=118` while it plays and reads `&t=127` after the pause (the time was 126.997 and is rounded)
+  - Scrubbing: the journeys layer paints 835 pixels at 0:00 (the heads at their starts), 34,928 at 1:57 and 67,118 for the whole match. The first death of the match (`fbbc5d02-5787de75`, at 118 s): no death colour at its spot at 117 s, death colour there at 118 s. The tooltip at that spot says "Death: killed by bot ... at 1:58" at 118 s and for the whole match; at 117 s it finds only the path that passes there ("at 1:25")
+  - The slider's keys, from 118 s: right 123, Shift+left 122, Page Up 182, Page Down 122, Home 0, End 523, left 518. A dragged value of 77.6 becomes 78 s, and a press on the slider pauses
+  - Space plays and pauses on the slider and on the map itself, where the focus stays; on a zoom button it does not. 27 s of the match pass in 3.2 s at 10x. The address stays `?match=fbbc5d02&t=118` while it plays and reads `&t=127` after the pause (the time was 126.997 and is rounded)
   - The slider's end is 523 for `fbbc5d02`, 780 for `a476eb57` and 878 for `5a081fe4`; with all matches the bar says "Open a match to play it back."
-  - A reload at `?match=fbbc5d02&t=120.5` opens paused at "2:00 / 8:43" with the slider at 120.5 and keeps the address
-  - **Not seen yet:** the map at the reloaded moment (its image had not loaded after 9 s in the pane); a console without errors (it held errors of Vite's hot reload from this session's branch switches: files of the parked branch that are gone, and a second copy of React after Vite optimised its dependencies again; restart the dev server, load once, read the console); Space on the map itself; dragging the slider with the pointer; 1x and 60x; the tooltip while the time is before the end; the frame-time reading on `fbbc5d02` and `d0a38c30` at 20x for 10 s with the count of React commits, which needs the pane visible
+  - A reload at `?match=fbbc5d02&t=120.5` opens paused at "2:00 / 8:43" with the slider at 120.5, keeps the address and draws that moment: 34,002 pixels, about half of the whole match
+  - The console of the fresh tab holds no error and no warning: two lines of Vite, and React's hint about its developer tools. The errors seen the first time were Vite's hot reload after this session's branch switches
+  - **The frame-time reading**, playing at 20x for 10 s, taken from the page itself:
+
+    | Match | Journeys | Time per draw: median, 95th, largest | React commits while playing | Time between frames: median, 95th |
+    |---|---|---|---|---|
+    | `fbbc5d02`, which has the most journeys | 16 | 0.2, 0.3 and 0.7 ms (225 draws) | none; one at Play, one at Pause | 33.3 and 34.2 ms |
+    | `d0a38c30` on Lockdown, which has the most rows | 15 | 0.2, 0.3 and 0.4 ms (161 draws) | none; one at Play, one at Pause | 33.3 and 34.3 ms |
+
+    The app's work per frame is far under 16 ms, and React renders nothing while a match plays. The time between frames is the pane's and not the app's: the browser pane shows about 30 frames a second and stood still for up to a second several times (21 and 20 frames longer than 34 ms). So "frame time under 16 ms" is shown for the work and not for the pacing; a reading in a browser window at 60 Hz is still missing. The stalls showed the 100 ms limit at work: at 20x the matches reached 147 s and 110 s instead of 200 s, and neither jumped
 - [ ] 6.9 Independent review by two agents, each held to 40 tool calls; fixes
 - [ ] 6.10 Docs and phase-end checks; status "DONE (awaiting my review)"
 - [ ] 6.11 On the user's yes: push the branch, open the pull request, record it here, read the first CI run. Then stop for the review
@@ -57,8 +65,8 @@ Phase 6 deliverables and acceptance criteria are in PLAN.md, "Phase 6". The task
 
 - Branch `phase-6-timeline`, cut from `main` at `89dfde3`; local only, nothing pushed. `main` equals `origin/main`.
 - Steps 6.2 to 6.7 are committed on `phase-6-timeline` (local only, nothing pushed): everything of playback is built. At 00:48 on 24 Nov: `npm run check` (396 tests), `npm run build` (87.68 kB of JavaScript gzipped) and `make test` (252 tests) pass.
-- Step 6.8 is half done: what was seen in the preview and what was not is in its entry above. The work stopped there because the 5-hour usage window was nearly used up.
-- **NEXT:** finish 6.8: `preview_stop` and `preview_start` for `lila-web` (the dev server saw two branch switches), open `?match=fbbc5d02`, and go through the "Not seen yet" list; ask the user to show the browser pane for the frame-time reading. Then 6.9: the review by two agents, each held to 40 tool calls. Then 6.10: PLAN.md "Phase 6" as built, BRIEF.md, README, ARCHITECTURE.md's mention of the clock, the commands table below, status "DONE (awaiting my review)", and the short manual test script for the closing message. Then ask once to push and open the pull request.
+- Step 6.8 is done: the preview checks and the frame-time reading are in its entry above. The user said "Continue" at 00:50 with the 5-hour window at 88%; the review did not fit into what was left.
+- **NEXT:** 6.9, once the usage window has reset (03:00 IST on 24 Nov): the review by two agents, each held to 40 tool calls, then the fixes. Then 6.10: PLAN.md "Phase 6" as built with a section on what differs and what the review changed, BRIEF.md, the README's status line, ARCHITECTURE.md's mention of the clock, the commands table below, status "DONE (awaiting my review)", and the short manual test script for the closing message. Then ask once to push and open the pull request, and stop.
 
 ## Decisions and assumptions made
 
@@ -202,6 +210,7 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 
 ## Known issues / TODO later
 
+- The frame-time reading of Phase 6 was taken in the browser pane, which shows about 30 frames a second and stalls now and then. It shows the work per frame (0.7 ms at most for a draw, no React commit while playing), not that frames come every 16 ms. A reading at 60 Hz, in Chrome's Performance panel as PLAN.md names it, is still to take: by the user, or in the user's Chrome if they ask for it.
 - **For Phase 8, set aside by the user on 24 Nov:** the six changes the Phase 5 plan was approved with. (1) `pushState` for discrete changes (map, match, focus, days, fates, switches), `replaceState` for moving, zooming and `t`. (2) A notice when a filter hides the open match. (3) A test that the 8-character match id prefixes are unique. (4) Filter chips as `<button>` with `aria-pressed` and focus styles, which they are since Phase 5. (5) The journey id's format ("-anon", "botNNNN") in a comment and in DATA_NOTES.md. (6) The folder-day assumption (`e325a53a` belongs to February_10) in DATA_NOTES.md. All but (4) were already built and tested when they were set aside: they wait on the local branch `fix-phase-5-approved-changes` (`9a2f0a4`, `8e13ce5`; not pushed). Phase 8 takes them from there. The branch is deleted only on the user's word.
 - Commits stay local until the user approves each push.
 - CI: all three checks passed on pull request #1, the app job and the `@v7` actions included. The run on `main` after the merge has not been read.
