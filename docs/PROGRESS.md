@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-23 10:57 IST
+Last updated: 2026-11-23 10:59 IST
 
 ## Current phase
 
@@ -46,7 +46,7 @@ Phase 2 deliverables and acceptance numbers are in PLAN.md, "Phase 2".
 - Last completed: 2.8. All Phase 2 code, tests, CI file and the architecture draft are committed; `make test` (78 tests), `make data` and `make profile` pass. The working tree is clean.
 - In flight: the independent review (2.9) runs in the background of the 23 Nov session. Its result exists only in that session until it is copied to `.local/phase2-review-result.raw`. If the session is gone, `.local/session-pointers.md` says where its transcripts are; otherwise re-run a review or go straight to 2.10.
 - Do not change files under `pipeline/` while the review is running.
-- The CI workflow exists but has never run; nothing since `3eeba7b` is pushed.
+- Pushed on the user's go at 2026-11-23 10:59 IST, up to and including this commit: the first push that carries the CI workflow. Its result has not been looked at yet (check it in 2.10: https://github.com/YesudasZ/lila-player-journeys/actions).
 - **NEXT:** when the review reports, save it to `.local/`, verify each finding by reproducing it, fix what holds, re-run `make test`, `make data` and `make profile`, commit as `phase-2: apply review findings`. Then 2.10.
 
 ## Decisions and assumptions made
@@ -91,7 +91,7 @@ Not available yet: dev server and `npm run check` (Phase 3).
 
 ## Known issues / TODO later
 
-- Commits stay local until the user approves each push. CI (task 2.7) can only be seen running after a push.
+- Commits stay local until the user approves each push.
 - GitHub's "Contributors" box still showed two contributors on 2026-11-23 10:45 IST, about 11 hours after the rewrite was pushed; GitHub's API lists one. The user chose to wait. Recheck before submission (also a Phase 11 check). Fallbacks: recreate the repo, or GitHub Support.
 - `ARCHITECTURE.md` is a first draft of about 900 words. It has to fit one printed page by Phase 10: trim it then.
 - The README's map constants may be 1.5 to 2% too large in x on two maps (`docs/profile/crosscheck.md`, section 4). Kept as documented, by the user's decision.
