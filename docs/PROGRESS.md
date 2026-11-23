@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-23 17:41 IST
+Last updated: 2026-11-23 17:43 IST
 
 ## Current phase
 
@@ -37,16 +37,17 @@ Phase 3 deliverables, the screen design, the package versions and the acceptance
 - [x] 3.4 `state/store.ts` (Zustand) and `data/`: the manifest, then the open map's image, then the other two; a retry after a failure asks the server afresh
 - [x] 3.5 Components: `TopBar`, `MapTabs`, `MapPanel`, `MapView` with `mapSurface.ts` (plain DOM code: canvas in device pixels, wheel, drag, double-click, keys), `MapReadout`, `ZoomControls`, `StatusMessage`
 - [x] 3.7 Checked in the preview pane at 1280 x 800 on all three maps: the artwork fits; the README's example point reads x -302, z -354 under the cursor (1 screenshot pixel is 2 units there); wheel zoom and drag keep the point under the cursor; double-click, the keys `+ - 0` and the arrows, and the three buttons work, with the buttons unavailable at their limits; tabs by click and by arrow keys; keyboard focus ring on the map; both error states with "Try again"; no console error. No screenshot files: the preview's screenshots cannot be written into the repo (see Known issues)
-- [ ] 3.6 CI: second job for the app; current versions of the GitHub actions
+- [x] 3.6 CI: a second job (`npm ci`, `npm run check`, `npm run build` on Node 22); `checkout`, `setup-python` and `setup-node` at v7. Not run yet: it runs on the pull request
 - [ ] 3.7 Check in the preview pane on all three maps; screenshots for the pull request
-- [ ] 3.8 Independent review with two agents; fixes
+- [ ] 3.8 Independent review with two agents, launched 17:43 IST as background workflow `phase3-review` (behaviour in a real browser and view maths; code quality and accessibility). Results not in yet; fixes follow
 - [ ] 3.9 README "run the app", BRIEF.md statuses, phase-end checks; ask once to push the branch and open the pull request; stop
 
 ## Exactly where I stopped
 
 - Branch `phase-3-app-shell`, cut from `main` at `24559ce`; local only, nothing pushed. `main` equals `origin/main`.
 - Last completed: 3.1 to 3.5 and 3.7. The app runs: `cd web && npm run dev`. `npm run check` (111 tests), `npm run build` and `make test` (237 tests) pass.
-- **NEXT:** 3.6 (second CI job, current action versions), 3.8 (review by two agents, fixes), 3.9 (README, BRIEF.md, phase-end checks, ask to push and open the pull request).
+- In flight: 3.8, the review workflow `phase3-review` (two agents, read-only on the project; one drives the dev server on port 5183 in the preview pane). Its result goes to `.local/phase3-review-result.raw`.
+- **NEXT:** when the review reports: reproduce each finding, fix what holds, re-run `npm run check`, `npm run build` and `make test`, commit. Then 3.9 (README "run the app", BRIEF.md, phase-end checks, ask to push the branch and open the pull request).
 
 ## Decisions and assumptions made
 
