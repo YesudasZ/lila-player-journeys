@@ -10,6 +10,7 @@ const FULL: Link = {
   map: "GrandRift",
   days: ["February_10", "February_12"],
   match: "0273e16e",
+  t: 12.5,
   journey: "0273e16e-94d042cb",
   choices: { loot: true, bots: false, kill: false },
   fates: ["killed_by_storm", "no_death_recorded"],
@@ -25,7 +26,7 @@ describe("a view as a link", () => {
   it("holds every part, in one order, and reads back as the same view", () => {
     const query = encodeLink(FULL);
     expect(query).toBe(
-      "?map=GrandRift&days=February_10,February_12&match=0273e16e&journey=0273e16e-94d042cb&show=loot&hide=bots,kill&fate=killed_by_storm,no_death_recorded&view=1024.5,980.2,2.5",
+      "?map=GrandRift&days=February_10,February_12&match=0273e16e&t=12.5&journey=0273e16e-94d042cb&show=loot&hide=bots,kill&fate=killed_by_storm,no_death_recorded&view=1024.5,980.2,2.5",
     );
     expect(decodeLink(query)).toEqual(FULL);
     expect(encodeLink(decodeLink(query))).toBe(query);
@@ -171,5 +172,43 @@ describe("what the filters leave on the map", () => {
     expect(emptyNote("Lockdown", [], ["killed by player"])).toBe("No journey on Lockdown has the fate “killed by player”.");
     expect(emptyNote("Grand Rift", ["14 Feb"], ["killed by storm", "killed"])).toBe("No journey on Grand Rift on 14 Feb has the fate “killed by storm” or “killed”.");
     expect(emptyNote("Lockdown", ["10 Feb", "11 Feb", "12 Feb"], [])).toBe("No journey on Lockdown on 10 Feb, 11 Feb or 12 Feb is left.");
+  });
+});
+
+describe("the time of playback in a link", () => {
+  const checked = (query: string) => checkedLink(decodeLink(query), manifest);
+  const opened = { ...DEFAULT_LINK, match: "fbbc5d02" }; // a match whose recorded span is 523 s
+
+  it("is written after its match, to a tenth of a second, and left out at the end", () => {
+    expect(encodeLink({ ...opened, t: 120.46 })).toBe("?match=fbbc5d02&t=120.5");
+    expect(encodeLink({ ...opened, t: 0, journey: "fbbc5d02-anon" })).toBe("?match=fbbc5d02&t=0&journey=fbbc5d02-anon");
+    expect(encodeLink(opened)).toBe("?match=fbbc5d02");
+  });
+
+  it.each([
+    ["a number", "?t=12.5", 12.5],
+    ["zero", "?t=0", 0],
+    ["a word", "?t=soon", null],
+    ["nothing", "?t=", null],
+    ["a number without end", "?t=1e999", null],
+  ])("reads %s", (_, query, time) => {
+    expect(decodeLink(query).t).toBe(time);
+  });
+
+  it("is kept with its match while it lies inside the match's span", () => {
+    expect(checked("?match=fbbc5d02&t=120.46")).toEqual({ ...opened, t: 120.5 });
+    expect(checked("?match=fbbc5d02&t=0")).toEqual({ ...opened, t: 0 });
+    expect(checked("?match=fbbc5d02&t=522.9")).toEqual({ ...opened, t: 522.9 });
+  });
+
+  it.each([
+    ["without a match", "?t=5", DEFAULT_LINK],
+    ["at the end of the match", "?match=fbbc5d02&t=523", opened],
+    ["rounded up to the end", "?match=fbbc5d02&t=522.96", opened],
+    ["past the end", "?match=fbbc5d02&t=9999", opened],
+    ["before the start", "?match=fbbc5d02&t=-1", opened],
+    ["with a match that is dropped", "?map=Lockdown&match=fbbc5d02&t=5", { ...DEFAULT_LINK, map: "Lockdown" }],
+  ])("is dropped %s", (_, query, expected) => {
+    expect(checked(query)).toEqual(expected);
   });
 });

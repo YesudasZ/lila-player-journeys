@@ -6,6 +6,7 @@ import { loadImage } from "../data/loadImage.ts";
 import { decodeLink } from "../lib/link.ts";
 import { journeysOf, manifest } from "../testing/committed.ts";
 import { currentAddress, startLinkSync } from "./linkSync.ts";
+import { playback, seek, startPlayback } from "./playback.ts";
 import { useAppStore } from "./store.ts";
 
 vi.mock("../data/fetchManifest.ts", () => ({ fetchManifest: vi.fn() }));
@@ -119,5 +120,38 @@ describe("the view in the address", () => {
     state().toggleDay("February_12");
     vi.advanceTimersByTime(1000);
     expect(written).toEqual([]);
+  });
+});
+
+describe("the time of playback in the address", () => {
+  it("is written when it comes to rest, in place, and never while the match plays", async () => {
+    vi.stubGlobal("document", { hidden: false, addEventListener: () => {}, removeEventListener: () => {} });
+    playback.setState(playback.getInitialState(), true);
+    const stopClock = startPlayback();
+    await loadFrom("?match=fbbc5d02");
+    vi.useFakeTimers();
+    const stop = startLinkSync();
+    seek(120.46);
+    vi.advanceTimersByTime(300);
+    expect(written).toEqual(["/?match=fbbc5d02&t=120.5"]);
+
+    playback.setState({ playing: true, time: 200 }); // as while it plays
+    state().setShown("kill", false);
+    playback.setState({ time: 250 });
+    vi.advanceTimersByTime(5000);
+    expect(written).toHaveLength(1);
+    expect(currentAddress()).toBe("https://tool.example/?match=fbbc5d02&t=250&hide=kill"); // the copy button gives the moment
+
+    playback.setState({ playing: false, time: 300 }); // the pause
+    vi.advanceTimersByTime(299);
+    expect(written).toHaveLength(1);
+    vi.advanceTimersByTime(1);
+    expect(written).toEqual(["/?match=fbbc5d02&t=120.5", "/?match=fbbc5d02&t=300&hide=kill"]);
+
+    seek(523); // the end, where the whole match is shown
+    vi.advanceTimersByTime(300);
+    expect(written.at(-1)).toBe("/?match=fbbc5d02&hide=kill");
+    stop();
+    stopClock();
   });
 });

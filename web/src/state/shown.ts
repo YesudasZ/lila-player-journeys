@@ -41,8 +41,12 @@ export function selectDrawList(state: AppState): DrawList | null {
   return list;
 }
 
-/** The view as a link, as the state stands; null until the manifest is there. What `checkedLink` gives back for it is the same link. */
-export function selectLink(state: AppState): Link | null {
+/**
+ * The view as a link, as the state stands; null until the manifest is there. What `checkedLink`
+ * gives back for it is the same link. `time` is where playback stands, which the clock knows and
+ * this state does not: null at the end of the match, and while no match is open.
+ */
+export function selectLink(state: AppState, time: number | null = null): Link | null {
   const map = selectMapEntry(state);
   if (state.manifest.status !== "ready" || !map) return null;
   const view = state.views[map.id];
@@ -50,6 +54,7 @@ export function selectLink(state: AppState): Link | null {
     map: map === state.manifest.value.maps[0] ? null : map.id,
     days: state.days,
     match: selectMatchId(state),
+    t: time,
     journey: state.focus,
     choices: state.choices,
     fates: state.fates,

@@ -83,7 +83,8 @@ JOURNEYS = [
 
 def test_a_case_counts_only_where_the_place_changes():
     assert cases_shown(JOURNEYS[0], 4, False, STEP) == {"a 5 s step", "a long gap"}
-    assert cases_shown(JOURNEYS[2], 3, True, STEP) == {"a 5 s step", "a death long after the last sample"}  # the gap before a death is not "a long gap"
+    # the gap before a death is "a death long after the last sample", not "a long gap"
+    assert cases_shown(JOURNEYS[2], 3, True, STEP) == {"a 5 s step", "a death long after the last sample"}
     assert cases_shown(JOURNEYS[5], 4, False, STEP) == set()
 
 

@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-24 00:35 IST
+Last updated: 2026-11-24 00:39 IST
 
 ## Current phase
 
@@ -37,7 +37,7 @@ Phase 6 deliverables and acceptance criteria are in PLAN.md, "Phase 6". The task
 - [x] 6.1a The user's five changes to the plan (pasted note, 24 Nov), recorded in PLAN.md: `t` is written with `replaceState`, never `pushState`; a frame counts for at most 100 ms and playback pauses when the tab is hidden; the frame-time reading also covers a second match (`fbbc5d02` is itself the one with the most journeys, 16, so the second is `d0a38c30` on Lockdown, which has the most rows: 1,216 in 15 journeys); the Play button gets the title "Play/Pause (Space when the map or timeline is focused)" and the slider's keys go where key help exists; DATA_NOTES.md records A6 and the journey of one row as assumptions. At the phase's end the closing message carries a short manual test script
 - [x] 6.2 Pipeline (24 Nov, 00:35): `pipeline/playback.py` with `head_at`, the rule of DATA_FORMAT.md as code, tested against values worked out by hand. `make data` leaves `web/public/data/` as it was and writes `web/src/lib/__fixtures__/playback.json` (4,876 bytes): five real journeys, the shortest that show each case, and one made-up journey of one row, with 100 heads in all. DATA_NOTES.md: A6 now says the playback rule in full, and A9 is the journey of one row (no path in the data has one: the shortest has 2 rows). `make test`: 252 tests
 - [x] 6.3 lib (24 Nov, 00:35): `web/src/lib/playback.ts`. `headAt` gives every head of the fixture exactly, with no rounding; the heads of a draw list at a time; how many of a marker's events have happened by a time; the clock's step, which counts at most 100 ms of real time for a frame; the speeds; the slider's keys. `npm run check`: 364 tests
-- [ ] 6.4 The clock `state/playback.ts`; `t` in the link and in the address
+- [x] 6.4 The clock and the link (24 Nov, 00:39): `web/src/state/playback.ts`, a plain Zustand store with `time`, `end`, `playing` and `speed`. It runs on `requestAnimationFrame` only while playing, follows the open match (523 s, 780 s and 878 s for the three named matches), opens a match whole and paused, takes the time of a link once, counts at most 100 ms for a late frame and pauses when the tab is hidden. `t` is in `lib/link.ts` (after `match`, to a tenth of a second, kept only with its match and below its span) and in the address: written with `replaceState` when the time comes to rest, never while the match plays. The app does not start the clock yet; that comes with the timeline bar. `npm run check`: 391 tests
 - [ ] 6.5 The draw list keeps the times of a marker's events; picking by time
 - [ ] 6.6 The journeys layer draws the moment
 - [ ] 6.7 The timeline bar, the keys, the slider's look
@@ -49,8 +49,8 @@ Phase 6 deliverables and acceptance criteria are in PLAN.md, "Phase 6". The task
 ## Exactly where I stopped
 
 - Branch `phase-6-timeline`, cut from `main` at `89dfde3`; local only, nothing pushed. `main` equals `origin/main`.
-- Steps 6.2 and 6.3 are committed: the reference function, the fixture and the pure functions of playback. Nothing of playback is on screen yet.
-- **NEXT:** step 6.4: the clock `web/src/state/playback.ts` (a plain Zustand store with `time`, `end`, `playing`, `speed`; it follows the open match and pauses when the tab is hidden) and `t` in `lib/link.ts`, `state/shown.ts` and `state/linkSync.ts`, written with `replaceState` only.
+- Steps 6.2 to 6.4 are committed: the reference function, the fixture, the pure functions, the clock and `t` in the link. Nothing of playback is on screen yet, and `App.tsx` does not call `startPlayback()` yet.
+- **NEXT:** step 6.5: in `lib/drawList.ts` a marker keeps the times of its events (`times`, which replaces `last`; `MapTooltip.tsx`, `journeysLayer.ts` and the tests of draw list and pick use `last`); `lib/pick.ts` takes what has happened by the time. Then 6.6, the layer draws the moment, and 6.7, the timeline bar with `startPlayback()` in `App.tsx`.
 
 ## Decisions and assumptions made
 
