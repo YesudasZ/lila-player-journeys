@@ -2,6 +2,7 @@ import { useEffect } from "react";
 
 import { MapPanel } from "./components/MapPanel.tsx";
 import { Centred, LoadError, LoadingLine } from "./components/StatusMessage.tsx";
+import { focusMapIfFocusWasLost } from "./components/focusMap.ts";
 import { TopBar } from "./components/TopBar.tsx";
 import { useAppStore } from "./state/store.ts";
 
@@ -30,7 +31,12 @@ export function App() {
         ) : (
           <Centred>
             {manifest.status === "error" ? (
-              <LoadError title="The maps did not load" failure={manifest.failure} retrying={manifest.retrying} onRetry={() => void loadManifest()} />
+              <LoadError
+                title="The maps did not load"
+                failure={manifest.failure}
+                retrying={manifest.retrying}
+                onRetry={() => void loadManifest().then(focusMapIfFocusWasLost)}
+              />
             ) : (
               <LoadingLine>Loading maps…</LoadingLine>
             )}

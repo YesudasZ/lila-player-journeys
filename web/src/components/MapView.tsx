@@ -5,6 +5,7 @@ import type { MapEntry } from "../lib/manifest.ts";
 import type { ZoomLimits } from "../lib/view.ts";
 import { MapReadout } from "./MapReadout.tsx";
 import { mountMapSurface, type MapSurface } from "./mapSurface.ts";
+import { MAP_SURFACE_ID } from "./tabIds.ts";
 import { ZoomControls } from "./ZoomControls.tsx";
 
 const KEYS_ID = "map-keys";
@@ -38,6 +39,7 @@ export function MapView({ map, image }: { map: MapEntry; image: HTMLImageElement
     <div ref={areaRef} className="relative h-full">
       <div
         ref={surfaceRef}
+        id={MAP_SURFACE_ID}
         tabIndex={0}
         role="application"
         aria-roledescription="map"

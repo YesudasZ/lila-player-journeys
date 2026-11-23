@@ -2,6 +2,7 @@ import { useEffect } from "react";
 
 import type { MapEntry } from "../lib/manifest.ts";
 import { useAppStore } from "../state/store.ts";
+import { focusMapIfFocusWasLost } from "./focusMap.ts";
 import { MAP_PANEL_ID, tabId } from "./tabIds.ts";
 import { MapView } from "./MapView.tsx";
 import { Centred, LoadError, LoadingLine } from "./StatusMessage.tsx";
@@ -23,7 +24,12 @@ export function MapPanel({ map }: { map: MapEntry }) {
       ) : (
         <Centred>
           {minimap?.status === "error" ? (
-            <LoadError title={`${map.name} did not load`} failure={minimap.failure} retrying={minimap.retrying} onRetry={() => void loadMinimap(map)} />
+            <LoadError
+              title={`${map.name} did not load`}
+              failure={minimap.failure}
+              retrying={minimap.retrying}
+              onRetry={() => void loadMinimap(map).then(focusMapIfFocusWasLost)}
+            />
           ) : (
             <LoadingLine>{`Loading ${map.name}…`}</LoadingLine>
           )}
