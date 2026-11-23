@@ -5,9 +5,9 @@
  * so panning and zooming rebuild nothing. Heads and markers are drawn at their size on screen.
  * What is drawn and what is picked comes from web/src/lib; this file only draws and listens.
  */
-import { MARKER_KINDS, type DrawList, type DrawnJourney, type MarkerKind } from "../../lib/drawList.ts";
+import type { DrawList, DrawnJourney, MarkerKind } from "../../lib/drawList.ts";
 import type { Journey } from "../../lib/journeys.ts";
-import { HEAD_RADIUS, MARKER_SHAPES } from "../../lib/markerShapes.ts";
+import { HEAD_RADIUS, MARKER_SHAPES, STROKES } from "../../lib/markerShapes.ts";
 import { pickMarker, pickPath, type PickedRow } from "../../lib/pick.ts";
 import type { Point, Size } from "../../lib/projection.ts";
 import { imageToScreen, scaleOf, screenToImage } from "../../lib/view.ts";
@@ -18,17 +18,12 @@ import type { Frame, Layer } from "../mapSurface.ts";
 const MARKER_REACH = 10; // CSS pixels within which a marker is under the pointer
 const PATH_REACH = 6; // the same for a path
 const DIMMED = 0.2; // the strength of everything else while one journey is focused
-const OUTLINE = 1.5; // CSS pixels of dark outline around a marker or a head
-const CROSS = 2.25; // CSS pixels of the strokes of the death cross
-const BOT_DASH = [6, 4]; // a bot's line, in CSS pixels
 const OFF_SCREEN = 12; // CSS pixels beyond the viewport within which a marker is still drawn
 /**
  * While all matches are open the lines are thin and half transparent, so that many paths over each
  * other read as density, and heads and markers are smaller, so that hundreds of them leave the paths visible.
  */
-const LOOKS = { single: { width: 2, strength: 0.95, size: 1 }, all: { width: 1.25, strength: 0.5, size: 0.7 } };
-/** The kinds from the bottom to the top: the many loot markers must not cover a death. */
-const DRAW_ORDER: readonly MarkerKind[] = [...MARKER_KINDS].reverse();
+const LOOKS = { single: { width: STROKES.line, strength: 0.95, size: 1 }, all: { width: 1.25, strength: 0.5, size: 0.7 } };
 /** The time of the last draw, for the browser's Performance panel and for the reading in PROGRESS.md. */
 const DRAW_MEASURE = "journeys-draw";
 
@@ -39,8 +34,8 @@ export interface Hover {
   viewport: Size;
   journey: Journey;
   row: number;
-  /** The marker, or null when the pointer is on a path. */
-  marker: { kind: MarkerKind; count: number } | null;
+  /** The marker, with the last of the rows it stands for, or null when the pointer is on a path. */
+  marker: { kind: MarkerKind; count: number; last: number } | null;
 }
 
 interface Parts {
@@ -54,9 +49,10 @@ interface Parts {
 interface JourneysLayer {
   layer: Layer;
   ring: Layer;
-  /** For the surface's `onPointer` and `onClick`. */
+  /** For the surface's `onPointer`, `onClick` and `onDoubleClick`. */
   point: (at: Point | null, frame: Frame) => void;
   click: (at: Point, frame: Frame) => void;
+  unclick: () => void;
   /** Call `redraw` with one of the two layers whenever it has to be drawn again. Returns what stops the watching. */
   watch: (redraw: (layer: Layer) => void) => () => void;
 }
@@ -89,6 +85,7 @@ export function createJourneysLayer({ canvas, ringCanvas, onHover }: Parts): Jou
   let shapes: { list: DrawList; paths: (Path2D | null)[] } | null = null;
   let hover: (PickedRow & { marker: number | null; list: DrawList }) | null = null;
   let told: string | null = null; // what the tooltip was last told, so that nothing is said twice
+  let beforeClick: string | null = null; // the focus before the last click, to give back when that click was half of a double-click
   let redraw: (layer: Layer) => void = () => {};
 
   const listNow = () => selectDrawList(useAppStore.getState());
@@ -97,7 +94,7 @@ export function createJourneysLayer({ canvas, ringCanvas, onHover }: Parts): Jou
   /**
    * A marker with its dark outline, drawn once at the resolution of the screen and then stamped
    * wherever it is needed. Thousands of markers cost little this way; drawn as shapes on every
-   * frame, the 8,988 loot markers of one map alone took longer than a frame.
+   * frame, the loot markers of one map alone took longer than a frame.
    */
   function stampOf(kind: MarkerKind, size: number, ratio: number): HTMLCanvasElement {
     const key = `${kind} ${size} ${ratio}`;
@@ -106,7 +103,7 @@ export function createJourneysLayer({ canvas, ringCanvas, onHover }: Parts): Jou
     const { lines, filled } = MARKER_SHAPES[kind];
     const radius = MARKER_SHAPES[kind].radius * size;
     const stamp = document.createElement("canvas");
-    stamp.width = Math.ceil((radius + OUTLINE + CROSS) * 2 * ratio) + 2;
+    stamp.width = Math.ceil((radius + STROKES.outline + STROKES.open) * 2 * ratio) + 2;
     stamp.height = stamp.width;
     const pen = stamp.getContext("2d");
     if (!pen) throw new Error("this browser cannot draw on a canvas");
@@ -120,14 +117,14 @@ export function createJourneysLayer({ canvas, ringCanvas, onHover }: Parts): Jou
       if (filled) pen.closePath();
     }
     pen.strokeStyle = colours.outline;
-    pen.lineWidth = filled ? OUTLINE * 2 : CROSS + OUTLINE * 2;
+    pen.lineWidth = filled ? STROKES.outline * 2 : STROKES.open + STROKES.outline * 2;
     pen.stroke();
     if (filled) {
       pen.fillStyle = colours[kind];
       pen.fill();
     } else {
       pen.strokeStyle = colours[kind];
-      pen.lineWidth = CROSS;
+      pen.lineWidth = STROKES.open;
       pen.stroke();
     }
     stamps.set(key, stamp);
@@ -144,13 +141,12 @@ export function createJourneysLayer({ canvas, ringCanvas, onHover }: Parts): Jou
     const focused = focus === null ? -1 : list.journeys.findIndex((drawn) => drawn.journey.id === focus);
     const rest = focused === -1 ? 1 : DIMMED;
     const scale = scaleOf(view, stage);
-    const left = stage.viewport.width / 2 - view.x * scale; // where the image's left edge lies on screen
-    const top = stage.viewport.height / 2 - view.y * scale;
-    const line = list.single ? LOOKS.single : LOOKS.all;
-    const head = HEAD_RADIUS * line.size;
+    const corner = imageToScreen({ x: 0, y: 0 }, view, stage); // where the image's top left corner lies on screen
+    const look = list.single ? LOOKS.single : LOOKS.all;
+    const head = HEAD_RADIUS * look.size;
 
     // Paths: shapes in image pixels, under the transform of the view.
-    context.setTransform(ratio * scale, 0, 0, ratio * scale, ratio * left, ratio * top);
+    context.setTransform(ratio * scale, 0, 0, ratio * scale, ratio * corner.x, ratio * corner.y);
     context.lineJoin = "round";
     context.lineCap = "round";
     const stroke = (index: number, width: number) => {
@@ -158,20 +154,20 @@ export function createJourneysLayer({ canvas, ringCanvas, onHover }: Parts): Jou
       if (!path) return;
       const bot = list.journeys[index].journey.actor === "bot";
       context.strokeStyle = bot ? colours.bot : colours.human;
-      context.setLineDash(bot ? BOT_DASH.map((length) => length / scale) : []);
+      context.setLineDash(bot ? STROKES.botDash.map((length) => length / scale) : []);
       context.lineWidth = width / scale;
       context.stroke(path);
     };
-    context.globalAlpha = line.strength * rest;
-    for (const index of paths.keys()) stroke(index, line.width);
+    context.globalAlpha = look.strength * rest;
+    for (const index of paths.keys()) stroke(index, look.width);
     if (focused !== -1 && paths[focused]) {
       context.globalAlpha = 0.9;
       context.setLineDash([]);
       context.strokeStyle = colours.highlight;
-      context.lineWidth = (line.width + 5) / scale;
+      context.lineWidth = (look.width + 5) / scale;
       context.stroke(paths[focused]);
       context.globalAlpha = 1;
-      stroke(focused, line.width + 0.5);
+      stroke(focused, look.width + 0.5);
     }
     context.setLineDash([]);
 
@@ -185,8 +181,8 @@ export function createJourneysLayer({ canvas, ringCanvas, onHover }: Parts): Jou
         context.beginPath();
         for (const [index, drawn] of list.journeys.entries()) {
           if (drawn.journey.actor !== actor || (only !== null && index !== only)) continue;
-          const x = drawn.x[drawn.pathLength - 1] * scale + left;
-          const y = drawn.y[drawn.pathLength - 1] * scale + top;
+          const x = drawn.x[drawn.pathLength - 1] * scale + corner.x;
+          const y = drawn.y[drawn.pathLength - 1] * scale + corner.y;
           if (!inView(x, y)) continue;
           if (actor === "human") {
             context.moveTo(x + head, y);
@@ -196,25 +192,37 @@ export function createJourneysLayer({ canvas, ringCanvas, onHover }: Parts): Jou
           }
         }
         context.strokeStyle = colours.outline;
-        context.lineWidth = OUTLINE * 2;
+        context.lineWidth = STROKES.outline * 2;
         context.stroke();
         context.fillStyle = colours[actor];
         context.fill();
       }
     };
 
-    /** The markers of all journeys, or of one, kind by kind. Each is a stamp set down on a whole device pixel, so it stays sharp. */
+    /**
+     * The markers of all journeys, or of one, in the order of the draw list: loot at the bottom, kills
+     * on top. Each is a stamp set down on a whole device pixel, so it stays sharp. In a single match a
+     * marker that stands for several rows carries their number.
+     */
     const markers = (only: number | null) => {
-      for (const kind of DRAW_ORDER) {
-        const stamp = stampOf(kind, line.size, ratio);
+      context.font = countFont;
+      context.textBaseline = "middle";
+      context.lineWidth = STROKES.outline * 2;
+      context.strokeStyle = colours.outline;
+      context.fillStyle = colours.text;
+      for (const marker of list.markers) {
+        if (only !== null && marker.journey !== only) continue;
+        const drawn = list.journeys[marker.journey];
+        const x = drawn.x[marker.row] * scale + corner.x;
+        const y = drawn.y[marker.row] * scale + corner.y;
+        if (!inView(x, y)) continue;
+        const stamp = stampOf(marker.kind, look.size, ratio);
         const side = stamp.width / ratio;
-        for (const marker of list.markers) {
-          if (marker.kind !== kind || (only !== null && marker.journey !== only)) continue;
-          const drawn = list.journeys[marker.journey];
-          const x = drawn.x[marker.row] * scale + left;
-          const y = drawn.y[marker.row] * scale + top;
-          if (inView(x, y)) context.drawImage(stamp, Math.round((x - side / 2) * ratio) / ratio, Math.round((y - side / 2) * ratio) / ratio, side, side);
-        }
+        context.drawImage(stamp, Math.round((x - side / 2) * ratio) / ratio, Math.round((y - side / 2) * ratio) / ratio, side, side);
+        if (!list.single || marker.count < 2) continue;
+        const radius = MARKER_SHAPES[marker.kind].radius;
+        context.strokeText(`${marker.count}`, x + radius + 3, y - radius);
+        context.fillText(`${marker.count}`, x + radius + 3, y - radius);
       }
     };
 
@@ -227,24 +235,6 @@ export function createJourneysLayer({ canvas, ringCanvas, onHover }: Parts): Jou
       markers(focused);
     }
     context.globalAlpha = 1;
-
-    // In a single match a marker that stands for several rows carries their number.
-    if (list.single) {
-      context.font = countFont;
-      context.textBaseline = "middle";
-      context.lineWidth = OUTLINE * 2;
-      context.strokeStyle = colours.outline;
-      context.fillStyle = colours.text;
-      for (const marker of list.markers) {
-        if (marker.count < 2) continue;
-        const drawn = list.journeys[marker.journey];
-        const x = drawn.x[marker.row] * scale + left + MARKER_SHAPES[marker.kind].radius + 3;
-        const y = drawn.y[marker.row] * scale + top - MARKER_SHAPES[marker.kind].radius;
-        if (!inView(x, y)) continue;
-        context.strokeText(`${marker.count}`, x, y);
-        context.fillText(`${marker.count}`, x, y);
-      }
-    }
 
     performance.clearMeasures(DRAW_MEASURE);
     performance.measure(DRAW_MEASURE, { start: started, end: performance.now() });
@@ -294,7 +284,7 @@ export function createJourneysLayer({ canvas, ringCanvas, onHover }: Parts): Jou
     if (saying === told) return;
     told = saying;
     const marker = hover.marker === null ? null : list.markers[hover.marker];
-    onHover({ at, viewport: frame.stage.viewport, journey: drawn.journey, row: hover.row, marker: marker && { kind: marker.kind, count: marker.count } });
+    onHover({ at, viewport: frame.stage.viewport, journey: drawn.journey, row: hover.row, marker: marker && { kind: marker.kind, count: marker.count, last: marker.last } });
   }
 
   function point(at: Point | null, frame: Frame) {
@@ -310,7 +300,14 @@ export function createJourneysLayer({ canvas, ringCanvas, onHover }: Parts): Jou
   function click(at: Point, frame: Frame) {
     const list = listNow();
     const found = list && pick(at, frame, list);
-    useAppStore.getState().setFocus(found ? list.journeys[found.journey].journey.id : null);
+    const { focus, setFocus } = useAppStore.getState();
+    beforeClick = focus;
+    setFocus(found ? list.journeys[found.journey].journey.id : null);
+  }
+
+  /** The last click was the first half of a double-click, which zooms: the focus goes back to what it was. */
+  function unclick() {
+    useAppStore.getState().setFocus(beforeClick);
   }
 
   function watch(notify: (layer: Layer) => void): () => void {
@@ -333,5 +330,5 @@ export function createJourneysLayer({ canvas, ringCanvas, onHover }: Parts): Jou
     };
   }
 
-  return { layer, ring, point, click, watch };
+  return { layer, ring, point, click, unclick, watch };
 }

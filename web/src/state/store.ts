@@ -97,8 +97,8 @@ export const useAppStore = create<AppState>()((set, get) => ({
         const manifest = await fetchManifest(again);
         const [first, ...others] = manifest.maps;
         set({ manifest: { status: "ready", value: manifest }, mapId: first.id });
+        void get().loadJourneys(first); // alongside its minimap: neither download waits for the other
         await get().loadMinimap(first);
-        void get().loadJourneys(first);
         for (const map of others) void get().loadMinimap(map);
       } catch (error) {
         set({ manifest: failed(error) });
@@ -147,7 +147,8 @@ export const useAppStore = create<AppState>()((set, get) => ({
   },
 
   setShown: (layer, shown) => {
-    set((state) => ({ choices: { ...state.choices, [layer]: shown } }));
+    const hidesJourneys = !shown && (layer === "humans" || layer === "bots"); // a journey that is no longer drawn cannot stay focused
+    set((state) => ({ choices: { ...state.choices, [layer]: shown }, focus: hidesJourneys ? null : state.focus }));
   },
 
   setFocus: (journeyId) => {

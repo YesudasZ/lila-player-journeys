@@ -11,7 +11,7 @@ export function Sidebar({ manifest, map }: { manifest: Manifest; map: MapEntry }
   return (
     <aside aria-label="Matches and legend" className="flex min-h-0 flex-col border-r border-border bg-surface text-[13px]">
       <MatchList key={map.id} manifest={manifest} map={map} />
-      {matchId !== null && <JourneyList map={map} matchId={matchId} />}
+      {matchId !== null && <JourneyList matchId={matchId} />}
       <Legend map={map} />
     </aside>
   );

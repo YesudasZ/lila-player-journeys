@@ -2,9 +2,9 @@
  * The draw list: everything the map and the legend need for what is shown. Pure.
  *
  * A journey's path is its rows up to and including its death row (docs/DATA_FORMAT.md, rule 3).
- * Every row that is not a movement row is a marker, at the place where its owner stood. Which
- * event codes are kills, deaths and so on comes from the manifest's `event_groups`; no event is
- * known here by name.
+ * Every row that is not a movement row is a marker, at the place where its owner stood; the events
+ * of one kind that one journey has at one spot are one marker with a count. Which event codes are
+ * kills, deaths and so on comes from the manifest's `event_groups`; no event is known here by name.
  */
 import type { Journey } from "./journeys.ts";
 import type { Manifest } from "./manifest.ts";
@@ -18,6 +18,9 @@ export type MarkerKind = (typeof MARKER_KINDS)[number];
 export const LAYER_KEYS = ["humans", "bots", ...MARKER_KINDS] as const;
 export type LayerKey = (typeof LAYER_KEYS)[number];
 export type Shown = Record<LayerKey, boolean>;
+
+/** The order the kinds are drawn in, from the bottom: the many loot markers must not cover a death or a kill. */
+const DRAWN: Record<MarkerKind, number> = { loot: 0, storm_death: 1, death: 2, kill: 3 };
 
 /** What the event codes mean for drawing, read from the manifest once. */
 export interface EventKinds {
@@ -58,16 +61,17 @@ export interface Marker {
   kind: MarkerKind;
   /** The index of its journey in the draw list's `journeys`. */
   journey: number;
-  /** The first of the rows it stands for. */
+  /** The first of the rows it stands for, and the last. */
   row: number;
-  /** How many rows it stands for: identical events of one journey in the same second at the same spot. */
+  last: number;
+  /** How many rows it stands for: the events of its kind that its journey has at this spot. */
   count: number;
 }
 
 export interface DrawList {
   /** The journeys that are drawn. */
   journeys: DrawnJourney[];
-  /** The markers that are drawn, in the order of their journeys and rows. */
+  /** The markers in the order they are drawn: loot at the bottom, then storm deaths, deaths, and kills on top; within a kind by journey and row. */
   markers: Marker[];
   /**
    * The legend's numbers. Journeys are counted for the open match whatever the switches say. Marker
@@ -114,17 +118,19 @@ export function buildDrawList(all: readonly Journey[], match: string | null, sho
       if (!kind) continue;
       counts[kind] += 1;
       if (!shown[kind]) continue;
-      const same = `${journey.t[row]} ${journey.u[row]} ${journey.v[row]} ${journey.e[row]}`;
+      const same = `${kind} ${journey.u[row]} ${journey.v[row]}`;
       const known = seen.get(same);
       if (known) {
         known.count += 1;
+        known.last = row;
       } else {
-        const marker: Marker = { kind, journey: index, row, count: 1 };
+        const marker: Marker = { kind, journey: index, row, last: row, count: 1 };
         seen.set(same, marker);
         markers.push(marker);
       }
     }
   }
+  markers.sort((a, b) => DRAWN[a.kind] - DRAWN[b.kind]); // a stable sort: journeys and rows keep their order within a kind
   return { journeys, markers, counts, matches: matches.size, single: match !== null };
 }
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { journeysOf, manifest, mapOf } from "../testing/committed.ts";
 import { buildDrawList, eventKinds, pathLength, shownLayers, type Grid, type MarkerKind, type Shown } from "./drawList.ts";
+import { pickMarker } from "./pick.ts";
 import type { Journey } from "./journeys.ts";
 
 const KINDS = eventKinds(manifest.event_groups);
@@ -62,16 +63,25 @@ describe("the draw list", () => {
     const list = buildDrawList([journey("a", [BOT_MOVE, LOOT, BOT_KILL, BOT_MOVE, BOT_KILLED, BOT_KILL], { actor: "bot" })], null, ALL, KINDS, GRID);
     expect(list.journeys).toHaveLength(1);
     expect(list.journeys[0].pathLength).toBe(5);
-    expect(list.markers.map((marker) => [marker.kind, marker.row])).toEqual([["loot", 1], ["kill", 2], ["death", 4], ["kill", 5]]);
+    expect(list.markers.map((marker) => [marker.kind, marker.row])).toEqual([["loot", 1], ["death", 4], ["kill", 2], ["kill", 5]]); // in the order they are drawn
     expect(list.counts).toEqual({ humans: 0, bots: 1, kill: 2, death: 1, storm_death: 0, loot: 1 });
   });
 
-  it("makes one marker with a count of identical events of one journey in the same second at the same spot", () => {
-    const repeated = journey("a", [MOVE, LOOT, LOOT, LOOT, LOOT, BOT_KILL], { seconds: [0, 5, 5, 5, 9, 9], spots: [10, 20, 20, 20, 20, 20] });
+  it("makes one marker with a count of the events of one kind that one journey has at one spot, whatever their second", () => {
+    const repeated = journey("a", [MOVE, LOOT, LOOT, LOOT, LOOT, BOT_KILL, LOOT], { seconds: [0, 5, 5, 5, 9, 9, 12], spots: [10, 20, 20, 20, 20, 20, 30] });
     const list = buildDrawList([repeated], null, ALL, KINDS, GRID);
-    expect(kindsOf(list.markers)).toEqual(["loot x3", "loot x1", "kill x1"]); // a later second and another event stay apart
-    expect(list.markers[0].row).toBe(1);
-    expect(list.counts.loot).toBe(4); // the legend counts rows, not markers
+    expect(kindsOf(list.markers)).toEqual(["loot x4", "loot x1", "kill x1"]); // another spot and another kind stay apart
+    expect([list.markers[0].row, list.markers[0].last]).toEqual([1, 4]); // from the first of its rows to the last
+    expect([list.markers[1].row, list.markers[1].last]).toEqual([6, 6]);
+    expect(list.counts.loot).toBe(5); // the legend counts rows, not markers
+  });
+
+  it("draws a kill over a loot at the same spot, and the pointer finds the one on top", () => {
+    const both = journey("a", [MOVE, BOT_KILL, LOOT], { spots: [10, 20, 20] }); // the loot comes later, and still lies underneath
+    const list = buildDrawList([both], null, ALL, KINDS, GRID);
+    expect(kindsOf(list.markers)).toEqual(["loot x1", "kill x1"]);
+    const { x, y } = list.journeys[0];
+    expect(list.markers[pickMarker({ x: x[1], y: y[1] }, 5, list) ?? -1].kind).toBe("kill");
   });
 
   it("keeps the same event of two journeys apart", () => {
@@ -165,12 +175,21 @@ describe("the draw lists of the committed data", () => {
     expect(listOf("Lockdown").counts).toEqual({ humans: 171, bots: 124, kill: 425, death: 166, storm_death: 17, loot: 2047 });
   });
 
-  it("draw fewer markers than rows where events repeat: Ambrose Valley's 9,902 loot rows are 8,988 markers", () => {
+  it("draw fewer markers than rows where a journey repeats an event at one spot: Ambrose Valley's 9,902 loot rows are 7,940 markers", () => {
     const markers = listOf("AmbroseValley").markers;
     const of = (kind: MarkerKind) => markers.filter((marker) => marker.kind === kind);
-    expect(of("loot")).toHaveLength(8988);
-    expect(of("kill")).toHaveLength(1772);
+    expect(of("loot")).toHaveLength(7940);
+    expect(of("kill")).toHaveLength(1744);
+    expect(of("death")).toHaveLength(487);
     expect(of("loot").reduce((sum, marker) => sum + marker.count, 0)).toBe(9902);
+  });
+
+  it("leave no marker of a journey under another of its kind: every spot has one", () => {
+    for (const map of manifest.maps) {
+      const list = listOf(map.id);
+      const spots = new Set(list.markers.map((marker) => `${marker.journey} ${marker.kind} ${list.journeys[marker.journey].x[marker.row]} ${list.journeys[marker.journey].y[marker.row]}`));
+      expect(spots.size).toBe(list.markers.length);
+    }
   });
 
   it("show fbbc5d02 as 16 journeys, one of them a human without an account id", () => {

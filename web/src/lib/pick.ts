@@ -6,7 +6,7 @@
 import type { DrawList } from "./drawList.ts";
 import type { Point } from "./projection.ts";
 
-/** The index of the nearest marker within `reach` of a point, or null. Of two equally near, the one drawn later, on top, wins. */
+/** The index of the nearest marker within `reach` of a point, or null. Of two equally near, the later one in the draw list wins: it is drawn on top. */
 export function pickMarker(at: Point, reach: number, list: DrawList): number | null {
   let best: number | null = null;
   let nearest = reach * reach;

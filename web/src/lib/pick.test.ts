@@ -11,7 +11,7 @@ function drawn(points: [number, number][], pathLength = points.length): DrawnJou
 function listOf(journeys: DrawnJourney[], markers: Marker[] = []): DrawList {
   return { journeys, markers, counts: { humans: 0, bots: 0, kill: 0, death: 0, storm_death: 0, loot: 0 }, matches: 1, single: true };
 }
-const marker = (journey: number, row: number): Marker => ({ kind: "kill", journey, row, count: 1 });
+const marker = (journey: number, row: number): Marker => ({ kind: "kill", journey, row, last: row, count: 1 });
 /** The reach in image pixels of 10 screen pixels at a scale of the view. */
 const reachAt = (scale: number) => 10 / scale;
 

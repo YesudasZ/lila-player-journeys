@@ -1,5 +1,7 @@
 import type { LayerKey, MarkerKind } from "../lib/drawList.ts";
-import { HEAD_RADIUS, MARKER_SHAPES, shapePath } from "../lib/markerShapes.ts";
+import { HEAD_RADIUS, MARKER_SHAPES, STROKES, shapePath } from "../lib/markerShapes.ts";
+
+const OUTLINED = STROKES.outline * 2; // half of the stroke of an outline lies under the fill
 
 /** The colour of each thing that is drawn, as the class of its token. */
 const TONES: Record<LayerKey, string> = {
@@ -15,11 +17,11 @@ const TONES: Record<LayerKey, string> = {
 function JourneyShape({ bot }: { bot: boolean }) {
   return (
     <>
-      <line x1="-13" x2="5" y1="0" y2="0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeDasharray={bot ? "6 4" : undefined} />
+      <line x1="-13" x2="5" y1="0" y2="0" stroke="currentColor" strokeWidth={STROKES.line} strokeLinecap="round" strokeDasharray={bot ? STROKES.botDash.join(" ") : undefined} />
       {bot ? (
-        <rect x={8 - HEAD_RADIUS} y={-HEAD_RADIUS} width={HEAD_RADIUS * 2} height={HEAD_RADIUS * 2} className="fill-current stroke-bg" strokeWidth="3" paintOrder="stroke" />
+        <rect x={8 - HEAD_RADIUS} y={-HEAD_RADIUS} width={HEAD_RADIUS * 2} height={HEAD_RADIUS * 2} className="fill-current stroke-bg" strokeWidth={OUTLINED} paintOrder="stroke" />
       ) : (
-        <circle cx="8" cy="0" r={HEAD_RADIUS} className="fill-current stroke-bg" strokeWidth="3" paintOrder="stroke" />
+        <circle cx="8" cy="0" r={HEAD_RADIUS} className="fill-current stroke-bg" strokeWidth={OUTLINED} paintOrder="stroke" />
       )}
     </>
   );
@@ -29,11 +31,11 @@ function JourneyShape({ bot }: { bot: boolean }) {
 function MarkerShapeIcon({ kind }: { kind: MarkerKind }) {
   const shape = MARKER_SHAPES[kind];
   const d = shapePath(shape);
-  if (shape.filled) return <path d={d} className="fill-current stroke-bg" strokeWidth="3" strokeLinejoin="round" paintOrder="stroke" />;
+  if (shape.filled) return <path d={d} className="fill-current stroke-bg" strokeWidth={OUTLINED} strokeLinejoin="round" paintOrder="stroke" />;
   return (
     <>
-      <path d={d} className="stroke-bg" strokeWidth="5.25" strokeLinecap="round" fill="none" />
-      <path d={d} stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" fill="none" />
+      <path d={d} className="stroke-bg" strokeWidth={STROKES.open + OUTLINED} strokeLinecap="round" fill="none" />
+      <path d={d} stroke="currentColor" strokeWidth={STROKES.open} strokeLinecap="round" fill="none" />
     </>
   );
 }

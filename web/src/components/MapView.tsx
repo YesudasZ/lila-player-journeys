@@ -43,6 +43,7 @@ export function MapView({ map, image, manifest }: { map: MapEntry; image: HTMLIm
       onLimits: setLimits,
       onPointer: drawn.point,
       onClick: drawn.click,
+      onDoubleClick: drawn.unclick,
       onEscape: () => {
         useAppStore.getState().setFocus(null);
       },

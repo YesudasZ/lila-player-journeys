@@ -67,8 +67,10 @@ interface Parts {
   onLimits: (limits: ZoomLimits) => void;
   /** The pointer is at this point of the map, or nowhere on it (null): it left, or the map is being dragged. Also told when the map moved under a resting pointer. */
   onPointer?: (at: Point | null, frame: Frame) => void;
-  /** A press and release without a drag. */
+  /** A click: a press and release without a drag. The second click of a double-click is not told. */
   onClick?: (at: Point, frame: Frame) => void;
+  /** A double-click, which zooms in: the click just told was its first half. */
+  onDoubleClick?: () => void;
   /** Esc was pressed inside the map area. */
   onEscape?: () => void;
 }
@@ -93,7 +95,7 @@ function onPixelRatioChange(changed: () => void): () => void {
   };
 }
 
-export function mountMapSurface({ area, surface, map, layers, readout, onLimits, onPointer, onClick, onEscape }: Parts): MapSurface {
+export function mountMapSurface({ area, surface, map, layers, readout, onLimits, onPointer, onClick, onDoubleClick, onEscape }: Parts): MapSurface {
   const contexts = new Map(
     layers.map((layer) => {
       const context = layer.canvas.getContext("2d");
@@ -113,6 +115,7 @@ export function mountMapSurface({ area, surface, map, layers, readout, onLimits,
   const stale = new Set<Layer>(layers); // the layers that do not show the current state yet
   let pointer: Point | null = null; // where the pointer is over the surface, in CSS pixels
   let drag: { id: number; last: Point; moved: boolean } | null = null;
+  let dragged = false; // the last release ended a drag, so the click event that follows it is not a click
   let limits: ZoomLimits | null = null;
 
   const stage = (): Stage => ({ viewport, artwork });
@@ -260,9 +263,13 @@ export function mountMapSurface({ area, surface, map, layers, readout, onLimits,
 
   function onPointerUp(event: PointerEvent) {
     if (drag?.id !== event.pointerId) return;
-    const clicked = !drag.moved;
+    dragged = drag.moved;
     endDrag();
-    if (clicked) onClick?.(position(event), frameOf(view()));
+  }
+
+  function onSurfaceClick(event: MouseEvent) {
+    if (!dragged && event.detail < 2) onClick?.(position(event), frameOf(view()));
+    dragged = false;
   }
 
   function onPointerLost(event: PointerEvent) {
@@ -283,7 +290,8 @@ export function mountMapSurface({ area, surface, map, layers, readout, onLimits,
     schedule(); // at a zoom limit the view stays, the position under the pointer is still written
   }
 
-  function onDoubleClick(event: MouseEvent) {
+  function onSurfaceDoubleClick(event: MouseEvent) {
+    onDoubleClick?.();
     show(zoomAt(view(), DOUBLE_CLICK_ZOOM, position(event), stage()));
   }
 
@@ -313,7 +321,8 @@ export function mountMapSurface({ area, surface, map, layers, readout, onLimits,
   surface.addEventListener("lostpointercapture", onPointerLost);
   surface.addEventListener("pointerleave", onPointerLeave);
   surface.addEventListener("wheel", onWheel, { passive: false }); // React's onWheel is passive and cannot stop the scroll
-  surface.addEventListener("dblclick", onDoubleClick);
+  surface.addEventListener("click", onSurfaceClick);
+  surface.addEventListener("dblclick", onSurfaceDoubleClick);
   area.addEventListener("keydown", onKeyDown);
   const stopListening = useAppStore.subscribe((state, before) => {
     if (state.views[map.id] === before.views[map.id]) return;
@@ -338,7 +347,8 @@ export function mountMapSurface({ area, surface, map, layers, readout, onLimits,
       surface.removeEventListener("lostpointercapture", onPointerLost);
       surface.removeEventListener("pointerleave", onPointerLeave);
       surface.removeEventListener("wheel", onWheel);
-      surface.removeEventListener("dblclick", onDoubleClick);
+      surface.removeEventListener("click", onSurfaceClick);
+      surface.removeEventListener("dblclick", onSurfaceDoubleClick);
       area.removeEventListener("keydown", onKeyDown);
     },
   };

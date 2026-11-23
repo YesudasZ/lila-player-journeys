@@ -1,31 +1,33 @@
-import { useMemo } from "react";
-
 import { fateLabel, whoLabel } from "../lib/labels.ts";
-import type { MapEntry } from "../lib/manifest.ts";
+import { selectDrawList } from "../state/shown.ts";
 import { useAppStore } from "../state/store.ts";
+import { moveInList } from "./listKeys.ts";
 import { Sample } from "./Samples.tsx";
 
 /**
- * The journeys of the open match. Choosing one focuses it on the map, as a click on its path does,
- * so the focus can also be set by keyboard; choosing it again clears the focus.
+ * The journeys of the open match that are drawn. Choosing one focuses it on the map, as a click on
+ * its path does, so the focus can also be set by keyboard; choosing it again clears the focus.
+ * The list is one stop for the Tab key; the arrow keys move inside it.
  */
-export function JourneyList({ map, matchId }: { map: MapEntry; matchId: string }) {
-  const loaded = useAppStore((state) => state.journeys[map.id]);
+export function JourneyList({ matchId }: { matchId: string }) {
+  const list = useAppStore(selectDrawList);
   const focus = useAppStore((state) => state.focus);
   const setFocus = useAppStore((state) => state.setFocus);
-  const journeys = useMemo(() => (loaded?.status === "ready" ? loaded.value.filter((journey) => journey.match === matchId) : []), [loaded, matchId]);
+  const journeys = list?.single ? list.journeys.map((drawn) => drawn.journey) : [];
   if (journeys.length === 0) return null;
+  const tabStop = journeys.some((journey) => journey.id === focus) ? focus : journeys[0].id;
 
   return (
     <section aria-labelledby="journeys-heading" className="flex max-h-[36%] min-h-0 flex-col border-t border-border">
       <h2 id="journeys-heading" className="px-4 pt-3 pb-1 font-heading text-[13px] font-semibold tracking-wide">
         Journeys of <span className="font-mono font-medium">{matchId}</span>
       </h2>
-      <ul className="min-h-0 overflow-y-auto px-2 pb-2">
+      <ul onKeyDown={moveInList} className="min-h-0 overflow-y-auto px-2 pb-2">
         {journeys.map((journey) => (
           <li key={journey.id}>
             <button
               type="button"
+              tabIndex={journey.id === tabStop ? 0 : -1}
               aria-pressed={journey.id === focus}
               onClick={() => {
                 setFocus(journey.id === focus ? null : journey.id);

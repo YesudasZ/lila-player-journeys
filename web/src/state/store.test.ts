@@ -256,11 +256,36 @@ describe("what is shown", () => {
     expect(selectMatchId(state())).toBe("fbbc5d02");
     const list = selectDrawList(state());
     expect([list?.single, list?.journeys.length]).toEqual([true, 16]);
-    expect(list?.markers.filter((marker) => marker.kind === "loot")).toHaveLength(7);
+    const loot = list?.markers.filter((marker) => marker.kind === "loot") ?? [];
+    expect(loot.reduce((rows, marker) => rows + marker.count, 0)).toBe(7);
+    expect(loot).toHaveLength(6); // two of the 7 loot rows are at one spot, so they are one marker
 
     state().selectMatch("AmbroseValley", null);
     expect(state().matches).toEqual({});
     expect(selectDrawList(state())?.journeys).toHaveLength(836);
+  });
+
+  it("is the newly opened match when one match follows another, whatever the switches", async () => {
+    await ready();
+    state().setShown("loot", true); // so that nothing but the match changes between the two lists
+    state().selectMatch("AmbroseValley", "fbbc5d02");
+    expect(selectDrawList(state())?.journeys).toHaveLength(16);
+    state().selectMatch("AmbroseValley", "a476eb57");
+    const list = selectDrawList(state());
+    expect(list?.journeys.map((drawn) => drawn.journey.match)).toEqual(["a476eb57"]);
+    expect(list?.counts).toMatchObject({ humans: 1, bots: 0, kill: 10, loot: 58 });
+  });
+
+  it("drops the focus when the journeys of one kind are hidden, and keeps it when a marker kind is", async () => {
+    await ready();
+    state().setFocus("fbbc5d02-anon");
+    state().setShown("kill", false);
+    expect(state().focus).toBe("fbbc5d02-anon");
+    state().setShown("bots", false);
+    expect(state().focus).toBeNull();
+    state().setFocus("fbbc5d02-anon");
+    state().setShown("bots", true); // showing them again takes no focus away
+    expect(state().focus).toBe("fbbc5d02-anon");
   });
 
   it("ignores a match the manifest does not have on that map", async () => {

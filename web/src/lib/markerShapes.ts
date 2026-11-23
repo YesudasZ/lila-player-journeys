@@ -24,6 +24,18 @@ export const MARKER_SHAPES: Record<MarkerKind, MarkerShape> = {
   loot: { radius: 3.5, lines: [RING], filled: false },
 };
 
+/** The strokes that the map's canvas and the legend share, in CSS pixels. */
+export const STROKES = {
+  /** A journey's line in a single match. */
+  line: 2,
+  /** A bot's dashes and the gaps between them. */
+  botDash: [6, 4],
+  /** The dark outline around a marker or a head. */
+  outline: 1.5,
+  /** The strokes of a shape that is not filled: the cross and the ring. */
+  open: 2.25,
+} as const;
+
 /** Half the size of a path's head, in CSS pixels: a circle for a human, a square for a bot. */
 export const HEAD_RADIUS = 3.5;
 

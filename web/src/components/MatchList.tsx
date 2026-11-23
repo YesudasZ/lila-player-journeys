@@ -5,6 +5,7 @@ import type { Manifest, MapEntry } from "../lib/manifest.ts";
 import { findMatches, journeysIn, matchesOfMap } from "../lib/matches.ts";
 import { selectMatchId } from "../state/shown.ts";
 import { useAppStore } from "../state/store.ts";
+import { moveInList } from "./listKeys.ts";
 
 const ROW =
   "flex w-full items-baseline gap-2 rounded-md px-2 py-1.5 text-left text-xs text-text-muted hover:bg-surface-2 hover:text-text focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent aria-pressed:bg-surface-2 aria-pressed:text-text aria-pressed:shadow-[inset_2px_0_0_var(--color-accent)]";
@@ -12,7 +13,7 @@ const ROW =
 /**
  * The matches of the open map, busiest first. "All matches" shows them together; choosing one opens
  * it alone, and choosing it again goes back. The box narrows the list to the ids that contain what
- * was typed.
+ * was typed. The list is one stop for the Tab key; the arrow keys move inside it.
  */
 export function MatchList({ manifest, map }: { manifest: Manifest; map: MapEntry }) {
   const matchId = useAppStore(selectMatchId);
@@ -20,6 +21,7 @@ export function MatchList({ manifest, map }: { manifest: Manifest; map: MapEntry
   const [typed, setTyped] = useState("");
   const matches = useMemo(() => matchesOfMap(manifest, map.id), [manifest, map.id]);
   const found = useMemo(() => findMatches(matches, typed), [matches, typed]);
+  const tabStop = found.some((match) => match.id === matchId) ? matchId : found.at(0)?.id;
   const days = useMemo(() => new Map(manifest.days.map((day) => [day.id, dayLabel(day.date)])), [manifest.days]);
 
   return (
@@ -55,11 +57,12 @@ export function MatchList({ manifest, map }: { manifest: Manifest; map: MapEntry
           No match id contains “{typed.trim()}”.
         </p>
       ) : (
-        <ul className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
+        <ul onKeyDown={moveInList} className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
           {found.map((match) => (
             <li key={match.id}>
               <button
                 type="button"
+                tabIndex={match.id === tabStop ? 0 : -1}
                 aria-pressed={match.id === matchId}
                 onClick={() => {
                   selectMatch(map.id, match.id === matchId ? null : match.id);
