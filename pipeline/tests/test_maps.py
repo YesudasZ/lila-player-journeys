@@ -2,7 +2,15 @@
 import numpy as np
 import pytest
 
-from pipeline.maps import MAPS, uv_to_pixel, world_to_uv
+from pipeline.maps import MAPS, uv_to_pixel, uv_to_world, world_to_uv
+
+
+@pytest.mark.parametrize("map_id", sorted(MAPS))
+def test_uv_to_world_undoes_world_to_uv(map_id):
+    x, z = np.array([-301.45, 0.0, 256.6]), np.array([-355.55, 12.5, -194.0])
+    back_x, back_z = uv_to_world(map_id, *world_to_uv(map_id, x, z))
+    np.testing.assert_allclose(back_x, x)
+    np.testing.assert_allclose(back_z, z)
 
 
 def test_readme_worked_example():

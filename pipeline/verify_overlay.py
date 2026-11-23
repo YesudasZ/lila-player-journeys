@@ -29,6 +29,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 from pipeline.dataset import MOVEMENT_EVENTS, load_raw
 from pipeline.maps import MAPS, MapConfig, uv_to_pixel, world_to_uv
+from pipeline.minimap import load_minimap
 
 OVERLAY_WIDTH = 1600
 PANEL_WIDTH = 480
@@ -75,15 +76,6 @@ class Orientation:
 
 README_ORIENTATION = Orientation(swap=False, mirror_u=False, mirror_v=False)
 ORIENTATIONS = [Orientation(swap, mirror_u, mirror_v) for swap in (False, True) for mirror_u in (False, True) for mirror_v in (False, True)]
-
-
-def load_minimap(path: Path, width: int) -> Image.Image:
-    """The minimap as RGB, ``width`` pixels wide, aspect ratio kept."""
-    with Image.open(path) as image:
-        image.draft("RGB", (width * 2, width * 2))  # lets the JPEG decoder skip most of a 9000 px image
-        rgb = image.convert("RGB")
-    height = round(width * rgb.height / rgb.width)
-    return rgb.resize((width, height), Image.Resampling.LANCZOS)
 
 
 def to_pixels(cfg: MapConfig, part: pd.DataFrame, size: tuple[int, int], orientation: Orientation) -> tuple[np.ndarray, np.ndarray]:

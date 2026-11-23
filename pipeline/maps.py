@@ -24,6 +24,7 @@ Coord = TypeVar("Coord", float, np.ndarray)
 @dataclass(frozen=True)
 class MapConfig:
     map_id: str  # value of the map_id column
+    name: str  # the map's name as the README writes it for people
     scale: float  # world units spanned by the full image width (and height)
     origin_x: float  # world x at u = 0, the left edge of the image
     origin_z: float  # world z at v = 0, the bottom edge of the image
@@ -33,9 +34,9 @@ class MapConfig:
 MAPS: dict[str, MapConfig] = {
     cfg.map_id: cfg
     for cfg in (
-        MapConfig("AmbroseValley", 900.0, -370.0, -473.0, "AmbroseValley_Minimap.png"),
-        MapConfig("GrandRift", 581.0, -290.0, -290.0, "GrandRift_Minimap.png"),
-        MapConfig("Lockdown", 1000.0, -500.0, -500.0, "Lockdown_Minimap.jpg"),
+        MapConfig("AmbroseValley", "Ambrose Valley", 900.0, -370.0, -473.0, "AmbroseValley_Minimap.png"),
+        MapConfig("GrandRift", "Grand Rift", 581.0, -290.0, -290.0, "GrandRift_Minimap.png"),
+        MapConfig("Lockdown", "Lockdown", 1000.0, -500.0, -500.0, "Lockdown_Minimap.jpg"),
     )
 }
 
@@ -44,6 +45,12 @@ def world_to_uv(map_id: str, x: Coord, z: Coord) -> tuple[Coord, Coord]:
     """Project world (x, z) on a map to UV. Values outside [0, 1] are off the image."""
     cfg = MAPS[map_id]
     return (x - cfg.origin_x) / cfg.scale, (z - cfg.origin_z) / cfg.scale
+
+
+def uv_to_world(map_id: str, u: Coord, v: Coord) -> tuple[Coord, Coord]:
+    """The inverse of ``world_to_uv``: UV on a map back to world (x, z)."""
+    cfg = MAPS[map_id]
+    return u * cfg.scale + cfg.origin_x, v * cfg.scale + cfg.origin_z
 
 
 def uv_to_pixel(u: Coord, v: Coord, width: int, height: int) -> tuple[Coord, Coord]:
