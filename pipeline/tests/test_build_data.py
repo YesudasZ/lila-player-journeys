@@ -253,6 +253,17 @@ def test_minimap_is_written_at_its_own_aspect_and_recorded(built):
             assert image.size == MINIMAP_SIZES[entry["id"]] == (entry["minimap"]["width"], entry["minimap"]["height"])
 
 
+def test_manifest_holds_the_box_of_the_artwork_inside_each_minimap(tmp_path):
+    raw = make_raw(tmp_path / "player_data", dataset())
+    with_surround = Image.new("RGB", (40, 40), (0, 0, 0))
+    with_surround.paste((30, 60, 90), (10, 4, 30, 34))
+    with_surround.save(raw / "minimaps" / MAPS["AmbroseValley"].minimap_file)
+    build(raw, tmp_path / "out", tmp_path / "fixtures")
+    artwork = {entry["id"]: entry["minimap"]["artwork"] for entry in read(tmp_path / "out" / "manifest.json")["maps"]}
+    assert artwork["AmbroseValley"] == {"left": 0.25, "top": 0.1, "right": 0.75, "bottom": 0.85}
+    assert artwork["GrandRift"] == artwork["Lockdown"] == {"left": 0.0, "top": 0.0, "right": 1.0, "bottom": 1.0}
+
+
 def test_minimap_wider_than_the_limit_is_downscaled_keeping_its_aspect(tmp_path, monkeypatch):
     monkeypatch.setattr(build_data, "MINIMAP_WIDTH", 20)
     raw = make_raw(tmp_path / "player_data", dataset())

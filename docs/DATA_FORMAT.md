@@ -21,7 +21,8 @@ The pipeline also writes `web/src/lib/__fixtures__/projection.json`, the referen
 | `events` | the eight event names. An event's position in this list is its code in `e` |
 | `event_groups` | the event codes behind each thing the app draws: `movement`, `kill`, `death`, `storm_death`, `loot`. Every code is in exactly one group |
 | `fates` | every value `fate` can take |
-| `maps[]` | `id`, `name`, `scale`, `origin_x`, `origin_z` (from `pipeline/maps.py`), `minimap.file`, `minimap.width`, `minimap.height` (read back from the WebP), `journeys_file`, and the number of `matches` and `journeys` |
+| `maps[]` | `id`, `name`, `scale`, `origin_x`, `origin_z` (from `pipeline/maps.py`), `minimap.file`, `minimap.width`, `minimap.height` (read back from the WebP), `minimap.artwork`, `journeys_file`, and the number of `matches` and `journeys` |
+| `maps[].minimap.artwork` | `left`, `top`, `right`, `bottom` of the map artwork as fractions of the image, measured from its left and top edges. The rest of the image is black surround. The app fits this box to the window. Every recorded position lies inside it |
 | `days[]` | `id` (the folder name), `date`, `partial` (true for 14 Feb), `matches`. In date order |
 | `totals` | the sum of each count below over all matches, and the number of matches |
 | `matches[]` | one entry per match, ordered by map, then start |

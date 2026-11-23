@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-23 17:10 IST
+Last updated: 2026-11-23 17:19 IST
 
 ## Current phase
 
@@ -31,7 +31,7 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 Phase 3 deliverables, the screen design, the package versions and the acceptance criteria are in PLAN.md, "Phase 3". The task list of Phase 2 is in the history of this file (`git log -p docs/PROGRESS.md`).
 
 - [x] 3.0 Plan approved by the user on 23 Nov (plan mode). Decided: ESLint with TypeScript 6.0.3; double-click zooms in; the artwork is fitted, with its box written into the manifest by the pipeline; fonts bundled; a two-agent review at the end. Branch cut from `main` at `24559ce`. Nothing installed yet
-- [ ] 3.1 Pipeline: `black_surround` moves from `verify_overlay.py` to `minimap.py`; artwork box per minimap into the manifest; pytest on a synthetic image; the three boxes pinned in `test_committed_data.py`; row in DATA_FORMAT.md; `make data`; `make overlay` output unchanged
+- [x] 3.1 Pipeline: `black_surround` now lives in `pipeline/minimap.py` (one implementation, also used by the proof images); `artwork_box` gives each minimap's artwork as fractions of the image; the manifest holds it as `minimap.artwork`. Boxes: Ambrose Valley 0.022 / 0.0396 / 0.8037 / 0.9517, Grand Rift 0.0767 / 0.1911 / 0.9556 / 0.8773, Lockdown 0.0605 / 0.0327 / 0.8989 / 0.8926 (left / top / right / bottom), pinned in `test_committed_data.py`, which also checks that every recorded position lies inside its box. 237 tests; `make data` changed only `manifest.json`; `make overlay` output unchanged
 - [ ] 3.2 Scaffold `web/`: `package.json` with the exact versions, Vite, TypeScript, ESLint, Vitest and Tailwind configuration, `npm install` (approved), `npm run check` and `npm run build` run
 - [ ] 3.3 `web/src/lib/`: `projection.ts`, `view.ts`, `scaleBar.ts`, `manifest.ts`, each with its tests
 - [ ] 3.4 Store and data loading: manifest, minimap images, selected map, one view per map
@@ -44,10 +44,10 @@ Phase 3 deliverables, the screen design, the package versions and the acceptance
 ## Exactly where I stopped
 
 - Branch `phase-3-app-shell`, cut from `main` at `24559ce`. `main` equals `origin/main`. This commit records the approved Phase 3 plan; the branch is local, nothing of it is pushed.
-- Last completed: 3.0. No code of Phase 3 exists yet and no package is installed.
+- Last completed: 3.1 (the artwork box in the pipeline and the manifest). No app code exists yet and no package is installed.
 - CI run #3 on `24559ce` (the last commit made on `main`) passed.
 - One planning agent (tool configuration against current documentation) had not reported when this was written. Its result is optional: the configuration is verified by running `npm run check` and `npm run build`.
-- **NEXT:** 3.1 (the artwork box in the pipeline), then 3.2 onward in order. Commit after each sub-step. `npm install` in `web/` is approved for exactly the versions in PLAN.md, Phase 3.
+- **NEXT:** 3.2 (scaffold `web/`), then 3.3 onward in order. Commit after each sub-step. `npm install` in `web/` is approved for exactly the versions in PLAN.md, Phase 3.
 
 ## Decisions and assumptions made
 
@@ -100,7 +100,7 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 |---|---|---|
 | `unzip _inbox/player_data.zip -d data/raw` | restores the raw data | 2026-11-22 |
 | `make setup` | creates `.venv`, installs pinned dependencies | 2026-11-22, in a fresh clone |
-| `make test` | 229 tests, no raw data needed; creates `.venv` on first use | 2026-11-23 13:16 |
+| `make test` | 237 tests, no raw data needed; creates `.venv` on first use | 2026-11-23 13:16 |
 | `make profile` | measures the raw data → `docs/profile/` (235 metrics) | 2026-11-23 13:10 |
 | `make data` | builds `web/public/data/` and the projection fixtures; writes nothing unless every check passes, the profile report included; 3 s | 2026-11-23 13:16 |
 | `make overlay` | proof images → `docs/img/`, about 30 s | 2026-11-23 13:10 |
