@@ -1,10 +1,10 @@
 # Progress Log
 
-Last updated: 2026-11-23 23:11 IST
+Last updated: 2026-11-23 23:12 IST
 
 ## Current phase
 
-Phase 5, Filters and URL state. Status: **IN PROGRESS** on the branch `phase-5-filters` (planning; no pull request yet).
+Phase 5, Filters and URL state. Status: **IN PROGRESS** on the branch `phase-5-filters` (plan approved; no pull request yet).
 
 Phases 1 to 4 and step 9.1 are merged: pull requests [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) (Phase 3), [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) (step 9.1) and [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3) (Phase 4) were reviewed and merged by the user on 23 Nov. The tool is live at https://lila-player-journeys-psi.vercel.app and shows Phase 4; production on Vercel follows `main`.
 
@@ -33,13 +33,19 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 Phase 5 deliverables and acceptance criteria are in PLAN.md, "Phase 5". The task lists of Phases 2 to 4 and of step 9.1 are in the history of this file (`git log -p docs/PROGRESS.md`).
 
 - [x] 5.0 The user's go for Phase 5, in this session (23 Nov). Branch `phase-5-filters` cut from `main` at `fb2aa02`. This file corrected: Phase 4 is merged as pull request #3; the live site shows it (checked after the merge: legend and counts as on the branch, no failed request, empty console)
-- [ ] 5.1 Plan Phase 5 in plan mode and get the plan approved. The steps after this one come from the approved plan
+- [x] 5.1 Plan approved by the user in plan mode (23 Nov, 23:12) and recorded in PLAN.md, "Phase 5". Approved with it: no `mode` in the URL (a link with a match shows that match); filters always hold (a filter that excludes the open match closes it); the fate filter works on journeys of humans and bots; the URL is rewritten in place, 300 ms after the last change; numbers in a link are rounded; no new dependency; one review by two agents held to 40 tool calls each
+- [ ] 5.2 lib: `link.ts` (encode, decode, check against the manifest), `filters.ts` (matches on the chosen days, counts for the tabs, wording of the empty note), the draw list takes allowed matches and fates; tests
+- [ ] 5.3 Store: `days`, `fates`, toggles, "clear filters", applying a link; `shown.ts` derives the allowed matches; tests
+- [ ] 5.4 `linkSync.ts` and the components: `Filters`, `CopyLink`, `EmptyNote`; `MatchList`, `MapTabs`, `TopBar`, `Sidebar`, `App`
+- [ ] 5.5 Preview check: filters, reload keeps the view, a copied link opens the same view, the empty note
+- [ ] 5.6 Independent review by two agents with a fixed budget; fixes
+- [ ] 5.7 Docs, phase-end checks; ask once to push the branch and open the pull request; stop
 
 ## Exactly where I stopped
 
 - Branch `phase-5-filters`, cut from `main` at `fb2aa02`; local only. `main` equals `origin/main`.
-- Nothing of Phase 5 is built yet.
-- **NEXT:** 5.1: write the plan in plan mode and get the user's approval. Then build as the plan says, with small commits. This conversation is near the end of its context and will be summarised automatically; everything needed is in this file, PLAN.md and git.
+- The plan is approved and recorded in PLAN.md, "Phase 5". No code of Phase 5 exists yet.
+- **NEXT:** 5.2, then the steps in order; `npm run check` and a commit after each. Restart the preview's dev server before 5.5 (the branch changed). This conversation is near the end of its context and will be summarised automatically; everything needed is in this file, PLAN.md and git.
 
 ## Decisions and assumptions made
 
