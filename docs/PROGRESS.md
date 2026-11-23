@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-23 22:16 IST
+Last updated: 2026-11-23 22:18 IST
 
 ## Current phase
 
@@ -36,7 +36,7 @@ Phase 4 deliverables and acceptance criteria are in PLAN.md, "Phase 4". The task
 - [x] 4.1 Plan approved by the user in plan mode (23 Nov, 22:10) and recorded in PLAN.md, "Phase 4" and its last section. Approved with it: the sidebar arrives now; every legend row is a switch; hover also on paths; a map's journeys load when its tab opens; no new dependency; one review by two agents with a fixed budget
 - [x] 4.2 lib: `journeys.ts` (types, `parseBundle`: a bundle is checked against the manifest that came with it); `reader.ts` (the field-by-field reader, shared with the manifest; its error is now `DataError`); the elevation decoder back in `projection.ts`
 - [x] 4.3 lib: `drawList.ts`, `pick.ts`, `labels.ts`, `matches.ts`, `markerShapes.ts`. 270 tests. The draw lists of the committed data match the manifest for all 796 matches; 29 one-line faults put into the new modules are all noticed (4 were not at first, and the tests were tightened)
-- [ ] 4.4 Store and data: journeys per map, the open match, the switches, the focused journey
+- [x] 4.4 Store and data: `fetchBundle.ts`; the store holds journeys per map (loaded when a map is first opened), the open match per map, the switches set by hand and the focused journey; `state/shown.ts` gives one draw list per state. 281 tests
 - [ ] 4.5 Map surface: a list of layers, the journeys canvas, hover and click
 - [ ] 4.6 Sidebar (Matches, Journeys, Legend) and the tooltip
 - [ ] 4.7 Preview check on the three named matches; greyscale check; redraw time
@@ -46,8 +46,8 @@ Phase 4 deliverables and acceptance criteria are in PLAN.md, "Phase 4". The task
 ## Exactly where I stopped
 
 - Branch `phase-4-journeys`, cut from `main` at `83d973c`; local only. `main` equals `origin/main`.
-- Done and committed: 4.2 and 4.3, the pure functions with their tests. Nothing of it is drawn yet.
-- **NEXT:** 4.4 (store and data), then 4.5 (map layers) and 4.6 (sidebar); `npm run check` and a commit after each.
+- Done and committed: 4.2 to 4.4, the pure functions and the store with their tests. Nothing of it is drawn yet.
+- **NEXT:** 4.5 (map layers: the journeys canvas, hover, click), then 4.6 (sidebar and tooltip); `npm run check` and a commit after each.
 
 ## Decisions and assumptions made
 

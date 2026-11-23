@@ -1,18 +1,22 @@
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
 
+import { fetchBundle } from "../data/fetchBundle.ts";
 import { fetchManifest } from "../data/fetchManifest.ts";
 import { loadImage } from "../data/loadImage.ts";
 import type { Manifest, MapEntry } from "../lib/manifest.ts";
 import { DataError } from "../lib/reader.ts";
-import { manifest, mapOf } from "../testing/committed.ts";
+import { journeysOf, manifest, mapOf } from "../testing/committed.ts";
+import { selectDrawList, selectMatchId } from "./shown.ts";
 import { useAppStore } from "./store.ts";
 
 // The store is tested with the real manifest and without a network: the two loaders are stand-ins.
 vi.mock("../data/fetchManifest.ts", () => ({ fetchManifest: vi.fn() }));
 vi.mock("../data/loadImage.ts", () => ({ loadImage: vi.fn() }));
+vi.mock("../data/fetchBundle.ts", () => ({ fetchBundle: vi.fn() }));
 
 const fetched = vi.mocked(fetchManifest);
 const loaded = vi.mocked(loadImage);
+const bundled = vi.mocked(fetchBundle);
 const [ambrose, rift, lockdown] = [mapOf("AmbroseValley"), mapOf("GrandRift"), mapOf("Lockdown")];
 const IMAGE = {} as HTMLImageElement; // the store keeps an image and never looks inside it
 const urlOf = (map: MapEntry) => `/data/${map.minimap.file}`;
@@ -35,6 +39,7 @@ let logged: MockInstance<typeof console.error>;
 beforeEach(() => {
   vi.resetAllMocks();
   logged = vi.spyOn(console, "error").mockImplementation(() => {});
+  bundled.mockImplementation((map) => Promise.resolve(journeysOf(map.id)));
   useAppStore.setState(useAppStore.getInitialState(), true);
 });
 
@@ -168,5 +173,133 @@ describe("views", () => {
     state().setView("Lockdown", null);
     stop();
     expect(told).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("journeys", () => {
+  const ready = async () => {
+    fetched.mockResolvedValue(manifest);
+    loaded.mockResolvedValue(IMAGE);
+    await state().loadManifest();
+    await vi.waitFor(() => {
+      expect(state().journeys.AmbroseValley?.status).toBe("ready");
+    });
+  };
+
+  it("are loaded for the first map with the manifest, and for another map when it is opened, once", async () => {
+    await ready();
+    expect(bundled.mock.calls).toEqual([[ambrose, manifest, false]]);
+
+    state().selectMap("Lockdown");
+    state().selectMap("AmbroseValley");
+    state().selectMap("Lockdown");
+    await vi.waitFor(() => {
+      expect(state().journeys.Lockdown?.status).toBe("ready");
+    });
+    expect(bundled.mock.calls.map(([map]) => map.id)).toEqual(["AmbroseValley", "Lockdown"]);
+    expect(state().journeys.GrandRift).toBeUndefined();
+  });
+
+  it("are not asked for before the manifest is there", async () => {
+    await state().loadJourneys(rift);
+    expect(bundled).not.toHaveBeenCalled();
+    expect(state().journeys).toEqual({});
+  });
+
+  it("keep the kind of a failure and are asked for afresh on the next try", async () => {
+    await ready();
+    bundled.mockRejectedValueOnce(new DataError("bundle.map is not GrandRift"));
+    await state().loadJourneys(rift);
+    expect(state().journeys.GrandRift).toEqual({ status: "error", failure: "refused", retrying: false });
+
+    await state().loadJourneys(rift);
+    expect(bundled).toHaveBeenLastCalledWith(rift, manifest, true);
+    expect(state().journeys.GrandRift?.status).toBe("ready");
+  });
+});
+
+describe("what is shown", () => {
+  const ready = async () => {
+    fetched.mockResolvedValue(manifest);
+    loaded.mockResolvedValue(IMAGE);
+    await state().loadManifest();
+    await vi.waitFor(() => {
+      expect(selectDrawList(state())).not.toBeNull();
+    });
+  };
+
+  it("is nothing until the journeys of the open map are there", () => {
+    expect(selectDrawList(state())).toBeNull();
+    expect(selectMatchId(state())).toBeNull();
+  });
+
+  it("is all matches of the open map at first, without loot", async () => {
+    await ready();
+    const list = selectDrawList(state());
+    expect([list?.single, list?.matches, list?.journeys.length]).toEqual([false, 566, 836]);
+    expect(list?.markers.some((marker) => marker.kind === "loot")).toBe(false);
+    expect(list?.counts.loot).toBe(9902);
+  });
+
+  it("is one draw list for one state: asking again builds nothing", async () => {
+    await ready();
+    expect(selectDrawList(state())).toBe(selectDrawList(state()));
+    const before = selectDrawList(state());
+    state().setView("AmbroseValley", { x: 10, y: 20, zoom: 2 }); // a view changes nothing that is drawn
+    state().setFocus("fbbc5d02-anon");
+    expect(selectDrawList(state())).toBe(before);
+  });
+
+  it("is one match with its loot when a match is opened, and all matches again with null", async () => {
+    await ready();
+    state().selectMatch("AmbroseValley", "fbbc5d02");
+    expect(selectMatchId(state())).toBe("fbbc5d02");
+    const list = selectDrawList(state());
+    expect([list?.single, list?.journeys.length]).toEqual([true, 16]);
+    expect(list?.markers.filter((marker) => marker.kind === "loot")).toHaveLength(7);
+
+    state().selectMatch("AmbroseValley", null);
+    expect(state().matches).toEqual({});
+    expect(selectDrawList(state())?.journeys).toHaveLength(836);
+  });
+
+  it("ignores a match the manifest does not have on that map", async () => {
+    await ready();
+    state().selectMatch("AmbroseValley", "no-such-match");
+    state().selectMatch("Lockdown", "fbbc5d02"); // a match of Ambrose Valley
+    expect(state().matches).toEqual({});
+  });
+
+  it("keeps the open match of each map while the tabs change", async () => {
+    await ready();
+    state().selectMatch("AmbroseValley", "fbbc5d02");
+    state().selectMap("Lockdown");
+    expect(selectMatchId(state())).toBeNull();
+    state().selectMap("AmbroseValley");
+    expect(selectMatchId(state())).toBe("fbbc5d02");
+  });
+
+  it("follows a switch set by hand in both views", async () => {
+    await ready();
+    state().setShown("loot", true);
+    state().setShown("bots", false);
+    const all = selectDrawList(state());
+    expect(all?.markers.some((marker) => marker.kind === "loot")).toBe(true);
+    expect(all?.journeys.every((drawn) => drawn.journey.actor === "human")).toBe(true);
+    expect(all?.counts.bots).toBe(268);
+
+    state().setShown("loot", false);
+    state().selectMatch("AmbroseValley", "fbbc5d02");
+    expect(selectDrawList(state())?.markers.some((marker) => marker.kind === "loot")).toBe(false);
+  });
+
+  it("drops the focus when another match or another map is opened", async () => {
+    await ready();
+    state().setFocus("fbbc5d02-anon");
+    state().selectMatch("AmbroseValley", "fbbc5d02");
+    expect(state().focus).toBeNull();
+    state().setFocus("fbbc5d02-anon");
+    state().selectMap("Lockdown");
+    expect(state().focus).toBeNull();
   });
 });

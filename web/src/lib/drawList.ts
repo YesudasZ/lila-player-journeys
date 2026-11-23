@@ -15,7 +15,8 @@ export const MARKER_KINDS = ["kill", "death", "storm_death", "loot"] as const sa
 export type MarkerKind = (typeof MARKER_KINDS)[number];
 
 /** Everything that can be shown or hidden: the two kinds of journey and the four kinds of marker. */
-export type LayerKey = "humans" | "bots" | MarkerKind;
+export const LAYER_KEYS = ["humans", "bots", ...MARKER_KINDS] as const;
+export type LayerKey = (typeof LAYER_KEYS)[number];
 export type Shown = Record<LayerKey, boolean>;
 
 /** What the event codes mean for drawing, read from the manifest once. */
