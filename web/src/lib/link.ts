@@ -1,0 +1,106 @@
+/**
+ * A view as a link. The address holds everything that says what is shown: the map, the days, the
+ * open match, the focused journey, the switches set by hand, the fates and the open map's view.
+ * Every part is left out at its default, so the bare address is the default view. Pure.
+ */
+import { LAYER_KEYS, type LayerKey, type Shown } from "./drawList.ts";
+import type { Manifest } from "./manifest.ts";
+import type { View } from "./view.ts";
+
+export interface Link {
+  /** The id of the open map; null is the first map of the manifest. */
+  map: string | null;
+  /** The chosen day folders; none means all days. */
+  days: string[];
+  /** The open match; null shows all matches. */
+  match: string | null;
+  /** The id of the focused journey, if there is one. */
+  journey: string | null;
+  /** The switches set by hand. */
+  choices: Partial<Shown>;
+  /** The chosen fates; none means all. */
+  fates: string[];
+  /** The open map's view; null is the fitted map. */
+  view: View | null;
+}
+
+export const DEFAULT_LINK: Link = { map: null, days: [], match: null, journey: null, choices: {}, fates: [], view: null };
+
+const tenth = (value: number): number => Math.round(value * 10) / 10;
+const thousandth = (value: number): number => Math.round(value * 1000) / 1000;
+const isLayer = (text: string): text is LayerKey => (LAYER_KEYS as readonly string[]).includes(text);
+const listOf = (value: string | null): string[] => (value === null || value === "" ? [] : value.split(","));
+
+/** A view as a link holds it: the point to a tenth of an image pixel, the zoom to a thousandth. */
+export function roundedView(view: View): View {
+  return { x: tenth(view.x), y: tenth(view.y), zoom: thousandth(view.zoom) };
+}
+
+/**
+ * The query of an address for a link: "" for the default view, else "?map=…&…", always in the same
+ * order. Ids are written as they are, a comma separates the entries of a list.
+ */
+export function encodeLink(link: Link): string {
+  const parts: [string, string][] = [];
+  if (link.map !== null) parts.push(["map", link.map]);
+  if (link.days.length > 0) parts.push(["days", link.days.join(",")]);
+  if (link.match !== null) parts.push(["match", link.match]);
+  if (link.journey !== null) parts.push(["journey", link.journey]);
+  const shown = LAYER_KEYS.filter((layer) => link.choices[layer] === true);
+  const hidden = LAYER_KEYS.filter((layer) => link.choices[layer] === false);
+  if (shown.length > 0) parts.push(["show", shown.join(",")]);
+  if (hidden.length > 0) parts.push(["hide", hidden.join(",")]);
+  if (link.fates.length > 0) parts.push(["fate", link.fates.join(",")]);
+  if (link.view) {
+    const { x, y, zoom } = roundedView(link.view);
+    parts.push(["view", `${x},${y},${zoom}`]);
+  }
+  if (parts.length === 0) return "";
+  return `?${parts.map(([key, value]) => `${key}=${encodeURIComponent(value).replaceAll("%2C", ",")}`).join("&")}`;
+}
+
+/**
+ * What the query of an address says, read as text. Ids stay text, also when they look like a
+ * number. Nothing is checked against the data here: `checkedLink` does that.
+ */
+export function decodeLink(query: string): Link {
+  const params = new URLSearchParams(query);
+  const choices: Partial<Shown> = {};
+  for (const layer of listOf(params.get("show"))) if (isLayer(layer)) choices[layer] = true;
+  for (const layer of listOf(params.get("hide"))) if (isLayer(layer)) choices[layer] = false;
+  const parts = listOf(params.get("view"));
+  const numbers = parts.map(Number);
+  const view = parts.length === 3 && parts.every((part) => part.trim() !== "") && numbers.every(Number.isFinite) ? { x: numbers[0], y: numbers[1], zoom: numbers[2] } : null;
+  return {
+    map: params.get("map"),
+    days: listOf(params.get("days")),
+    match: params.get("match"),
+    journey: params.get("journey"),
+    choices,
+    fates: listOf(params.get("fate")),
+    view,
+  };
+}
+
+/**
+ * A link with everything dropped that the data does not have: an unknown map, day or fate, and a
+ * match that is not on that map or not on the chosen days. Days and fates come back in the order
+ * of the manifest and the first map as null, so that what is applied is what is written back.
+ * The focused journey cannot be checked before the journeys of the map have arrived.
+ */
+export function checkedLink(link: Link, manifest: Manifest): Link {
+  const [first] = manifest.maps;
+  const map = manifest.maps.find((entry) => entry.id === link.map) ?? first;
+  const days = manifest.days.map((day) => day.id).filter((id) => link.days.includes(id));
+  const fates = manifest.fates.filter((fate) => link.fates.includes(fate));
+  const match = manifest.matches.find((entry) => entry.id === link.match && entry.map === map.id && (days.length === 0 || days.includes(entry.day)));
+  return {
+    map: map === first ? null : map.id,
+    days,
+    match: match?.id ?? null,
+    journey: link.journey,
+    choices: link.choices,
+    fates,
+    view: link.view && roundedView(link.view),
+  };
+}
