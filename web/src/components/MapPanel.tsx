@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 import type { MapEntry } from "../lib/manifest.ts";
 import { useAppStore } from "../state/store.ts";
 import { MAP_PANEL_ID, tabId } from "./tabIds.ts";
@@ -9,15 +11,19 @@ export function MapPanel({ map }: { map: MapEntry }) {
   const minimap = useAppStore((state) => state.minimaps[map.id]);
   const loadMinimap = useAppStore((state) => state.loadMinimap);
 
+  // The page's title follows the open map. It is set on the one title element that index.html has.
+  useEffect(() => {
+    document.title = `${map.name} · LILA BLACK Player Journeys`;
+  }, [map.name]);
+
   return (
     <div role="tabpanel" id={MAP_PANEL_ID} aria-labelledby={tabId(map.id)} className="h-full">
-      <title>{`${map.name} · LILA BLACK Player Journeys`}</title>
       {minimap?.status === "ready" ? (
         <MapView key={map.id} map={map} image={minimap.value} />
       ) : (
         <Centred>
           {minimap?.status === "error" ? (
-            <LoadError title={`${map.name} did not load`} onRetry={() => void loadMinimap(map)} />
+            <LoadError title={`${map.name} did not load`} failure={minimap.failure} retrying={minimap.retrying} onRetry={() => void loadMinimap(map)} />
           ) : (
             <LoadingLine>{`Loading ${map.name}…`}</LoadingLine>
           )}

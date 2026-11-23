@@ -11,6 +11,7 @@ export function MapTabs({ maps }: { maps: MapEntry[] }) {
   const tabs = useRef(new Map<string, HTMLButtonElement>());
 
   function onKeyDown(event: KeyboardEvent, index: number) {
+    if (event.ctrlKey || event.metaKey || event.altKey) return; // Back and Forward, for example, stay the browser's
     const last = maps.length - 1;
     const target = { ArrowRight: index === last ? 0 : index + 1, ArrowLeft: index === 0 ? last : index - 1, Home: 0, End: last }[event.key];
     if (target === undefined) return;
@@ -50,7 +51,7 @@ export function MapTabs({ maps }: { maps: MapEntry[] }) {
             <span className="flex h-8 items-center rounded-md px-2.5 group-hover:bg-surface-2 group-hover:text-text group-focus-visible:outline-2 group-focus-visible:outline-accent group-active:bg-border group-aria-selected:group-hover:bg-transparent">
               {map.name}
             </span>
-            {selected && <span className="absolute inset-x-3.5 -bottom-px h-0.5 bg-accent" />}
+            {selected && <span className="absolute inset-x-3.5 bottom-0 h-0.5 bg-accent" />}
           </button>
         );
       })}

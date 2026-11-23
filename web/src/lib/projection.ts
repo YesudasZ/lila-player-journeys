@@ -31,11 +31,6 @@ export function codeToUnit(code: number, steps: number): number {
   return code / steps;
 }
 
-/** A stored elevation code in world units. `stepsPerUnit` is the manifest's `encoding.elevation_steps_per_unit`. */
-export function codeToElevation(code: number, stepsPerUnit: number): number {
-  return code / stepsPerUnit;
-}
-
 /** u and v as a pixel of an image of any size. Image rows count downward and v counts upward, hence the flip. */
 export function uvToPixel(u: number, v: number, image: Size): Point {
   return { x: u * image.width, y: (1 - v) * image.height };

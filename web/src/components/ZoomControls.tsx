@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import type { ZoomLimits } from "./mapSurface.ts";
+import type { ZoomLimits } from "../lib/view.ts";
 
 interface ButtonProps {
   label: string;

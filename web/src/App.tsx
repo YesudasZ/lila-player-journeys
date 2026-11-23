@@ -30,7 +30,7 @@ export function App() {
         ) : (
           <Centred>
             {manifest.status === "error" ? (
-              <LoadError title="The maps did not load" onRetry={() => void loadManifest()} />
+              <LoadError title="The maps did not load" failure={manifest.failure} retrying={manifest.retrying} onRetry={() => void loadManifest()} />
             ) : (
               <LoadingLine>Loading maps…</LoadingLine>
             )}

@@ -14,6 +14,7 @@ import {
   screenToImage,
   wheelZoomFactor,
   zoomAt,
+  zoomLimits,
   type Box,
   type Stage,
 } from "./view.ts";
@@ -50,6 +51,18 @@ describe("fit", () => {
   it.each(Object.entries(VIEWPORTS))("draws the image at the aspect ratio of the manifest in a %s viewport", (_, viewport) => {
     const rect = imageRect(fitView(ARTWORK), stageOf(viewport), IMAGE);
     expect(rect.width / rect.height).toBeCloseTo(2048 / 2046, 12);
+  });
+
+  it("draws the image where the view puts its corners", () => {
+    const view = { x: 900, y: 1100, zoom: 3.2 };
+    const scale = scaleOf(view, WIDE);
+    const rect = imageRect(view, WIDE, IMAGE);
+    // by hand: the view's point is in the middle of the 1440 x 742 viewport, the image's corner 900 and 1100 image pixels before it
+    expect(rect.x).toBeCloseTo(720 - 900 * scale, 9);
+    expect(rect.y).toBeCloseTo(371 - 1100 * scale, 9);
+    const bottomRight = imageToScreen({ x: IMAGE.width, y: IMAGE.height }, view, WIDE);
+    expect(rect.x + rect.width).toBeCloseTo(bottomRight.x, 9);
+    expect(rect.y + rect.height).toBeCloseTo(bottomRight.y, 9);
   });
 
   it("is limited by the height in a wide viewport and by the width in a tall one", () => {
@@ -101,7 +114,16 @@ describe("zoom at a point", () => {
   it("stops at the closest zoom, which is four screen pixels per image pixel", () => {
     const zoomed = zoomAt(view, 1000, { x: 720, y: 371 }, WIDE);
     expect(zoomed.zoom).toBe(closestZoom(WIDE));
-    expect(scaleOf(zoomed, WIDE)).toBeCloseTo(CLOSEST_SCALE, 12);
+    expect(CLOSEST_SCALE).toBe(4);
+    expect(scaleOf(zoomed, WIDE)).toBeCloseTo(4, 12);
+  });
+
+  it("does not move the map when the wheel keeps turning at the closest zoom, wherever the cursor is", () => {
+    const closest = { x: 1000, y: 1000, zoom: closestZoom(WIDE) };
+    const again = zoomAt(closest, 2, { x: 1300, y: 150 }, WIDE);
+    expect(again.zoom).toBe(closest.zoom);
+    expect(again.x).toBeCloseTo(closest.x, 9);
+    expect(again.y).toBeCloseTo(closest.y, 9);
   });
 
   it("keeps the point under the cursor even at the edge of the artwork, where the map is narrower than the viewport", () => {
@@ -177,12 +199,34 @@ describe("pan and clamp", () => {
     expect(clampView({ x: 1000, y: 1000, zoom: 500 }, WIDE).zoom).toBe(closestZoom(WIDE));
   });
 
+  it.each([
+    { x: Number.NaN, y: 1000, zoom: 2 },
+    { x: 1000, y: Number.NaN, zoom: 2 },
+    { x: 1000, y: 1000, zoom: Number.NaN },
+    { x: Number.POSITIVE_INFINITY, y: 1000, zoom: 2 },
+  ])("shows the fitted map for a view that is not made of numbers: %o", (broken) => {
+    expect(clampView(broken, WIDE)).toEqual(fitView(ARTWORK));
+  });
+
   it("lets the centre move a quarter of the artwork's length either way at zoom 2", () => {
     const length = ARTWORK.right - ARTWORK.left;
     const middle = (ARTWORK.left + ARTWORK.right) / 2;
     expect(clampView({ x: -1e6, y: 1000, zoom: 2 }, WIDE).x).toBeCloseTo(middle - length / 4, 9);
     expect(clampView({ x: 1e6, y: 1000, zoom: 2 }, WIDE).x).toBeCloseTo(middle + length / 4, 9);
     expect(clampView({ x: middle + 10, y: 1000, zoom: 2 }, WIDE).x).toBe(middle + 10);
+  });
+});
+
+describe("zoom limits", () => {
+  it("are reached at fit and at the closest zoom, and nowhere between", () => {
+    expect(zoomLimits(fitView(ARTWORK), WIDE)).toEqual({ atFit: true, atClosest: false });
+    expect(zoomLimits({ x: 1000, y: 1000, zoom: 3 }, WIDE)).toEqual({ atFit: false, atClosest: false });
+    expect(zoomLimits({ x: 1000, y: 1000, zoom: closestZoom(WIDE) }, WIDE)).toEqual({ atFit: false, atClosest: true });
+  });
+
+  it("are both reached when the fitted artwork is already drawn at the closest scale", () => {
+    const artwork = { left: 0, top: 0, right: 100, bottom: 100 };
+    expect(zoomLimits(fitView(artwork), { viewport: { width: 2000, height: 2000 }, artwork })).toEqual({ atFit: true, atClosest: true });
   });
 });
 

@@ -4,10 +4,10 @@ import { scaleBar, scaleBarLabel } from "./scaleBar.ts";
 
 describe("scale bar", () => {
   it.each([
-    // world units per pixel, expected units: the three maps at fit in a 1440 x 742 viewport, then closer and further
-    [1.297, 100],
-    [0.818, 50],
-    [1.212, 100],
+    // world units per pixel, expected units: the three maps fitted to a 1440 x 742 viewport (readout.test.ts), then closer and further
+    [1.183, 100],
+    [0.574, 50],
+    [1.239, 100],
     [0.11, 10],
     [0.071, 5],
     [0.0171, 2],
@@ -29,9 +29,11 @@ describe("scale bar", () => {
     }
   });
 
-  it("takes the exact power of ten when it fits exactly", () => {
+  it("takes a bar that fits exactly, for each of the three leading digits", () => {
     expect(scaleBar(1000 / 120, 120).units).toBe(1000);
     expect(scaleBar(1, 100).units).toBe(100);
+    expect(scaleBar(0.5, 100).units).toBe(50);
+    expect(scaleBar(0.2, 100).units).toBe(20);
   });
 
   it("labels the bar in units, singular for one", () => {

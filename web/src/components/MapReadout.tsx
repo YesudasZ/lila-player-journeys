@@ -1,6 +1,6 @@
 import type { RefObject } from "react";
 
-export interface ReadoutRefs {
+interface ReadoutRefs {
   x: RefObject<HTMLSpanElement | null>;
   z: RefObject<HTMLSpanElement | null>;
   bar: RefObject<HTMLSpanElement | null>;

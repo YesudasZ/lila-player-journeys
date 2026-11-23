@@ -1,6 +1,6 @@
 /** The scale bar: a round number of world units and how long that is on screen. */
 
-export interface ScaleBar {
+interface ScaleBar {
   units: number;
   pixels: number;
 }

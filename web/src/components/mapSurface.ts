@@ -4,33 +4,27 @@
  * This is plain DOM code on purpose. Panning and zooming happen many times a second, so they must
  * not go through a React render: the surface draws on the canvas, writes the read-out straight
  * into the page, and keeps the view in the store, where other parts of the app can read it.
+ * What it computes lives in web/src/lib, where it is tested; here are only the events and the drawing.
  */
+import { mapKeyAction } from "../lib/mapKeys.ts";
 import { artworkInPixels, type MapEntry } from "../lib/manifest.ts";
-import { pixelToUv, uvToWorld, type Point, type Size } from "../lib/projection.ts";
+import type { Point, Size } from "../lib/projection.ts";
+import { unitsPerPixel, wholeUnits, worldUnder } from "../lib/readout.ts";
 import { scaleBar, scaleBarLabel } from "../lib/scaleBar.ts";
-import { clampView, closestZoom, fitView, imageRect, panBy, scaleOf, screenToImage, wheelZoomFactor, zoomAt, type Stage, type View } from "../lib/view.ts";
+import { clampView, fitView, imageRect, panBy, wheelZoomFactor, zoomAt, zoomLimits, type Stage, type View, type ZoomLimits } from "../lib/view.ts";
 import { useAppStore } from "../state/store.ts";
 
 const DRAG_STARTS_AFTER = 3; // CSS pixels; a smaller movement is still a click
-const KEY_PAN_STEP = 64; // CSS pixels per press of an arrow key
-export const BUTTON_ZOOM_STEP = 1.5;
 const DOUBLE_CLICK_ZOOM = 2;
 const SCALE_BAR_MAX = 120; // CSS pixels
 const NO_VALUE = "—";
 
 /** The elements of the read-out that the surface writes into. */
-export interface ReadoutParts {
+interface ReadoutParts {
   x: HTMLElement;
   z: HTMLElement;
   bar: HTMLElement;
   label: HTMLElement;
-}
-
-export interface ZoomLimits {
-  /** The map is fitted: it cannot be zoomed out further. */
-  atFit: boolean;
-  /** The map is at its closest zoom. */
-  atClosest: boolean;
 }
 
 export interface MapSurface {
@@ -43,19 +37,15 @@ export interface MapSurface {
 }
 
 interface Parts {
-  /** The focusable element that receives pointer, wheel and key events and gives the viewport its size. */
+  /** The element around the map and its buttons. A key pressed anywhere inside it acts on the map. */
+  area: HTMLElement;
+  /** The focusable element that receives pointer and wheel events and gives the viewport its size. */
   surface: HTMLElement;
   canvas: HTMLCanvasElement;
   map: MapEntry;
   image: HTMLImageElement;
   readout: ReadoutParts;
   onLimits: (limits: ZoomLimits) => void;
-}
-
-/** A whole number of world units with a real minus sign, as a level editor shows it. */
-function wholeUnits(value: number): string {
-  const rounded = Math.round(value);
-  return rounded < 0 ? `−${Math.abs(rounded)}` : `${rounded}`;
 }
 
 /** Call `changed` whenever the device pixel ratio changes, for browsers whose ResizeObserver does not say so. */
@@ -78,7 +68,7 @@ function onPixelRatioChange(changed: () => void): () => void {
   };
 }
 
-export function mountMapSurface({ surface, canvas, map, image, readout, onLimits }: Parts): MapSurface {
+export function mountMapSurface({ area, surface, canvas, map, image, readout, onLimits }: Parts): MapSurface {
   const found = canvas.getContext("2d");
   if (!found) throw new Error("this browser cannot draw on a canvas");
   const context = found;
@@ -87,7 +77,8 @@ export function mountMapSurface({ surface, canvas, map, image, readout, onLimits
   const background = getComputedStyle(surface).getPropertyValue("--color-bg").trim();
 
   let viewport: Size = { width: surface.clientWidth, height: surface.clientHeight };
-  let frame = 0;
+  let pending = 0; // the animation frame that has been asked for, 0 when there is none
+  let stale = true; // the canvas does not show the current view yet
   let pointer: Point | null = null; // where the pointer is over the surface, in CSS pixels
   let drag: { id: number; last: Point; moved: boolean } | null = null;
   let limits: ZoomLimits | null = null;
@@ -99,9 +90,9 @@ export function mountMapSurface({ surface, canvas, map, image, readout, onLimits
     useAppStore.getState().setView(map.id, next.zoom === 1 ? null : next); // a fitted map has no view of its own
   };
 
-  function draw() {
-    frame = 0;
-    const current = view();
+  /** Everything that depends on the view alone: the picture, the scale bar and the zoom limits. */
+  function paint(current: View) {
+    stale = false;
     const ratio = canvas.width / Math.max(viewport.width, 1);
     context.setTransform(ratio, 0, 0, ratio, 0, 0);
     context.globalCompositeOperation = "source-over";
@@ -112,37 +103,35 @@ export function mountMapSurface({ surface, canvas, map, image, readout, onLimits
     context.imageSmoothingQuality = "high";
     const rect = imageRect(current, stage(), imageSize);
     context.drawImage(image, rect.x, rect.y, rect.width, rect.height);
-    writeReadout(current);
-    reportLimits(current);
-  }
 
-  function schedule() {
-    frame ||= requestAnimationFrame(draw);
-  }
-
-  function writeReadout(current: View) {
-    const unitsPerPixel = map.scale / imageSize.width / scaleOf(current, stage());
-    const bar = scaleBar(unitsPerPixel, SCALE_BAR_MAX);
+    const bar = scaleBar(unitsPerPixel(current, stage(), imageSize, map), SCALE_BAR_MAX);
     readout.bar.style.width = `${bar.pixels}px`;
     readout.label.textContent = scaleBarLabel(bar.units);
-
-    const onImage = pointer && screenToImage(pointer, current, stage());
-    if (onImage && onImage.x >= 0 && onImage.x <= imageSize.width && onImage.y >= 0 && onImage.y <= imageSize.height) {
-      const { u, v } = pixelToUv(onImage, imageSize);
-      const world = uvToWorld(u, v, map);
-      readout.x.textContent = wholeUnits(world.x);
-      readout.z.textContent = wholeUnits(world.z);
-    } else {
-      readout.x.textContent = NO_VALUE;
-      readout.z.textContent = NO_VALUE;
-    }
+    reportLimits(zoomLimits(current, stage()));
   }
 
-  function reportLimits(current: View) {
-    const next = { atFit: current.zoom <= 1, atClosest: current.zoom >= closestZoom(stage()) };
+  function reportLimits(next: ZoomLimits) {
     if (limits?.atFit === next.atFit && limits.atClosest === next.atClosest) return;
     limits = next;
     onLimits(next);
+  }
+
+  function writePosition(current: View) {
+    const world = pointer && worldUnder(pointer, current, stage(), imageSize, map);
+    readout.x.textContent = world ? wholeUnits(world.x) : NO_VALUE;
+    readout.z.textContent = world ? wholeUnits(world.z) : NO_VALUE;
+  }
+
+  /** One frame. The canvas is drawn only when the view or the size changed; a pointer that only moves changes two numbers. */
+  function render() {
+    pending = 0;
+    const current = view();
+    if (stale) paint(current);
+    writePosition(current);
+  }
+
+  function schedule() {
+    pending ||= requestAnimationFrame(render);
   }
 
   /** The canvas gets one pixel per device pixel, so the map is sharp on any screen. */
@@ -150,7 +139,9 @@ export function mountMapSurface({ surface, canvas, map, image, readout, onLimits
     viewport = css;
     canvas.width = device.width;
     canvas.height = device.height;
-    draw(); // now, not on the next frame: resizing a canvas clears it
+    stale = true;
+    cancelAnimationFrame(pending);
+    render(); // now, not on the next frame: resizing a canvas clears it
   }
 
   const observer = new ResizeObserver((entries) => {
@@ -182,29 +173,44 @@ export function mountMapSurface({ surface, canvas, map, image, readout, onLimits
   };
   const centre = (): Point => ({ x: viewport.width / 2, y: viewport.height / 2 });
 
+  /** The pointer is over the map: from here on the read-out has a position to show. */
+  function onPointerSeen(event: PointerEvent) {
+    pointer = position(event);
+    schedule();
+  }
+
   function onPointerDown(event: PointerEvent) {
-    if (event.button !== 0) return;
-    drag = { id: event.pointerId, last: position(event), moved: false };
+    onPointerSeen(event); // a press may be the first sign of a pointer: a tap, or a mouse that rested here
+    if (event.button !== 0 || drag || !pointer) return; // one drag at a time: a second finger does not take the map over
+    drag = { id: event.pointerId, last: pointer, moved: false };
     surface.setPointerCapture(event.pointerId);
   }
 
   function onPointerMove(event: PointerEvent) {
-    pointer = position(event);
-    if (drag?.id === event.pointerId) {
-      const dx = pointer.x - drag.last.x;
-      const dy = pointer.y - drag.last.y;
-      if (!drag.moved && Math.hypot(dx, dy) < DRAG_STARTS_AFTER) return;
-      if (!drag.moved) surface.dataset.dragging = "";
-      drag = { ...drag, last: pointer, moved: true };
-      show(panBy(view(), dx, dy, stage()));
+    onPointerSeen(event);
+    if (drag?.id !== event.pointerId || !pointer) return;
+    if ((event.buttons & 1) === 0) {
+      endDrag(); // the release never arrived, for example because another button was held meanwhile
+      return;
     }
-    schedule();
+    const dx = pointer.x - drag.last.x;
+    const dy = pointer.y - drag.last.y;
+    if (!drag.moved && Math.hypot(dx, dy) < DRAG_STARTS_AFTER) return;
+    drag = { ...drag, last: pointer, moved: true };
+    const before = view();
+    const after = panBy(before, dx, dy, stage());
+    if (after.x === before.x && after.y === before.y) return; // nothing left to bring in on that side
+    surface.dataset.dragging = ""; // the closed hand shows only once the map really moves
+    show(after);
+  }
+
+  function endDrag() {
+    drag = null;
+    delete surface.dataset.dragging;
   }
 
   function onPointerEnd(event: PointerEvent) {
-    if (drag?.id !== event.pointerId) return;
-    drag = null;
-    delete surface.dataset.dragging;
+    if (drag?.id === event.pointerId) endDrag();
   }
 
   function onPointerLeave() {
@@ -214,7 +220,9 @@ export function mountMapSurface({ surface, canvas, map, image, readout, onLimits
 
   function onWheel(event: WheelEvent) {
     event.preventDefault(); // neither scroll the page nor zoom the browser
-    show(zoomAt(view(), wheelZoomFactor(event.deltaY, event.deltaMode, event.ctrlKey), position(event), stage()));
+    pointer = position(event); // a wheel may turn before the pointer has moved
+    show(zoomAt(view(), wheelZoomFactor(event.deltaY, event.deltaMode, event.ctrlKey), pointer, stage()));
+    schedule(); // at a zoom limit the view stays, the position under the pointer is still written
   }
 
   function onDoubleClick(event: MouseEvent) {
@@ -222,20 +230,12 @@ export function mountMapSurface({ surface, canvas, map, image, readout, onLimits
   }
 
   function onKeyDown(event: KeyboardEvent) {
-    if (event.ctrlKey || event.metaKey || event.altKey) return; // the browser's own zoom and shortcuts stay
-    const pans: Record<string, [number, number]> = {
-      ArrowLeft: [KEY_PAN_STEP, 0],
-      ArrowRight: [-KEY_PAN_STEP, 0],
-      ArrowUp: [0, KEY_PAN_STEP],
-      ArrowDown: [0, -KEY_PAN_STEP],
-    };
-    const pan = pans[event.key] as [number, number] | undefined;
-    if (pan) show(panBy(view(), pan[0], pan[1], stage()));
-    else if (event.key === "+" || event.key === "=") zoomBy(BUTTON_ZOOM_STEP);
-    else if (event.key === "-" || event.key === "_") zoomBy(1 / BUTTON_ZOOM_STEP);
-    else if (event.key === "0") fit();
-    else return;
+    const action = mapKeyAction(event);
+    if (!action) return;
     event.preventDefault();
+    if (action.kind === "pan") show(panBy(view(), action.dx, action.dy, stage()));
+    else if (action.kind === "zoom") zoomBy(action.factor);
+    else fit();
   }
 
   function zoomBy(factor: number) {
@@ -246,16 +246,20 @@ export function mountMapSurface({ surface, canvas, map, image, readout, onLimits
     show(fitView(artwork));
   }
 
+  surface.addEventListener("pointerenter", onPointerSeen);
   surface.addEventListener("pointerdown", onPointerDown);
   surface.addEventListener("pointermove", onPointerMove);
   surface.addEventListener("pointerup", onPointerEnd);
   surface.addEventListener("pointercancel", onPointerEnd);
+  surface.addEventListener("lostpointercapture", onPointerEnd);
   surface.addEventListener("pointerleave", onPointerLeave);
   surface.addEventListener("wheel", onWheel, { passive: false }); // React's onWheel is passive and cannot stop the scroll
   surface.addEventListener("dblclick", onDoubleClick);
-  surface.addEventListener("keydown", onKeyDown);
+  area.addEventListener("keydown", onKeyDown);
   const stopListening = useAppStore.subscribe((state, before) => {
-    if (state.views !== before.views) schedule();
+    if (state.views[map.id] === before.views[map.id]) return;
+    stale = true;
+    schedule();
   });
 
   return {
@@ -265,15 +269,17 @@ export function mountMapSurface({ surface, canvas, map, image, readout, onLimits
       observer.disconnect();
       stopWatchingRatio();
       stopListening();
-      cancelAnimationFrame(frame);
+      cancelAnimationFrame(pending);
+      surface.removeEventListener("pointerenter", onPointerSeen);
       surface.removeEventListener("pointerdown", onPointerDown);
       surface.removeEventListener("pointermove", onPointerMove);
       surface.removeEventListener("pointerup", onPointerEnd);
       surface.removeEventListener("pointercancel", onPointerEnd);
+      surface.removeEventListener("lostpointercapture", onPointerEnd);
       surface.removeEventListener("pointerleave", onPointerLeave);
       surface.removeEventListener("wheel", onWheel);
       surface.removeEventListener("dblclick", onDoubleClick);
-      surface.removeEventListener("keydown", onKeyDown);
+      area.removeEventListener("keydown", onKeyDown);
     },
   };
 }

@@ -89,15 +89,29 @@ function clampCentre(centre: number, low: number, high: number, zoom: number): n
  * The nearest view that is allowed: zoom between fit and the closest zoom, and the map never moved
  * so far that a side shows more empty space than the fitted map has there. The centre of the
  * viewport therefore stays inside the artwork, and a view at zoom 1 is always the fit view.
+ * A view that is not made of numbers, from a damaged link for example, becomes the fit view.
  */
 export function clampView(view: View, stage: Stage): View {
-  const zoom = clamp(view.zoom, 1, closestZoom(stage));
   const { artwork } = stage;
+  if (![view.x, view.y, view.zoom].every(Number.isFinite)) return fitView(artwork);
+  const zoom = clamp(view.zoom, 1, closestZoom(stage));
   return {
     x: clampCentre(view.x, artwork.left, artwork.right, zoom),
     y: clampCentre(view.y, artwork.top, artwork.bottom, zoom),
     zoom,
   };
+}
+
+/** Which ends of the zoom range a view has reached. */
+export interface ZoomLimits {
+  /** The map is fitted: it cannot be zoomed out further. */
+  atFit: boolean;
+  /** The map is at its closest zoom. */
+  atClosest: boolean;
+}
+
+export function zoomLimits(view: View, stage: Stage): ZoomLimits {
+  return { atFit: view.zoom <= 1, atClosest: view.zoom >= closestZoom(stage) };
 }
 
 /** Zoom by a factor so that the image point under `anchor` (a point of the viewport) stays under it where the limits allow. */

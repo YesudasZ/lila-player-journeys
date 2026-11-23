@@ -107,21 +107,23 @@ export interface Manifest {
   matches: MatchEntry[];
 }
 
-const COUNTS = ["humans", "anonymous", "bots", "kills", "deaths", "storm_deaths", "loot", "bot_kills", "bot_deaths", "rows"] as const;
-const EVENT_GROUPS = ["movement", "kill", "death", "storm_death", "loot"] as const;
+/** The data file came and is not what this version of the app reads. The message names the field. */
+export class ManifestError extends Error {
+  override name = "ManifestError";
+}
 
 class Reader {
   private readonly value: Record<string, unknown>;
   private readonly path: string;
 
   constructor(value: unknown, path: string) {
-    if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error(`${path} is missing or not an object`);
+    if (typeof value !== "object" || value === null || Array.isArray(value)) throw new ManifestError(`${path} is missing or not an object`);
     this.value = value as Record<string, unknown>;
     this.path = path;
   }
 
   private fail(key: string, wanted: string): never {
-    throw new Error(`${this.path}.${key} is missing or not ${wanted}`);
+    throw new ManifestError(`${this.path}.${key} is missing or not ${wanted}`);
   }
 
   text(key: string): string {
@@ -132,6 +134,12 @@ class Reader {
   number(key: string): number {
     const found = this.value[key];
     return typeof found === "number" && Number.isFinite(found) ? found : this.fail(key, "a number");
+  }
+
+  /** A number above zero: a size or a scale, which the map is divided by. */
+  positive(key: string): number {
+    const found = this.number(key);
+    return found > 0 ? found : this.fail(key, "above zero");
   }
 
   flag(key: string): boolean {
@@ -150,17 +158,28 @@ class Reader {
   }
 
   counts(): Counts {
-    return Object.fromEntries(COUNTS.map((name) => [name, this.number(name)])) as unknown as Counts;
+    return {
+      humans: this.number("humans"),
+      anonymous: this.number("anonymous"),
+      bots: this.number("bots"),
+      kills: this.number("kills"),
+      deaths: this.number("deaths"),
+      storm_deaths: this.number("storm_deaths"),
+      loot: this.number("loot"),
+      bot_kills: this.number("bot_kills"),
+      bot_deaths: this.number("bot_deaths"),
+      rows: this.number("rows"),
+    };
   }
 }
 
 const asText = (value: unknown, path: string): string => {
-  if (typeof value !== "string") throw new Error(`${path} is not text`);
+  if (typeof value !== "string") throw new ManifestError(`${path} is not text`);
   return value;
 };
 
 const asCode = (value: unknown, path: string): number => {
-  if (typeof value !== "number" || !Number.isInteger(value)) throw new Error(`${path} is not a whole number`);
+  if (typeof value !== "number" || !Number.isInteger(value)) throw new ManifestError(`${path} is not a whole number`);
   return value;
 };
 
@@ -168,18 +187,16 @@ function asMap(value: unknown, path: string): MapEntry {
   const map = new Reader(value, path);
   const minimap = map.object("minimap");
   const artwork = minimap.object("artwork");
+  const box = { left: artwork.number("left"), top: artwork.number("top"), right: artwork.number("right"), bottom: artwork.number("bottom") };
+  const inside = 0 <= box.left && box.left < box.right && box.right <= 1 && 0 <= box.top && box.top < box.bottom && box.bottom <= 1;
+  if (!inside) throw new ManifestError(`${path}.minimap.artwork is not a box inside the image`);
   return {
     id: map.text("id"),
     name: map.text("name"),
-    scale: map.number("scale"),
+    scale: map.positive("scale"),
     origin_x: map.number("origin_x"),
     origin_z: map.number("origin_z"),
-    minimap: {
-      file: minimap.text("file"),
-      width: minimap.number("width"),
-      height: minimap.number("height"),
-      artwork: { left: artwork.number("left"), top: artwork.number("top"), right: artwork.number("right"), bottom: artwork.number("bottom") },
-    },
+    minimap: { file: minimap.text("file"), width: minimap.positive("width"), height: minimap.positive("height"), artwork: box },
     journeys_file: map.text("journeys_file"),
     matches: map.number("matches"),
     journeys: map.number("journeys"),
@@ -203,19 +220,30 @@ function asMatch(value: unknown, path: string): MatchEntry {
   };
 }
 
-/** The manifest, checked field by field. Anything missing or of the wrong kind is an Error that names it. */
+/**
+ * The manifest, checked field by field. Anything missing or of the wrong kind is a ManifestError that
+ * names it; so is a value that would draw a wrong map: a size or scale of zero, an artwork box that
+ * is not inside its image, two maps with one id, an event code that stands for no event.
+ */
 export function parseManifest(value: unknown): Manifest {
   const manifest = new Reader(value, "manifest");
   const encoding = manifest.object("encoding");
   const groups = manifest.object("event_groups");
   const totals = manifest.object("totals");
   const maps = manifest.list("maps", asMap);
-  if (maps.length === 0) throw new Error("manifest.maps is empty");
+  if (maps.length === 0) throw new ManifestError("manifest.maps is empty");
+  if (new Set(maps.map((map) => map.id)).size < maps.length) throw new ManifestError("manifest.maps has two maps with one id");
+  const events = manifest.list("events", asText);
+  const group = (name: string): number[] => {
+    const codes = groups.list(name, asCode);
+    if (codes.some((code) => code < 0 || code >= events.length)) throw new ManifestError(`manifest.event_groups.${name} has a code that stands for no event`);
+    return codes;
+  };
   return {
     encoding: { uv_steps: encoding.number("uv_steps"), elevation_steps_per_unit: encoding.number("elevation_steps_per_unit") },
     sample_step_seconds: manifest.number("sample_step_seconds"),
-    events: manifest.list("events", asText),
-    event_groups: Object.fromEntries(EVENT_GROUPS.map((group) => [group, groups.list(group, asCode)])) as Manifest["event_groups"],
+    events,
+    event_groups: { movement: group("movement"), kill: group("kill"), death: group("death"), storm_death: group("storm_death"), loot: group("loot") },
     fates: manifest.list("fates", asText),
     maps,
     days: manifest.list("days", asDay),
