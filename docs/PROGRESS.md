@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-23 10:56 IST
+Last updated: 2026-11-23 10:57 IST
 
 ## Current phase
 
@@ -38,14 +38,16 @@ Phase 2 deliverables and acceptance numbers are in PLAN.md, "Phase 2".
 - [x] 2.6 Profiler uses `clean.py`, `EVENTS` and `actor_by_file` (one implementation of each rule); `make profile` left `docs/profile/` byte-identical
 - [x] 2.7 `.github/workflows/ci.yml` (pytest on Python 3.12 and 3.14) and `pipeline/tests/test_repo_hygiene.py`. The workflow has never run: it needs a push
 - [x] 2.8 `ARCHITECTURE.md` first draft (stack, data flow, coordinate mapping, assumptions, trade-offs); README has a data pipeline section and a CI badge; BRIEF.md statuses updated
-- [ ] 2.9 Independent review of the phase; findings fixed
+- [ ] 2.9 Independent review of the phase: launched 2026-11-23 about 11:00 IST as a background workflow (3 reviewers); results not in yet; findings not applied
 - [ ] 2.10 Phase-end checks; status to "DONE (awaiting my review)"; stop
 
 ## Exactly where I stopped
 
-- Last completed: 2.8 (this commit). `make test` passes with 78 tests. The working tree is clean.
+- Last completed: 2.8. All Phase 2 code, tests, CI file and the architecture draft are committed; `make test` (78 tests), `make data` and `make profile` pass. The working tree is clean.
+- In flight: the independent review (2.9) runs in the background of the 23 Nov session. Its result exists only in that session until it is copied to `.local/phase2-review-result.raw`. If the session is gone, `.local/session-pointers.md` says where its transcripts are; otherwise re-run a review or go straight to 2.10.
+- Do not change files under `pipeline/` while the review is running.
 - The CI workflow exists but has never run; nothing since `3eeba7b` is pushed.
-- **NEXT:** 2.9. Have independent agents review the Phase 2 code (`pipeline/clean.py`, `journeys.py`, `encode.py`, `build_data.py`, the tests, the generated `web/public/data/`) against `docs/PLAN.md` Phase 2 and `docs/DATA_NOTES.md`; fix what holds up. Then 2.10: phase-end checks, status to "DONE (awaiting my review)", and ask the user whether to push (CI needs it).
+- **NEXT:** when the review reports, save it to `.local/`, verify each finding by reproducing it, fix what holds, re-run `make test`, `make data` and `make profile`, commit as `phase-2: apply review findings`. Then 2.10.
 
 ## Decisions and assumptions made
 
@@ -91,5 +93,6 @@ Not available yet: dev server and `npm run check` (Phase 3).
 
 - Commits stay local until the user approves each push. CI (task 2.7) can only be seen running after a push.
 - GitHub's "Contributors" box still showed two contributors on 2026-11-23 10:45 IST, about 11 hours after the rewrite was pushed; GitHub's API lists one. The user chose to wait. Recheck before submission (also a Phase 11 check). Fallbacks: recreate the repo, or GitHub Support.
+- `ARCHITECTURE.md` is a first draft of about 900 words. It has to fit one printed page by Phase 10: trim it then.
 - The README's map constants may be 1.5 to 2% too large in x on two maps (`docs/profile/crosscheck.md`, section 4). Kept as documented, by the user's decision.
 - 56 of the profiler's 231 metrics were added after the blind cross-check and were not re-derived by it (the cleaning counts among them were confirmed by a skeptic).
