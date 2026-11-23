@@ -1,10 +1,10 @@
 # Progress Log
 
-Last updated: 2026-11-23 22:02 IST
+Last updated: 2026-11-23 22:10 IST
 
 ## Current phase
 
-Phase 4, Journeys, humans versus bots, markers. Status: **IN PROGRESS** on the branch `phase-4-journeys` (planning; no pull request yet).
+Phase 4, Journeys, humans versus bots, markers. Status: **IN PROGRESS** on the branch `phase-4-journeys` (plan approved; no pull request yet).
 
 Phases 1 to 3 and step 9.1 are merged: pull requests [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) (Phase 3) and [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) (step 9.1) were reviewed and merged by the user on 23 Nov. The tool is live at https://lila-player-journeys-psi.vercel.app; production on Vercel follows `main`.
 
@@ -33,13 +33,21 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 Phase 4 deliverables and acceptance criteria are in PLAN.md, "Phase 4". The task lists of Phases 2 and 3 and of step 9.1 are in the history of this file (`git log -p docs/PROGRESS.md`).
 
 - [x] 4.0 The user's go for Phase 4, in this session (23 Nov). Branch `phase-4-journeys` cut from `main` at `83d973c`. This file corrected: step 9.1 is merged as pull request #2
-- [ ] 4.1 Plan Phase 4 in plan mode and get the plan approved. The steps after this one come from the approved plan
+- [x] 4.1 Plan approved by the user in plan mode (23 Nov, 22:10) and recorded in PLAN.md, "Phase 4" and its last section. Approved with it: the sidebar arrives now; every legend row is a switch; hover also on paths; a map's journeys load when its tab opens; no new dependency; one review by two agents with a fixed budget
+- [ ] 4.2 lib: `journeys.ts` (types, `parseBundle`); the elevation decoder back in `projection.ts`
+- [ ] 4.3 lib: `drawList.ts`, `pick.ts`, `labels.ts`, `matches.ts`, `markerShapes.ts`
+- [ ] 4.4 Store and data: journeys per map, the open match, the switches, the focused journey
+- [ ] 4.5 Map surface: a list of layers, the journeys canvas, hover and click
+- [ ] 4.6 Sidebar (Matches, Journeys, Legend) and the tooltip
+- [ ] 4.7 Preview check on the three named matches; greyscale check; redraw time
+- [ ] 4.8 Independent review by two agents with a fixed budget; fixes
+- [ ] 4.9 Docs, phase-end checks; ask once to push the branch and open the pull request; stop
 
 ## Exactly where I stopped
 
 - Branch `phase-4-journeys`, cut from `main` at `83d973c`; local only. `main` equals `origin/main`.
-- Nothing of Phase 4 is built yet.
-- **NEXT:** 4.1: read `docs/DATA_FORMAT.md` and PLAN.md's Phase 4, write the plan in plan mode and get the user's approval. Then build as the plan says, with small commits.
+- The plan is approved and recorded. No code of Phase 4 exists yet.
+- **NEXT:** 4.2, then the steps in order; `npm run check` and a commit after each.
 
 ## Decisions and assumptions made
 
@@ -101,6 +109,13 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 2026-11-23, after step 9.1:
 - Pull request #2 was merged with a merge commit as well; `main` is at `83d973c`. Open question 6 stands.
 - The user chose to do Phase 4 in the same session rather than in a fresh one ("Do this task here").
+
+2026-11-23, Phase 4 plan (approved in plan mode):
+- The sidebar is built in Phase 4, with the match list, the journeys of the open match and the legend; every legend row is a switch. Phase 5 keeps the day and fate filters, the tab counts, the URL state, "copy link" and the empty states.
+- A fate's wording is made from its own text ("killed_by_bot" reads "killed by bot"), so the app holds no second list of fates. Marker kinds are the keys of the manifest's `event_groups`.
+- Hover works on markers (10 pixels) and on paths (6 pixels). Click focuses a journey; Esc or a click on empty map clears.
+- A map's journeys are fetched when its tab is first opened.
+- Planned and built without planning agents; one review at the end by two agents with a fixed budget. Ultracode is on in the session; the usage rule decided.
 
 ## Open questions for the user
 
