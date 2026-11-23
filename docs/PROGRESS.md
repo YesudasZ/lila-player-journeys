@@ -1,10 +1,12 @@
 # Progress Log
 
-Last updated: 2026-11-23 19:44 IST
+Last updated: 2026-11-23 19:49 IST
 
 ## Current phase
 
-Phase 3, App shell and map canvas. Status: **DONE (awaiting my review)** in pull request [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1), from the branch `phase-3-app-shell` (last code commit `73cb25f`). Pushed and opened on 23 Nov with the user's yes.
+Step 9.1, the first deployment (the end of Phase 3). Status: **IN PROGRESS** on the branch `chore-first-deployment`, waiting for the user to create the Vercel project.
+
+Phase 3 itself is merged: the user reviewed pull request [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) and merged it on 23 Nov. All three CI checks passed on the pull request, and the checks pass on `main` locally.
 
 Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 
@@ -14,13 +16,13 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 |---|---|---|---|
 | 1 | Data discovery and repo setup | APPROVED | `bc63f0e` |
 | 2 | Pipeline | APPROVED | `ccc2369` |
-| 3 | App shell and map canvas (ends with the first deployment, step 9.1) | DONE (awaiting my review) | pull request [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1), branch `phase-3-app-shell` |
+| 3 | App shell and map canvas (ends with the first deployment, step 9.1) | APPROVED (merged); step 9.1 open | pull request [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) |
 | 4 | Journeys, humans versus bots, markers | NOT STARTED | |
 | 5 | Filters and URL state | NOT STARTED | |
 | 6 | Timeline and playback | NOT STARTED | |
 | 7 | Heatmaps | NOT STARTED | |
 | 8 | Polish | NOT STARTED | |
-| 9 | Deployment (9.1 after Phase 3, 9.2 on the last day) | NOT STARTED | |
+| 9 | Deployment (9.1 after Phase 3, 9.2 on the last day) | 9.1 IN PROGRESS | branch `chore-first-deployment` |
 | 10 | Insights and docs | NOT STARTED | |
 | 11 | Final QA | NOT STARTED | |
 
@@ -28,26 +30,19 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 
 ## Current phase task list
 
-Phase 3 deliverables, the screen design, the package versions and the acceptance criteria are in PLAN.md, "Phase 3". The task list of Phase 2 is in the history of this file (`git log -p docs/PROGRESS.md`).
+Step 9.1 is described in PLAN.md, "Phase 9". The task lists of Phases 2 and 3 are in the history of this file (`git log -p docs/PROGRESS.md`).
 
-- [x] 3.0 Plan approved by the user on 23 Nov (plan mode). Decided: ESLint with TypeScript 6.0.3; double-click zooms in; the artwork is fitted, with its box written into the manifest by the pipeline; fonts bundled; a two-agent review at the end. Branch cut from `main` at `24559ce`
-- [x] 3.1 Pipeline: `black_surround` now lives in `pipeline/minimap.py` (one implementation, also used by the proof images); `artwork_box` gives each minimap's artwork as fractions of the image; the manifest holds it as `minimap.artwork`. Boxes: Ambrose Valley 0.022 / 0.0396 / 0.8037 / 0.9517, Grand Rift 0.0767 / 0.1911 / 0.9556 / 0.8773, Lockdown 0.0605 / 0.0327 / 0.8989 / 0.8926 (left / top / right / bottom), pinned in `test_committed_data.py`, which also checks that every recorded position lies inside its box. `make data` changed only `manifest.json`; `make overlay` output unchanged
-- [x] 3.2 `web/` scaffolded: 21 packages at exactly the approved versions (239 in the lockfile), TypeScript 6.0.3 strict, ESLint 10 with type-aware rules and the React hooks rules, Vitest, Tailwind v4 with the LILA Night tokens and no default palette, fonts bundled
-- [x] 3.3 `web/src/lib/`: `projection.ts`, `view.ts`, `scaleBar.ts`, `manifest.ts`, and after the review `readout.ts` and `mapKeys.ts`. All 13 fixture points match from their integer codes
-- [x] 3.4 `state/store.ts` (Zustand) and `data/`: the manifest, then the open map's image, then the other two; a retry after a failure asks the server afresh
-- [x] 3.5 Components: `TopBar`, `MapTabs`, `MapPanel`, `MapView` with `mapSurface.ts` (plain DOM code: canvas in device pixels, wheel, drag, double-click, keys), `MapReadout`, `ZoomControls`, `StatusMessage`, `ErrorBoundary`
-- [x] 3.6 CI: a second job (`npm ci`, `npm run check`, `npm run build` on Node 22); `checkout`, `setup-python` and `setup-node` at v7. Not run yet: it runs on the pull request
-- [x] 3.7 Checked in the preview pane at 1280 x 800 on all three maps: the artwork fits; the README's example point reads x -302, z -354 under the cursor (1 screenshot pixel is 2 units there); wheel zoom and drag keep the point under the cursor; double-click, the keys `+ - 0` and the arrows, and the three buttons work, with the buttons unavailable at their limits; tabs by click and by arrow keys; keyboard focus ring on the map; the error states; no console error. No screenshot files: the preview's screenshots cannot be written into the repo (see Known issues)
-- [x] 3.8 Independent review by two agents (behaviour in a real browser and view maths; code quality and accessibility). No blocker; 7 findings to fix and 25 small ones, several raised by both. Fixed in `f0ad05d`, `4df79b5` and `73cb25f`; what was left as it is, and why, is in PLAN.md's last section. Every fix was checked again in the preview with real clicks and keys, the three failure screens included (a data file moved away and put back; `git status` clean after). Raw result: `.local/phase3-review-result.raw`
-- [x] 3.9 README "run the app" and BRIEF.md statuses (`c78c13d`); PLAN.md and this file; phase-end checks pass
-- [x] 3.10 Pushed and pull request #1 opened with the user's yes (23 Nov, 19:44); recorded here. CI runs on the pull request, the app job and the v7 actions for the first time
+- [x] 9.1.0 Pull request #1 merged by the user; `main` pulled (`884e78e`). `main` holds exactly the reviewed branch: the same tree as the branch's last commit `b972d7d`. On `main`: `npm run check` (196 tests), `npm run build` and `make test` (237 tests) pass
+- [ ] 9.1.1 The user creates the Vercel project in the browser: import the GitHub repo, root directory `web`, everything else as Vercel detects it for Vite (build `npm run build`, output `dist`), no environment variables. Production follows `main`
+- [ ] 9.1.2 Check the hosted URL: the three maps load, the data files are served, no console errors (the open acceptance line of Phase 3)
+- [ ] 9.1.3 The URL at the top of the README and, with the user's yes, in the repo's About field; statuses in PLAN.md and BRIEF.md
+- [ ] 9.1.4 Ask once to push this branch and open its pull request; stop
 
 ## Exactly where I stopped
 
-- Branch `phase-3-app-shell`, cut from `main` at `24559ce`, is pushed; pull request #1 into `main` is open. `main` equals `origin/main`.
-- Everything of Phase 3 is committed. At 19:23: `npm run check` (196 tests), `npm run build` and `make test` (237 tests) pass.
-- Waiting for the user's review of pull request #1. The user merges it on GitHub with "Rebase and merge"; changes asked for in the review go onto the same branch.
-- **NEXT:** nothing until the user has reviewed. If a check fails on the pull request: read the failing step, repair it on this branch, ask before pushing. After the user's merge and go: `git switch main`, `git pull --ff-only`, then step 9.1: the user creates the Vercel project with root directory `web`, the hosted URL is checked for console errors, and a one-line pull request puts the URL at the top of the README. Phase 4 starts only on the user's go, on a new branch cut from the updated `main`.
+- Branch `chore-first-deployment`, cut from `main` at `884e78e`; local only, one docs commit (this file). `main` equals `origin/main`.
+- Waiting for the user: the Vercel project (9.1.1). Nothing else is in flight.
+- **NEXT:** when the user says the site is live: get its URL (from the user, or from GitHub's list of deployments), open it in the preview pane and check 9.1.2; then 9.1.3 on this branch, the checks, and ask to push and open the pull request. Phase 4 starts only on the user's go, on a new branch cut from the updated `main`.
 
 ## Decisions and assumptions made
 
@@ -101,6 +96,11 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 - The user approved PLAN.md with the recommended answers: deadline Thu 26 Nov (end of day until the hour is known); the scope ladder as written; one data bundle per map with heatmaps binned in the browser; public ids are 8-character prefixes of player and match ids; the README's map constants; one review per phase.
 - The stale "Contributors" box on GitHub: the user chose to wait for GitHub to refresh it.
 
+2026-11-23, after the merge of Phase 3:
+- Pull request #1 was merged with a merge commit (`884e78e`), not with "Rebase and merge" as the git flow in CLAUDE.md says. Left as it is: making `main` linear again would mean rewriting it. The hashes of the branch's commits are therefore still valid on `main`. What to do for the next pull requests is open question 6.
+- The branch for step 9.1 was cut right after the merge without a separate go, so that this file can record the merge without a commit on `main` (assumption, told to the user).
+- The merged branch `phase-3-app-shell` still exists locally and on GitHub. It is deleted only on the user's word.
+
 ## Open questions for the user
 
 1. Should `docs/PROGRESS.md`, `CLAUDE.md` and `.claude/` stay in the repo at submission? They show how the work was run with Claude Code, which the brief allows; they are also working notes in a public repo.
@@ -108,6 +108,7 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 3. `/resume` is also the name of a built-in Claude Code command (reopen a past conversation). Keep the name, or rename it (for example `/where`)?
 4. At what hour on Thu 26 Nov is the submission due?
 5. The Phase 2 review asked for a linter and a type checker in CI (ruff and mypy, development-only dependencies). Add them? The code already keeps to one line length and has type hints, but nothing checks them. Not blocking.
+6. Pull request #1 was merged with a merge commit. For the next pull requests: keep "Rebase and merge" as the rule (the repo can be set to offer only that method: one `gh repo edit` command, on the user's yes), or accept merge commits and change the rule in CLAUDE.md?
 
 ## Commands that work
 
@@ -115,9 +116,9 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 |---|---|---|
 | `unzip _inbox/player_data.zip -d data/raw` | restores the raw data | 2026-11-22 |
 | `make setup` | creates `.venv`, installs pinned dependencies | 2026-11-22, in a fresh clone |
-| `make test` | 237 tests, no raw data needed; creates `.venv` on first use | 2026-11-23 19:23 |
-| `cd web && npm run check` | type check, ESLint with no warning allowed, 196 Vitest tests | 2026-11-23 19:23 |
-| `cd web && npm run build` | production build into `web/dist/` (not committed); JavaScript 76 kB gzipped | 2026-11-23 19:23 |
+| `make test` | 237 tests, no raw data needed; creates `.venv` on first use | 2026-11-23 19:49 |
+| `cd web && npm run check` | type check, ESLint with no warning allowed, 196 Vitest tests | 2026-11-23 19:49 |
+| `cd web && npm run build` | production build into `web/dist/` (not committed); JavaScript 76 kB gzipped | 2026-11-23 19:49 |
 | `cd web && npm run dev` | the app on http://localhost:5173 | 2026-11-23 17:41 |
 | `make profile` | measures the raw data → `docs/profile/` (235 metrics) | 2026-11-23 13:10 |
 | `make data` | builds `web/public/data/` and the projection fixtures; writes nothing unless every check passes, the profile report included; 3 s | 2026-11-23 13:16 |
@@ -126,7 +127,7 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 ## Known issues / TODO later
 
 - Commits stay local until the user approves each push.
-- CI: the app job and the `@v7` actions run for the first time on pull request #1. If a set-up step fails there, the action versions are the first suspect (looked up on 23 Nov: checkout v7.0.1, setup-python v7.1.0, setup-node v7.1.0).
+- CI: all three checks passed on pull request #1, the app job and the `@v7` actions included. The run on `main` after the merge has not been read.
 - Screenshots for pull requests and for the walkthrough: the preview pane's screenshots are not files the repo can hold. Phase 10 needs a way to write them (Playwright, a development dependency: ask first).
 - The preview pane of this session reads `~/YesudasZ/.claude/launch.json`, where the entry `lila-web` (port 5183) was added. `.claude/launch.json` in this repo (entry `web`, port 5173) is for sessions started in this folder. Vite reloads the page when a file under `web/public/` changes, so a failure test that moves a data file away cannot show the retry working; set the failure in the app's own store instead.
 - Usage: the 5-hour limit was reached on 23 Nov shortly before 17:00 IST while three planning agents ran next to a long conversation, and the two-agent review of Phase 3 took about 40% of a window. Keep agent use low, and prefer a fresh session per phase, started with the resume protocol.
