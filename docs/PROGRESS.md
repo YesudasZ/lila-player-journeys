@@ -1,10 +1,10 @@
 # Progress Log
 
-Last updated: 2026-11-24 00:00 IST
+Last updated: 2026-11-24 00:09 IST
 
 ## Current phase
 
-Phase 6, Timeline and playback. Status: **IN PROGRESS** on the branch `phase-6-timeline` (the plan is not approved yet; no pull request yet).
+Phase 6, Timeline and playback. Status: **IN PROGRESS** on the branch `phase-6-timeline` (plan approved; no pull request yet).
 
 Phases 1 to 5 and step 9.1 are merged: pull requests [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) (Phase 3), [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) (step 9.1), [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3) (Phase 4) and [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4) (Phase 5) were reviewed and merged by the user, the last one on 23 Nov, 23:54 IST. The tool is live at https://lila-player-journeys-psi.vercel.app and shows Phase 5; production on Vercel follows `main`.
 
@@ -33,13 +33,23 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 Phase 6 deliverables and acceptance criteria are in PLAN.md, "Phase 6". The task lists of Phases 2 to 5 and of step 9.1 are in the history of this file (`git log -p docs/PROGRESS.md`).
 
 - [x] 6.0 The user's go for Phase 6, in this session (24 Nov, 00:00). Branch `phase-6-timeline` cut from `main` at `89dfde3`. This file corrected: Phase 5 is merged as pull request #4; the live site shows it (checked after the merge: day and fate filters, counts on the tabs, the view in the address, "All matches (566)" and "566 matches, 836 journeys", every request answered, empty console). Not seen there either: the clipboard write of "Copy link", which the preview pane refuses
-- [ ] 6.1 Plan Phase 6 in plan mode; on the user's approval, record it in PLAN.md
+- [x] 6.1 Plan approved by the user in plan mode (24 Nov, 00:09) and recorded in PLAN.md, "Phase 6". Approved with it: the whole match is the resting state and Play at the end starts from 0:00; `t` is in the address only when the time is not the end, and a link opens paused; Space on the map and on the slider, the arrow keys keep moving the map there; speeds 1x to 60x, 10x at first; a single match only, so Should 5 and Could 2 are not built in this phase; no React update per frame at all; the frame-time reading comes from the page itself; five real journeys and one made-up one-row journey in the fixture; no new dependency and no change to the data files; one review by two agents held to 40 tool calls each
+- [ ] 6.2 Pipeline: `pipeline/playback.py` with `head_at`, the fixture `web/src/lib/__fixtures__/playback.json` written by `make data`, tests
+- [ ] 6.3 lib: `playback.ts` (`headAt`, the heads of a draw list at a time, a marker's count at a time, the clock's step, the slider's ticks and keys), tested against the fixture
+- [ ] 6.4 The clock `state/playback.ts`; `t` in the link and in the address
+- [ ] 6.5 The draw list keeps the times of a marker's events; picking by time
+- [ ] 6.6 The journeys layer draws the moment
+- [ ] 6.7 The timeline bar, the keys, the slider's look
+- [ ] 6.8 Checked in the preview; the frame-time reading
+- [ ] 6.9 Independent review by two agents, each held to 40 tool calls; fixes
+- [ ] 6.10 Docs and phase-end checks; status "DONE (awaiting my review)"
+- [ ] 6.11 On the user's yes: push the branch, open the pull request, record it here, read the first CI run. Then stop for the review
 
 ## Exactly where I stopped
 
 - Branch `phase-6-timeline`, cut from `main` at `89dfde3`; local only, nothing pushed. `main` equals `origin/main`.
-- Phase 6 has no code yet. Its plan is being written in plan mode and waits for the user's approval.
-- **NEXT:** on approval: record the plan in PLAN.md ("Phase 6") and in the task list above, then build in small commits.
+- Phase 6 has no code yet. Its plan is approved and recorded in PLAN.md.
+- **NEXT:** step 6.2: `pipeline/playback.py` with `head_at` and its tests, then the fixture from `make data` (it must leave `web/public/data/` unchanged). Then 6.3 to 6.7 in order; each commit leaves the checks green.
 
 ## Decisions and assumptions made
 
@@ -140,6 +150,13 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 - Pull request #4 was merged with a merge commit, like #1 to #3; `main` is at `89dfde3`. Open question 6 stands.
 - The user chose again to do the next phase in the same session ("Do this task here"), with the 5-hour window at 66% and three hours before its reset.
 - The merged branches `phase-3-app-shell`, `chore-first-deployment`, `phase-4-journeys` and `phase-5-filters` still exist locally and on GitHub. They are deleted only on the user's word.
+
+2026-11-24, Phase 6 plan (approved in plan mode):
+- The whole match is the resting state; `t` is in the address only before the end. Starting every match at 0:00 would open it as an empty map.
+- The arrow keys stay with the map while it has the focus; the slider has its own. PLAN.md said "space, arrows" without saying where.
+- The clock is a plain Zustand store of its own (`state/playback.ts`), so that the 60 updates a second reach only the map layer and the slider.
+- No path in the data has a single row (0 of 1,242), so that case of the fixture is made up and marked so.
+- Planned and built without planning agents; one review at the end by two agents with a fixed budget. Ultracode is on in the session; the usage rule decided.
 
 ## Open questions for the user
 

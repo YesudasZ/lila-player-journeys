@@ -229,21 +229,43 @@ web/src/components/            Filters, CopyLink, EmptyNote; MatchList, MapTabs,
 
 ## Phase 6: Timeline and playback (1.5 h)
 
-**Goal:** watch a match unfold smoothly.
+**Goal:** watch a match unfold smoothly. The detailed plan below was approved on 24 Nov 2026; it is built on the branch `phase-6-timeline`.
 
 **Deliverables**
-- A `requestAnimationFrame` clock outside React; React receives throttled updates for the read-out only.
-- Position at a time (assumption A6; rule 4 of [DATA_FORMAT.md](DATA_FORMAT.md)): the head moves along the journey's path, whose points are all its rows up to the death row. It moves in a straight line across a gap of up to 5 s; across a longer gap it holds still and moves during the last 5 s; after the last point it stays put. The pipeline gets the reference implementation, a small pure function, and writes a fixture of journeys with the expected head positions; the TypeScript function is tested against that fixture.
-- Play and pause, speeds 1x to 60x, scrubber with event ticks, keyboard shortcuts (space, arrows). Markers appear as time passes. `t` joins the URL.
-- Should 5: all-matches playback. Could 2: density strip.
+- A bar under the map, in the map's column: Play and Pause, the time (`02:05 / 08:43`), a slider, and the speed (1x, 2x, 5x, 10x, 20x, 60x; 10x at first, which plays a median match of 380 s in 38 s).
+- The whole match is the resting state: opening a match shows everything, as before, with the timeline at its end. Play at the end starts again from 0:00.
+- While the time is before the end, each path is drawn up to the time and its head moves along it. A journey is not on the map before its first row. A marker appears at the second of its event; a marker that stands for several events counts those that have happened. Only what is drawn can be pointed at.
+- Position at a time (assumption A6; rule 4 of [DATA_FORMAT.md](DATA_FORMAT.md)): the head moves along the journey's path, whose points are all its rows up to the death row. It moves in a straight line across a gap of up to 5 s; across a longer gap it holds still and moves during the last 5 s; after the last point it stays put; of two rows in the same second the later one counts. The pipeline has the reference implementation, a small pure function (`pipeline/playback.py`), and writes a fixture of journeys with the expected heads; the TypeScript function is tested against every one of them.
+- Above the slider's track, one tick per event of the journeys that are drawn, in the colours of the map, following the legend's switches. The thumb is the time needle.
+- The clock lives outside React, in a plain Zustand store (`time`, `end`, `playing`, `speed`). It runs on `requestAnimationFrame` only while playing and follows the open match: a new match resets it to the end, paused. Nothing in React renders per frame: the slider and the time are written straight into the page, as the map's read-out is.
+- Keys: Space plays and pauses while the focus is on the map or on the slider. On the map the arrow keys keep moving the map, as reviewed in Phase 3. On the slider, left and right step 5 s (one recorded step), with Shift 1 s, Page Up and Page Down 60 s, Home and End jump to the start and the end. Dragging the slider pauses.
+- `t` joins the address, after `match`, to a tenth of a second, and only when the time is not the end. A link opens paused; speed is not part of a link. The address is rewritten after a pause or a seek, never while playing.
+- Single match only: in the all-matches view the bar says "Open a match to play it back." Should 5 (all-matches playback) and Could 2 (density strip) are not built in this phase: by the scope ladder Should 1 and 2, which belong to Phase 7, come first.
+
+**Files**
+
+```
+pipeline/playback.py                         head_at, the reference; the fixture's cases
+pipeline/build_data.py                       writes web/src/lib/__fixtures__/playback.json with the projection fixture
+web/src/lib/playback.ts                      headAt, the heads of a draw list at a time, a marker's count at a time, the clock's step, the slider's ticks and keys
+web/src/lib/drawList.ts                      a marker keeps the times of its events
+web/src/lib/pick.ts                          picks only what has happened by the time
+web/src/lib/link.ts                          t
+web/src/lib/mapKeys.ts                       Space
+web/src/state/playback.ts                    the clock
+web/src/state/linkSync.ts, shown.ts          t in the address
+web/src/components/Timeline.tsx              the bar
+web/src/components/layers/journeysLayer.ts   draws the moment
+web/src/components/                          mapSurface, MapView and App change a little; the slider's look is in styles.css
+```
 
 **Acceptance**
-- Unit tests of position-at-time, from the pipeline's fixture: a 5 s step, a long gap, a death long after the last sample, two rows in the same second, a journey with one row.
-- The scrubber's end equals the manifest's observed span for the three named matches.
-- No React render per frame. Frame time under 16 ms while playing `fbbc5d02` at 20x for 10 s, measured in Chrome's Performance panel without throttling; the reading is written into PROGRESS.md.
+- Unit tests of position-at-time, from the pipeline's fixture: a 5 s step, a long gap, a death long after the last sample, two rows in the same second, a journey that is not on the map at 0:00, and a journey with one row. The first five are real journeys, the shortest that show each case; the last is made up and marked so, since no path in the data has a single row (0 of 1,242).
+- The scrubber's end equals the manifest's observed span for the three named matches: 523 s for `fbbc5d02`, 780 s for `a476eb57`, 878 s for `5a081fe4`.
+- No React render per frame. Frame time under 16 ms while playing `fbbc5d02` at 20x for 10 s. The reading is taken from the page itself (the time between frames, the time per draw and a count of React commits), not in Chrome's Performance panel, and is written into PROGRESS.md.
 - Scrubbing to a death shows the death marker at the head of that path.
 
-**Verify locally:** play `fbbc5d02` at 1x and 60x; scrub hard.
+**Verify locally:** play `fbbc5d02` at 1x and 60x; scrub hard; pause in the middle and reload.
 
 ## Phase 7: Heatmaps (1.5 h)
 
