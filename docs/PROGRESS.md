@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-24 00:42 IST
+Last updated: 2026-11-24 00:44 IST
 
 ## Current phase
 
@@ -40,7 +40,7 @@ Phase 6 deliverables and acceptance criteria are in PLAN.md, "Phase 6". The task
 - [x] 6.4 The clock and the link (24 Nov, 00:39): `web/src/state/playback.ts`, a plain Zustand store with `time`, `end`, `playing` and `speed`. It runs on `requestAnimationFrame` only while playing, follows the open match (523 s, 780 s and 878 s for the three named matches), opens a match whole and paused, takes the time of a link once, counts at most 100 ms for a late frame and pauses when the tab is hidden. `t` is in `lib/link.ts` (after `match`, to a tenth of a second, kept only with its match and below its span) and in the address: written with `replaceState` when the time comes to rest, never while the match plays. The app does not start the clock yet; that comes with the timeline bar. `npm run check`: 391 tests
 - [x] 6.5 Marker times and picking (24 Nov, 00:42): in `lib/drawList.ts` a marker keeps the time of each of its events (`times`, which replaces `last`); `lib/pick.ts` finds a marker only from its first event on, and a path only as far as it is drawn. The tooltip gets the count of the events that have happened and the time of the last of them
 - [x] 6.6 The layer draws the moment (24 Nov, 00:42): `layers/journeysLayer.ts` listens to the clock. Before the end of a match it draws every path as far as its head has come, the heads where the journeys are, and the markers of what has happened with their counts; what is under a resting pointer is looked up again when the time moves. The whole match and all matches keep their cached paths. Tested in lib: the head of a journey is on its death marker from the second of the death. Not looked at in the preview yet: nothing starts the clock before step 6.7. `npm run check`: 394 tests
-- [ ] 6.7 The timeline bar, the keys, the slider's look
+- [x] 6.7 The timeline bar (24 Nov, 00:44): `components/Timeline.tsx` in a third grid row under the map: Play and Pause with the title "Play/Pause (Space when the map or timeline is focused)", the time (`2:05 / 8:43`), the slider with a mark for every kind and second in which something happened, and the speed. The slider and the time are written straight into the page; React renders the bar only when play, pause, speed, the match or the journeys drawn change. Space on the map (`lib/mapKeys.ts`, `mapSurface.ts`); the slider's keys in its title and in a description for assistive technology (the tool has no visible key help); the slider's look in `styles.css`. `App.tsx` starts the clock. `npm run check`: 396 tests; build: 87.68 kB of JavaScript gzipped. Not looked at in the preview yet
 - [ ] 6.8 Checked in the preview; the frame-time reading
 - [ ] 6.9 Independent review by two agents, each held to 40 tool calls; fixes
 - [ ] 6.10 Docs and phase-end checks; status "DONE (awaiting my review)"
@@ -49,8 +49,8 @@ Phase 6 deliverables and acceptance criteria are in PLAN.md, "Phase 6". The task
 ## Exactly where I stopped
 
 - Branch `phase-6-timeline`, cut from `main` at `89dfde3`; local only, nothing pushed. `main` equals `origin/main`.
-- Steps 6.2 to 6.6 are committed: the reference function, the fixture, the pure functions, the clock, `t` in the link, marker times, picking by time, and the layer that draws the moment. `App.tsx` does not call `startPlayback()` yet, so nothing of it shows on screen.
-- **NEXT:** step 6.7: `web/src/components/Timeline.tsx` (Play and Pause with the title "Play/Pause (Space when the map or timeline is focused)", the time, the slider with ticks, the speed), a third grid row in `App.tsx` with `startPlayback()`, Space in `lib/mapKeys.ts` and `mapSurface.ts`, the slider's look in `styles.css`. Then 6.8: the preview, and the frame-time reading on `fbbc5d02` and `d0a38c30`.
+- Steps 6.2 to 6.7 are committed: everything of playback is built, and none of it has been looked at in the preview yet.
+- **NEXT:** step 6.8: restart the preview's dev server (the branch was switched), then open `?match=fbbc5d02`: the bar, Play at 1x and 60x, scrub, pause and reload; the slider's end for `fbbc5d02`, `a476eb57` and `5a081fe4` (523, 780, 878); a death marker on the head; no console error. The frame-time reading on `fbbc5d02` and `d0a38c30` at 20x for 10 s needs the browser pane visible. Then 6.9, the review by two agents, and 6.10.
 
 ## Decisions and assumptions made
 

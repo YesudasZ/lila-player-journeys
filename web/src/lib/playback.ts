@@ -5,7 +5,7 @@
  * (pipeline/playback.py) and writes a fixture of journeys with the heads it computes; the tests
  * hold this function to every one of them.
  */
-import type { DrawList } from "./drawList.ts";
+import type { DrawList, MarkerKind } from "./drawList.ts";
 
 /** Where a journey's head is: a place, and the last row of the path that it has reached. */
 export interface Head {
@@ -43,6 +43,27 @@ export function happened(times: ArrayLike<number>, time: number): number {
   let count = 0;
   while (count < times.length && times[count] <= time) count += 1;
   return count;
+}
+
+/** A mark on the time slider: something of a kind happened in this second of the match. */
+export interface Tick {
+  kind: MarkerKind;
+  time: number;
+}
+
+/** The events of a draw list as marks for the time slider, in the order they are drawn: one for every kind and second in which something of that kind happened. */
+export function ticksOf(list: DrawList): Tick[] {
+  const seen = new Set<string>();
+  const ticks: Tick[] = [];
+  for (const { kind, times } of list.markers) {
+    for (const time of times) {
+      const key = `${kind} ${time}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      ticks.push({ kind, time });
+    }
+  }
+  return ticks;
 }
 
 /** The speeds of playback, as multiples of real time, and the one it starts with: a median match of 380 s then plays in 38 s. */

@@ -4,15 +4,17 @@ import { focusMapIfFocusWasLost } from "./components/focusMap.ts";
 import { MapPanel } from "./components/MapPanel.tsx";
 import { Sidebar } from "./components/Sidebar.tsx";
 import { Centred, LoadError, LoadingLine } from "./components/StatusMessage.tsx";
+import { Timeline } from "./components/Timeline.tsx";
 import { TopBar } from "./components/TopBar.tsx";
 import { matchCounts } from "./lib/filters.ts";
 import { decodeLink } from "./lib/link.ts";
 import { startLinkSync } from "./state/linkSync.ts";
+import { startPlayback } from "./state/playback.ts";
 import { useAppStore } from "./state/store.ts";
 
 /**
  * The page grid. The top bar spans both columns; below it the sidebar has the first column and the
- * map the second. The timeline will take a third row, so the map never has to move.
+ * map the second. The timeline has the third row of the map's column, so the map never has to move.
  */
 export function App() {
   const manifest = useAppStore((state) => state.manifest);
@@ -23,8 +25,13 @@ export function App() {
 
   // The page opens the view its address asks for, and from then on the address follows the view.
   useEffect(() => {
+    const stopClock = startPlayback(); // before the manifest arrives, so that the clock gets the time the link names
+    const stopLink = startLinkSync();
     void loadManifest(decodeLink(location.search));
-    return startLinkSync();
+    return () => {
+      stopLink();
+      stopClock();
+    };
   }, [loadManifest]);
 
   const counts = useMemo(() => (manifest.status === "ready" ? matchCounts(manifest.value, days) : new Map<string, number>()), [manifest, days]);
@@ -33,7 +40,7 @@ export function App() {
   const map = maps.find((entry) => entry.id === mapId);
 
   return (
-    <div className="grid h-full grid-cols-[320px_minmax(0,1fr)] grid-rows-[48px_minmax(0,1fr)] overflow-hidden">
+    <div className="grid h-full grid-cols-[320px_minmax(0,1fr)] grid-rows-[48px_minmax(0,1fr)_auto] overflow-hidden">
       <TopBar maps={maps} counts={counts} />
       {manifest.status === "ready" && map ? (
         <>
@@ -41,6 +48,7 @@ export function App() {
           <main className="min-h-0">
             <MapPanel map={map} manifest={manifest.value} />
           </main>
+          <Timeline manifest={manifest.value} />
         </>
       ) : (
         <main className="col-span-2 min-h-0">

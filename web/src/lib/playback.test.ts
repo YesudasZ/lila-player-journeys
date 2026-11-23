@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { journeysOf, manifest, mapOf } from "../testing/committed.ts";
 import fixture from "./__fixtures__/playback.json";
 import { buildDrawList, eventKinds, shownLayers } from "./drawList.ts";
-import { LONGEST_FRAME, SPEEDS, advance, happened, headAt, headsAt, sliderKeyAction } from "./playback.ts";
+import { LONGEST_FRAME, SPEEDS, advance, happened, headAt, headsAt, sliderKeyAction, ticksOf } from "./playback.ts";
 
 const step = fixture.sample_step_seconds;
 
@@ -72,6 +72,27 @@ describe("the heads of a match at a time", () => {
       expect(headsAt(list, died, step)[marker.journey]).toEqual({ x: drawn.x[marker.row], y: drawn.y[marker.row], row: marker.row });
       expect([happened(marker.times, died - 0.1), happened(marker.times, died)]).toEqual([0, 1]);
     }
+  });
+});
+
+describe("the marks on the time slider", () => {
+  const map = mapOf("AmbroseValley");
+  const grid = { steps: manifest.encoding.uv_steps, image: { width: map.minimap.width, height: map.minimap.height } };
+  const listOf = (hidden: object) => buildDrawList(journeysOf("AmbroseValley"), "fbbc5d02", { ...shownLayers({}, true), ...hidden }, eventKinds(manifest.event_groups), grid);
+
+  it("are one for every kind and second in which something happened, inside the match, in the order of drawing", () => {
+    const list = listOf({});
+    const ticks = ticksOf(list);
+    expect(new Set(ticks.map((tick) => `${tick.kind} ${tick.time}`)).size).toBe(ticks.length);
+    expect(ticks.every((tick) => tick.time >= 0 && tick.time <= 523)).toBe(true);
+    for (const marker of list.markers) for (const time of marker.times) expect(ticks).toContainEqual({ kind: marker.kind, time });
+    expect([...new Set(ticks.map((tick) => tick.kind))]).toEqual(["loot", "death", "kill"]); // this match has no storm death
+    expect(ticks.length).toBeLessThanOrEqual(list.counts.kill + list.counts.death + list.counts.loot);
+  });
+
+  it("follow the switches: a hidden kind has no marks", () => {
+    expect(ticksOf(listOf({ loot: false, kill: false })).every((tick) => tick.kind === "death")).toBe(true);
+    expect(ticksOf(listOf({ loot: false, kill: false, death: false }))).toEqual([]);
   });
 });
 

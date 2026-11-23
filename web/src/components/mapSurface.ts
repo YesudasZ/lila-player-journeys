@@ -73,6 +73,8 @@ interface Parts {
   onDoubleClick?: () => void;
   /** Esc was pressed inside the map area. */
   onEscape?: () => void;
+  /** Space was pressed while the map itself had the focus. */
+  onPlay?: () => void;
 }
 
 /** Call `changed` whenever the device pixel ratio changes, for browsers whose ResizeObserver does not say so. */
@@ -95,7 +97,7 @@ function onPixelRatioChange(changed: () => void): () => void {
   };
 }
 
-export function mountMapSurface({ area, surface, map, layers, readout, onLimits, onPointer, onClick, onDoubleClick, onEscape }: Parts): MapSurface {
+export function mountMapSurface({ area, surface, map, layers, readout, onLimits, onPointer, onClick, onDoubleClick, onEscape, onPlay }: Parts): MapSurface {
   const contexts = new Map(
     layers.map((layer) => {
       const context = layer.canvas.getContext("2d");
@@ -298,10 +300,12 @@ export function mountMapSurface({ area, surface, map, layers, readout, onLimits,
   function onKeyDown(event: KeyboardEvent) {
     const action = mapKeyAction(event);
     if (!action) return;
+    if (action.kind === "play" && event.target !== surface) return; // on one of the map's buttons Space presses that button
     event.preventDefault();
     if (action.kind === "pan") show(panBy(view(), action.dx, action.dy, stage()));
     else if (action.kind === "zoom") zoomBy(action.factor);
     else if (action.kind === "fit") fit();
+    else if (action.kind === "play") onPlay?.();
     else onEscape?.();
   }
 
