@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-23 13:16 IST
+Last updated: 2026-11-23 13:37 IST
 
 ## Current phase
 
@@ -50,15 +50,15 @@ Phase 2 deliverables and acceptance numbers are in PLAN.md, "Phase 2".
     - Recomputation without the pipeline's code: 0 differences on 11 fields of 1,242 journeys and 15 fields of 796 matches. 129 builds on odd inputs: 3 should-fix and 8 nits, all fixed (a bot file under an account id, unreadable-file and profile-file messages, stray entries in the data folder, files filed under the wrong day, two wrong sentences in DATA_FORMAT.md)
     - Second mutation run: 347 mutants against 149 tests, 61 gaps, 10 equivalent. Its 31 proposed tests are in, adapted. A test holds the 140-character line limit. 224 tests. Commit `2e28c2d`
   - [x] g. Final mutation check on the finished code: 319 of the 347 mutants still apply, and 40 new ones cover the code changed since. 349 are killed by the tests; the 10 that survive are the ones no input can tell apart. 7 tests added for what slipped through. Commit `ccc2369`
-- [x] 2.10 Phase-end checks at 13:16 IST: `make test` 229 passed; `make data` (3 s), `make profile` and `make overlay` pass and leave every committed file unchanged; no unused import; valid Python 3.12 syntax; no private detail in a tracked file. Not checked: CI on these commits, which needs a push
+- [x] 2.10 Phase-end checks at 13:16 IST: `make test` 229 passed; `make data` (3 s), `make profile` and `make overlay` pass and leave every committed file unchanged; no unused import; valid Python 3.12 syntax; no private detail in a tracked file. Not checked at that time: CI on these commits, which needed a push
 
 ## Exactly where I stopped
 
 - Phase 2 is done and waits for the user's review. Last code commit: `ccc2369`. The working tree is clean.
-- The commits since `2f0d706` are not pushed. CI ("green on `main`" is a Phase 2 acceptance point) has only run on `2f0d706`, where it passed. Ask before pushing.
+- Pushed on the user's go at 2026-11-23 13:37 IST, up to and including this commit. CI ("green on `main`" is a Phase 2 acceptance point) had passed on `2f0d706`; its run on this push has to be looked at once: https://github.com/YesudasZ/lila-player-journeys/actions. Record the result here with the next commit.
 - For the review: PLAN.md's last section (lines the review changed after the approval), `docs/DATA_FORMAT.md` (the data contract), `docs/profile/crosscheck.md` section 6 (how the pipeline was checked), and open questions 5 and 6 below.
 - Phase 3 has not been started. Do not start it without the user's go.
-- **NEXT:** wait for the user's review of Phase 2. On "go": push if approved, check CI once, then Phase 3 (app shell, map canvas, first deployment).
+- **NEXT:** wait for the user's review of Phase 2 (the push was approved; the review of the changed plan lines and open questions 5 and 6 is still open). On "go": Phase 3 (app shell, map canvas, first deployment).
 
 ## Decisions and assumptions made
 
