@@ -143,20 +143,49 @@ Contrast of the tokens used (WCAG): `text` 16.25 and `text-muted` 6.73 on `surfa
 
 ## Phase 4: Journeys, humans versus bots, markers (1.5 h)
 
-**Goal:** paths and events on the map, readable at a glance.
+**Goal:** paths and events on the map, readable at a glance, and a first way to choose what is shown. The detailed plan below was approved on 23 Nov 2026; it is built on the branch `phase-4-journeys`.
 
 **Deliverables**
-- Path layer, cached per filter state. Humans: solid sky-blue line, round head. Bots: dashed orange line, square head.
-- Markers by shape and colour: kill, death, storm death, loot. Identical events at the same spot and second collapse into one marker with a count.
-- Loot markers are on in single-match view and off in all-matches view; the toggle is always visible in the legend.
-- Hover tooltip: event, who, time, world coordinates and elevation. An anonymous journey reads "human (no account id)". Click a journey to focus it and dim the rest. Legend. The decoder of an elevation code comes back into `projection.ts` with this tooltip, tested against the fixture's elevation codes (it left in Phase 3, where nothing used it).
-- Human or bot comes from the journey's `actor`, marker types from the manifest's `event_groups`; no event name or id pattern is repeated in the app.
+- Path layer, cached per filter state. Humans: solid sky-blue line, round head. Bots: dashed orange line, square head. Until Phase 6 a head sits at the end of its path. Lines are thinner and half transparent in the all-matches view, so density reads.
+- Markers by shape and colour, at one size on screen at every zoom, each with a dark outline: kill triangle, death cross, storm-death diamond, small loot square. Identical events of one journey at the same spot and second collapse into one marker with a count: in the tooltip, and in a single match also as a small number beside the marker.
+- The sidebar, in the 320 px column the page grid has reserved since Phase 3 (moved here from Phase 5):
+  - **Matches:** "All matches" or one match; a box to find a match by typing its id; every match of the open map, busiest first (most journeys, then most rows), each with its id, day, number of journeys and its bots.
+  - **Journeys**, when one match is open: "human 5e3a91c2", "human (no account id)", "bot 1432", each with its fate in words. Choosing one focuses it on the map, so focus also works by keyboard.
+  - **Legend:** what is shown ("566 matches, 836 journeys"), then one row per thing drawn with its sample, its count and a switch. Loot starts hidden in the all-matches view and shown in a single match; a choice made by hand stays.
+- Hover: the nearest marker within 10 screen pixels gets a ring and a tooltip with the event, who, the time into the match, world x and z, and elevation; a death says how. With no marker near, the nearest path within 6 pixels says who and when. Click focuses the journey under the pointer and dims the rest; a click on empty map or Esc clears. A drag is still a drag.
+- Human or bot comes from the journey's `actor`, marker kinds from the manifest's `event_groups`, a fate's wording from its own text; no event name or id pattern is repeated in the app. The decoder of an elevation code comes back into `projection.ts` with the tooltip, tested against the fixture's elevation codes (it left in Phase 3, where nothing used it).
+- A map's journeys load when its tab is first opened. If they fail, the sidebar says so with "Try again" and the map stays usable. A bundle this version cannot read is refused like the manifest.
+
+**Files**
+
+```
+web/src/lib/journeys.ts            types of a journey; parseBundle with its refusals
+web/src/lib/drawList.ts            paths to the death row, collapsed markers, heads, legend counts
+web/src/lib/pick.ts                nearest marker and nearest path
+web/src/lib/matches.ts             the matches of a map, busiest first, found by typed id
+web/src/lib/labels.ts              who, fate, event and time as text
+web/src/lib/markerShapes.ts        the shapes, shared by canvas and legend
+web/src/lib/projection.ts          the elevation decoder comes back, with its fixture test
+web/src/data/fetchBundle.ts        fetch and check of a map's journeys
+web/src/state/store.ts             journeys per map, open match, switches, focus
+web/src/components/mapSurface.ts   a list of layers; hover and click
+web/src/components/layers/         minimapLayer.ts, journeysLayer.ts
+web/src/components/                Sidebar, MatchList, JourneyList, Legend, MapTooltip
+```
+
+**How it works**
+- The draw list (`drawList.ts`, pure) is everything the map and the legend need for the open match and the switches: each path as its rows up to and including the death row with its points in image pixels, the markers with their counts, and the legend's numbers. It is built once per change of match or switch.
+- A second canvas above the minimap draws it. Paths are built once per draw list as shapes in image pixels and drawn under the view's transform, so panning and zooming rebuild nothing. Markers and heads are drawn at screen size each frame. The surface holds a list of layers, one canvas and one draw function each.
+- Picking (`pick.ts`, pure) works in image pixels with the reach divided by the scale, so it means the same number of screen pixels at every zoom.
+- Hover stays inside the map surface and reaches React only when the hovered thing changes. The open match, the switches and the focused journey are in the store.
+- The canvas and the legend draw markers from the same shape definitions.
 
 **Acceptance**, on three named matches: `fbbc5d02` (16 journeys, one of them anonymous), `a476eb57` (one journey, 218 rows), `5a081fe4` (ends in a storm death)
 - For each journey the path's points are its rows up to and including its death row: every row holds where its owner stood ([DATA_FORMAT.md](DATA_FORMAT.md)). A journey with a death therefore ends at the death's position (unit test on the function that builds draw lists).
-- Per marker type, the counts shown add up to the manifest entry of the match: kill markers = kills + bot kills, death markers = deaths + bot deaths.
+- Per marker type, the counts shown add up to the manifest entry of the match: kill markers = kills + bot kills, death markers = deaths + bot deaths. A unit test checks this for all 796 matches on the committed files. In the browser the legend reads: `fbbc5d02` 2 humans, 14 bots, 5 kills, 8 deaths, 7 loot; `a476eb57` 1 human, 10 kills, 58 loot; `5a081fe4` 4 kills, 1 storm death, 37 loot.
 - In a greyscale screenshot of `fbbc5d02`, humans, bots and each marker type can still be told apart. If the loot square and the bot's square head cannot, loot becomes a ring.
-- Hover picks the nearest marker within 10 screen pixels.
+- Hover picks the nearest marker within 10 screen pixels (unit test).
+- Redrawing the journeys of Ambrose Valley, all matches, takes under 16 ms on the development machine; the reading is written into PROGRESS.md.
 
 **Verify locally:** open the three matches and compare the legend counts with `manifest.json`.
 
@@ -165,8 +194,8 @@ Contrast of the tokens used (WCAG): `text` 16.25 and `text-muted` 6.73 on `surfa
 **Goal:** every view is reachable and shareable.
 
 **Deliverables**
-- Sidebar: day chips (multi-select, labelled as UTC days, "partial" on 14 Feb), match list sorted busiest first with a "has bots" flag, single-match or all-matches mode, toggles for humans, bots and each event type. Should 3: fate filter.
-- "N matches, M journeys" on every aggregated view. Each map tab gains the number of matches the day filter leaves.
+- Sidebar (its frame, the match list, the two views and the legend's switches exist since Phase 4): day chips (multi-select, labelled as UTC days, "partial" on 14 Feb), which also narrow the match list. Should 3: fate filter.
+- Each map tab gains the number of matches the day filter leaves, and the legend's "N matches, M journeys" follows the filters.
 - State in a Zustand store synced with the URL: `map`, `days`, `match`, `journey` (the focused journey's id), `mode`, `show`, `fate`, and the viewport. Phase 6 adds `t`, Phase 7 adds `heat`. A "copy link" button. Designed empty states.
 - First visit lands on Ambrose Valley, all matches, traffic heatmap (from Phase 7).
 
@@ -333,3 +362,14 @@ Left as it is:
 | The guard in `scaleBar` for `Math.log10` landing just under a whole number | Kept, without a test | No input reaches it in this JavaScript engine; another engine may round differently |
 | The elevation decoder had no caller in the app | Removed until Phase 4 | It returns with the tooltip that shows elevation |
 | The `@v7` versions of the GitHub actions | Proven by the first run on the pull request | The versions were looked up on 23 Nov; only a run can confirm them |
+
+## Changed with the Phase 4 plan (23 Nov 2026, approved in plan mode)
+
+| Was | Now | Why |
+|---|---|---|
+| The sidebar arrives in Phase 5 | It arrives in Phase 4 with the match list, the journeys of the open match and the legend | Phase 4 needs a way to open one match and a place for the legend. A temporary picker would be thrown away, and the project allows no placeholder UI |
+| Only the loot switch in Phase 4; the other switches in Phase 5 | Every legend row is a switch in Phase 4 | The same few lines of code |
+| Phase 5: match list, the two views and the switches | Phase 5 keeps the day filter, the fate filter, the counts on the map tabs, the state in the URL, "copy link" and the empty states | They moved to Phase 4 |
+| Hover on markers | Hover also on a path: who and when | A path without a marker near it would say nothing |
+| All map bundles loaded at the start | A map's journeys load when its tab is first opened | 686 kB gzipped in total, most of it never looked at |
+| A review like Phase 3's | Two agents with a fixed budget, about a third of it | The Phase 3 review took 40% of a usage window |
