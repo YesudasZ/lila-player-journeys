@@ -1,12 +1,12 @@
 # Progress Log
 
-Last updated: 2026-11-23 23:06 IST
+Last updated: 2026-11-23 23:11 IST
 
 ## Current phase
 
-Phase 4, Journeys, humans versus bots, markers. Status: **DONE (awaiting my review)** in pull request [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3), from the branch `phase-4-journeys` (last code commit `acae5fa`). Pushed and opened on 23 Nov with the user's yes.
+Phase 5, Filters and URL state. Status: **IN PROGRESS** on the branch `phase-5-filters` (planning; no pull request yet).
 
-Phases 1 to 3 and step 9.1 are merged: pull requests [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) (Phase 3) and [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) (step 9.1) were reviewed and merged by the user on 23 Nov. The tool is live at https://lila-player-journeys-psi.vercel.app; production on Vercel follows `main`.
+Phases 1 to 4 and step 9.1 are merged: pull requests [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) (Phase 3), [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) (step 9.1) and [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3) (Phase 4) were reviewed and merged by the user on 23 Nov. The tool is live at https://lila-player-journeys-psi.vercel.app and shows Phase 4; production on Vercel follows `main`.
 
 Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 
@@ -17,8 +17,8 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 | 1 | Data discovery and repo setup | APPROVED | `bc63f0e` |
 | 2 | Pipeline | APPROVED | `ccc2369` |
 | 3 | App shell and map canvas (ends with the first deployment, step 9.1) | APPROVED (merged and hosted) | pull request [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) |
-| 4 | Journeys, humans versus bots, markers | DONE (awaiting my review) | pull request [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3), branch `phase-4-journeys` |
-| 5 | Filters and URL state | NOT STARTED | |
+| 4 | Journeys, humans versus bots, markers | APPROVED (merged) | pull request [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3) |
+| 5 | Filters and URL state | IN PROGRESS | branch `phase-5-filters` |
 | 6 | Timeline and playback | NOT STARTED | |
 | 7 | Heatmaps | NOT STARTED | |
 | 8 | Polish | NOT STARTED | |
@@ -30,30 +30,16 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 
 ## Current phase task list
 
-Phase 4 deliverables and acceptance criteria are in PLAN.md, "Phase 4". The task lists of Phases 2 and 3 and of step 9.1 are in the history of this file (`git log -p docs/PROGRESS.md`).
+Phase 5 deliverables and acceptance criteria are in PLAN.md, "Phase 5". The task lists of Phases 2 to 4 and of step 9.1 are in the history of this file (`git log -p docs/PROGRESS.md`).
 
-- [x] 4.0 The user's go for Phase 4, in this session (23 Nov). Branch `phase-4-journeys` cut from `main` at `83d973c`. This file corrected: step 9.1 is merged as pull request #2
-- [x] 4.1 Plan approved by the user in plan mode (23 Nov, 22:10) and recorded in PLAN.md, "Phase 4" and its last section. Approved with it: the sidebar arrives now; every legend row is a switch; hover also on paths; a map's journeys load when its tab opens; no new dependency; one review by two agents with a fixed budget
-- [x] 4.2 lib: `journeys.ts` (types, `parseBundle`: a bundle is checked against the manifest that came with it); `reader.ts` (the field-by-field reader, shared with the manifest; its error is now `DataError`); the elevation decoder back in `projection.ts`
-- [x] 4.3 lib: `drawList.ts`, `pick.ts`, `labels.ts`, `matches.ts`, `markerShapes.ts`. 270 tests. The draw lists of the committed data match the manifest for all 796 matches; 29 one-line faults put into the new modules are all noticed (4 were not at first, and the tests were tightened)
-- [x] 4.4 Store and data: `fetchBundle.ts`; the store holds journeys per map (loaded when a map is first opened), the open match per map, the switches set by hand and the focused journey; `state/shown.ts` gives one draw list per state. 281 tests
-- [x] 4.5 Map surface: a list of layers (`components/layers/`): minimap, journeys, and the ring around what is under the pointer on a canvas of its own, so a moving pointer redraws no journey. Hover (marker within 10 pixels, else path within 6), click to focus, Esc or a click on empty map to clear. Markers are drawn once and stamped
-- [x] 4.6 Sidebar (`Sidebar`, `MatchList`, `JourneyList`, `Legend`, `Samples`) and `MapTooltip`. 285 tests
-- [x] 4.7 Checked in the preview at 1280 x 800 (22:35), no console error:
-  - Legend against the manifest: all of Ambrose Valley 568 humans, 268 bots, 1,789 kills, 487 deaths, 17 storm deaths, 9,902 loot (hidden by default); `fbbc5d02` 2, 14, 5, 8, 0, 7 with 16 journeys listed, one "human (no account id)"; `a476eb57` 1 human, 10 kills, 58 loot; `5a081fe4` 4 kills, 1 storm death, 37 loot, "killed by storm"
-  - Hover on a kill reads "Kill, bot 1440, at 1:28, x 111 z 69, elevation 105"; a click on a path focuses its journey and its row in the list; Esc, a click on empty map and a second press on the row clear; a drag is not a click
-  - Greyscale on `fbbc5d02`: the loot square could not be told from a bot's square head, so loot is now a ring, as PLAN.md provided for
-  - Redraw of the journeys layer, Ambrose Valley, all matches, default switches: 4.7 to 8.8 ms at fit and about 5 ms while panning at zoom 1.5 (target under 16 ms). With loot switched on by hand: 25 ms at fit, 10 to 12 ms at zoom 1.5, 7 to 9 ms at zoom 3.4. `fbbc5d02`: 0.9 ms. Read from the `journeys-draw` user timing; device pixel ratio 2, map area 960 x 752
-- [x] 4.8 Independent review by two agents, each held to 40 tool calls (48 used together, about half the cost of the Phase 3 review). No blocker; 6 findings to fix and 9 small ones, several raised by both. Fixed in `acae5fa`; what changed and what was left, with reasons, is PLAN.md's last section. Each fix was checked again in the preview with real input. Raw result: `.local/phase4-review-result.raw`
-- [x] 4.9 PLAN.md, BRIEF.md and the README describe Phase 4 as built; phase-end checks pass (23:04)
-- [x] 4.10 Pushed and pull request #3 opened with the user's yes (23 Nov, 23:06); recorded here. CI and Vercel's preview run on the pull request
+- [x] 5.0 The user's go for Phase 5, in this session (23 Nov). Branch `phase-5-filters` cut from `main` at `fb2aa02`. This file corrected: Phase 4 is merged as pull request #3; the live site shows it (checked after the merge: legend and counts as on the branch, no failed request, empty console)
+- [ ] 5.1 Plan Phase 5 in plan mode and get the plan approved. The steps after this one come from the approved plan
 
 ## Exactly where I stopped
 
-- Branch `phase-4-journeys`, cut from `main` at `83d973c`, is pushed; pull request #3 into `main` is open. `main` equals `origin/main`.
-- Everything of Phase 4 is committed and pushed. `npm run check` (289 tests), `npm run build` and `make test` (237 tests) pass.
-- Waiting for the user's review of pull request #3. Vercel adds a preview link to it; the user merges on GitHub.
-- **NEXT:** nothing until the user has reviewed. If a check fails on the pull request: read the failing step, repair it on this branch, ask before pushing. After the user's merge and go: `git switch main`, `git pull --ff-only`, look at the live site, then Phase 5 (filters and URL state) on a new branch cut from the updated `main`. Start it in a fresh session with the resume protocol: this conversation is at the end of its context.
+- Branch `phase-5-filters`, cut from `main` at `fb2aa02`; local only. `main` equals `origin/main`.
+- Nothing of Phase 5 is built yet.
+- **NEXT:** 5.1: write the plan in plan mode and get the user's approval. Then build as the plan says, with small commits. This conversation is near the end of its context and will be summarised automatically; everything needed is in this file, PLAN.md and git.
 
 ## Decisions and assumptions made
 
@@ -134,6 +120,11 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 - The draw list holds the markers in drawing order (loot, storm deaths, deaths, kills), so the pointer finds the marker on top.
 - A double-click zooms and leaves the focus alone. Each list in the sidebar is one Tab stop with arrow keys inside.
 - Hiding humans or bots clears the focus. What a tooltip says about a single event has no keyboard route until Phase 8.
+
+2026-11-23, after Phase 4:
+- Pull request #3 was merged with a merge commit, like #1 and #2; `main` is at `fb2aa02`. Open question 6 stands.
+- The user chose again to do the next phase in the same session ("Do this task here").
+- After a switch of branches the dev server of the preview has to be restarted: Vite lost its styles once after one.
 
 ## Open questions for the user
 
