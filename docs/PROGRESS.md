@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-24 00:09 IST
+Last updated: 2026-11-24 00:16 IST
 
 ## Current phase
 
@@ -34,6 +34,7 @@ Phase 6 deliverables and acceptance criteria are in PLAN.md, "Phase 6". The task
 
 - [x] 6.0 The user's go for Phase 6, in this session (24 Nov, 00:00). Branch `phase-6-timeline` cut from `main` at `89dfde3`. This file corrected: Phase 5 is merged as pull request #4; the live site shows it (checked after the merge: day and fate filters, counts on the tabs, the view in the address, "All matches (566)" and "566 matches, 836 journeys", every request answered, empty console). Not seen there either: the clipboard write of "Copy link", which the preview pane refuses
 - [x] 6.1 Plan approved by the user in plan mode (24 Nov, 00:09) and recorded in PLAN.md, "Phase 6". Approved with it: the whole match is the resting state and Play at the end starts from 0:00; `t` is in the address only when the time is not the end, and a link opens paused; Space on the map and on the slider, the arrow keys keep moving the map there; speeds 1x to 60x, 10x at first; a single match only, so Should 5 and Could 2 are not built in this phase; no React update per frame at all; the frame-time reading comes from the page itself; five real journeys and one made-up one-row journey in the fixture; no new dependency and no change to the data files; one review by two agents held to 40 tool calls each
+- [x] 6.1a The user's five changes to the plan (pasted note, 24 Nov), recorded in PLAN.md: `t` is written with `replaceState`, never `pushState`; a frame counts for at most 100 ms and playback pauses when the tab is hidden; the frame-time reading also covers a second match (`fbbc5d02` is itself the one with the most journeys, 16, so the second is `d0a38c30` on Lockdown, which has the most rows: 1,216 in 15 journeys); the Play button gets the title "Play/Pause (Space when the map or timeline is focused)" and the slider's keys go where key help exists; DATA_NOTES.md records A6 and the journey of one row as assumptions. At the phase's end the closing message carries a short manual test script
 - [ ] 6.2 Pipeline: `pipeline/playback.py` with `head_at`, the fixture `web/src/lib/__fixtures__/playback.json` written by `make data`, tests
 - [ ] 6.3 lib: `playback.ts` (`headAt`, the heads of a draw list at a time, a marker's count at a time, the clock's step, the slider's ticks and keys), tested against the fixture
 - [ ] 6.4 The clock `state/playback.ts`; `t` in the link and in the address
