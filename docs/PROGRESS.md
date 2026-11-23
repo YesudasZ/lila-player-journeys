@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-23 10:54 IST
+Last updated: 2026-11-23 10:56 IST
 
 ## Current phase
 
@@ -37,15 +37,15 @@ Phase 2 deliverables and acceptance numbers are in PLAN.md, "Phase 2".
 - [x] 2.5 Real data built in 3 s, byte-identical on a second run. Counts agree with the profiler and with PLAN.md: 796 matches (284/201/162/112/37 per day), 798 human journeys (17 anonymous), 444 bot journeys, 2,236 kills, 404 deaths, 39 storm deaths, 12,829 loot rows, 296 bot deaths. Bundles gzipped: 463, 53 and 160 kB. `web/public/data/` committed
 - [x] 2.6 Profiler uses `clean.py`, `EVENTS` and `actor_by_file` (one implementation of each rule); `make profile` left `docs/profile/` byte-identical
 - [x] 2.7 `.github/workflows/ci.yml` (pytest on Python 3.12 and 3.14) and `pipeline/tests/test_repo_hygiene.py`. The workflow has never run: it needs a push
-- [ ] 2.8 `ARCHITECTURE.md` first draft; README section on rebuilding the data
+- [x] 2.8 `ARCHITECTURE.md` first draft (stack, data flow, coordinate mapping, assumptions, trade-offs); README has a data pipeline section and a CI badge; BRIEF.md statuses updated
 - [ ] 2.9 Independent review of the phase; findings fixed
 - [ ] 2.10 Phase-end checks; status to "DONE (awaiting my review)"; stop
 
 ## Exactly where I stopped
 
-- Last completed: 2.7 (this commit). `make test` passes with 78 tests. The working tree is clean.
+- Last completed: 2.8 (this commit). `make test` passes with 78 tests. The working tree is clean.
 - The CI workflow exists but has never run; nothing since `3eeba7b` is pushed.
-- **NEXT:** 2.8. Write `ARCHITECTURE.md` (first draft, one page: stack and why, data flow, coordinate mapping, assumptions, trade-offs) from `docs/DATA_NOTES.md` and `docs/PLAN.md`, and add a "rebuild the data" section to `README.md`. Then 2.9: an independent review of the Phase 2 code.
+- **NEXT:** 2.9. Have independent agents review the Phase 2 code (`pipeline/clean.py`, `journeys.py`, `encode.py`, `build_data.py`, the tests, the generated `web/public/data/`) against `docs/PLAN.md` Phase 2 and `docs/DATA_NOTES.md`; fix what holds up. Then 2.10: phase-end checks, status to "DONE (awaiting my review)", and ask the user whether to push (CI needs it).
 
 ## Decisions and assumptions made
 
