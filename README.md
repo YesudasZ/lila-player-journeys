@@ -4,7 +4,7 @@
 
 A browser tool for Level Designers to see how players move, fight, loot and die on LILA BLACK's three maps. Built for the LILA Games Product Engineer written test.
 
-> **Work in progress.** The raw telemetry has been measured, cleaned and built into the files the app will load. The orientation of the coordinate mapping is proven; its scale is right to about 1 to 2% of the map width. The app itself is not built yet.
+> **Work in progress.** The raw telemetry has been measured, cleaned and built into the files the app loads. The app shows the three maps with pan and zoom, world coordinates under the cursor and a scale bar. Journeys, markers, filters, playback and heatmaps come next; it is not hosted yet.
 
 | Read this | To learn |
 |---|---|
@@ -16,6 +16,20 @@ A browser tool for Level Designers to see how players move, fight, loot and die 
 | [docs/profile/crosscheck.md](docs/profile/crosscheck.md) | how those measurements and decisions were checked independently |
 | [docs/img/](docs/img/) | proof that world coordinates land on the right minimap pixels |
 | [docs/PLAN.md](docs/PLAN.md) | the build plan, phase by phase |
+
+## The app
+
+Needs Node 22.12 or newer. It runs from the data files committed in `web/public/data/`: no zip and no environment variables are needed.
+
+```bash
+cd web
+npm ci          # install the pinned packages
+npm run dev     # http://localhost:5173
+npm run check   # type check, ESLint and unit tests
+npm run build   # production build into web/dist/
+```
+
+Vite, React, TypeScript (strict), Tailwind CSS v4 and Zustand, drawing on an HTML canvas. Pure logic lives in `web/src/lib/` with its tests beside it.
 
 ## Data pipeline
 
