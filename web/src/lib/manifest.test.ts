@@ -8,7 +8,7 @@ interface Loose {
   encoding: unknown;
   events: unknown[];
   event_groups: Record<string, unknown>;
-  maps: { id: unknown; scale: unknown; minimap: { width: unknown; height: unknown; artwork?: unknown } }[];
+  maps: { id: unknown; scale: unknown; origin_x: unknown; minimap: { width: unknown; height: unknown; artwork?: unknown } }[];
   days: { partial: unknown }[];
   matches: Record<string, unknown>[];
 }
@@ -71,6 +71,7 @@ describe("a manifest that is not what the app was built for", () => {
     ["an event code that is not whole", ({ event_groups }) => (event_groups.kill = [2.5]), "manifest.event_groups.kill[0] is not a whole number"],
     ["an event code that stands for no event", ({ event_groups }) => (event_groups.loot = [99]), "manifest.event_groups.loot has a code that stands for no event"],
     ["a day that is neither partial nor complete", ({ days }) => (days[4].partial = "yes"), "manifest.days[4].partial is missing or not true or false"],
+    ["an origin that is not a finite number", ({ maps }) => (maps[0].origin_x = Number.POSITIVE_INFINITY), "manifest.maps[0].origin_x is missing or not a number"],
     ["a scale of zero", ({ maps }) => (maps[0].scale = 0), "manifest.maps[0].scale is missing or not above zero"],
     ["an image without a width", ({ maps }) => (maps[1].minimap.width = 0), "manifest.maps[1].minimap.width is missing or not above zero"],
     ["an image with a negative height", ({ maps }) => (maps[1].minimap.height = -5), "manifest.maps[1].minimap.height is missing or not above zero"],
