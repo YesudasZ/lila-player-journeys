@@ -1,0 +1,47 @@
+{
+  "rows_in": 89104,
+  "removed": {
+    "spare_copy_of_journey": 88,
+    "second_half_of_file_written_twice": 190,
+    "kill_mirroring_killed": 3,
+    "movement_after_death": 206
+  },
+  "rows_out": 88617,
+  "rows_out_by_event": {
+    "Position": 50931,
+    "BotPosition": 21712,
+    "Kill": 0,
+    "Killed": 3,
+    "BotKill": 2406,
+    "BotKilled": 697,
+    "KilledByStorm": 39,
+    "Loot": 12829
+  },
+  "events_of_human_journeys": {
+    "BotKill": 2236,
+    "BotKilled": 401,
+    "Killed": 3,
+    "KilledByStorm": 39,
+    "Loot": 12829,
+    "Position": 50931
+  },
+  "events_of_bot_journeys": {
+    "BotKill": 170,
+    "BotKilled": 296,
+    "BotPosition": 21712
+  },
+  "journeys": {
+    "total": 1242,
+    "human": 798,
+    "anonymous": 17,
+    "bot": 444
+  },
+  "matches": 796,
+  "matches_by_day": {
+    "February_10": 284,
+    "February_11": 201,
+    "February_12": 162,
+    "February_13": 112,
+    "February_14": 37
+  }
+}
