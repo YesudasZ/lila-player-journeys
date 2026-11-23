@@ -467,9 +467,20 @@ describe("filters and links, as the review asked to pin them", () => {
     expect(await open("?match=fbbc5d02&journey=fbbc5d02-bot1440")).toBe("?match=fbbc5d02&journey=fbbc5d02-bot1440");
   });
 
-  it("leave the open map alone when the journeys of another map arrive", async () => {
-    await open("?match=fbbc5d02&journey=fbbc5d02-anon");
-    await state().loadJourneys(lockdown); // not the open map: its journeys say nothing about this focus
+  it("leave the open map alone when the journeys of another map arrive, before its own or after", async () => {
+    const own = deferred<ReturnType<typeof journeysOf>>();
+    bundled.mockImplementation((map) => (map.id === "AmbroseValley" ? own.promise : Promise.resolve(journeysOf(map.id))));
+    fetched.mockResolvedValue(manifest);
+    loaded.mockResolvedValue(IMAGE);
+    await state().loadManifest(decodeLink("?match=fbbc5d02&journey=fbbc5d02-anon"));
+    await state().loadJourneys(lockdown); // not the open map, whose own journeys are still on their way: these say nothing about its focus
+    expect([state().focus, selectMatchId(state())]).toEqual(["fbbc5d02-anon", "fbbc5d02"]);
+
+    own.resolve(journeysOf("AmbroseValley"));
+    await vi.waitFor(() => {
+      expect(state().journeys.AmbroseValley?.status).toBe("ready");
+    });
+    await state().loadJourneys(rift);
     expect([state().focus, selectMatchId(state())]).toEqual(["fbbc5d02-anon", "fbbc5d02"]);
   });
 

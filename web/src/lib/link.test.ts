@@ -80,6 +80,7 @@ describe("a link from outside, checked against the data", () => {
     ["a match outside the chosen days", "?match=fbbc5d02&days=February_10", { ...DEFAULT_LINK, days: ["February_10"] }],
     ["a broken view", "?map=Lockdown&view=1,2", { ...DEFAULT_LINK, map: "Lockdown" }],
     ["a view that is not closer than fit", "?map=Lockdown&view=1024,1024,0", { ...DEFAULT_LINK, map: "Lockdown" }],
+    ["a view at fit, which is the view without one", "?map=Lockdown&view=1024,1024,1", { ...DEFAULT_LINK, map: "Lockdown" }],
     ["a view beside the image", "?view=-5,10,3", DEFAULT_LINK],
     ["a view absurdly close", "?view=1000,900,9999", DEFAULT_LINK],
   ])("drops %s and keeps the rest", (_, query, expected) => {
