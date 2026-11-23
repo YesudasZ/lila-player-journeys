@@ -3,12 +3,23 @@
 Like the real data: no .parquet extension, events stored as bytes, and Unix
 seconds sitting inside a timestamp[ms] column.
 """
-import pyarrow as pa
 import pyarrow.parquet as pq
 import pytest
 
-from pipeline.dataset import DEATH_EVENTS, EVENT_GROUPS, EVENTS, EXPECTED_SCHEMA, SCHEMA, UNDECODABLE, day_date, day_dates, id_kind, load_raw, short_ids
-from pipeline.tests.helpers import FIRST_TS, HUMAN, MATCH, OTHER_MATCH, frame, rows_of, write_files
+from pipeline.dataset import (
+    DEATH_EVENTS,
+    EVENT_GROUPS,
+    EVENTS,
+    EXPECTED_SCHEMA,
+    SCHEMA,
+    UNDECODABLE,
+    day_date,
+    day_dates,
+    id_kind,
+    load_raw,
+    short_ids,
+)
+from pipeline.tests.helpers import FIRST_TS, HUMAN, MATCH, OTHER_MATCH, frame, rows_of, write_file_with_text_events, write_files
 
 
 def test_ts_keeps_the_raw_integer_seconds(tmp_path):
@@ -48,7 +59,8 @@ def test_rows_keep_file_identity_and_file_order(tmp_path):
 
 
 def test_same_file_name_in_two_day_folders_stays_two_files(tmp_path):
-    write_files(tmp_path, frame(rows_of("February_10", HUMAN, MATCH, [(0, "Position")]), rows_of("February_11", HUMAN, MATCH, [(0, "Position")])))
+    once = [(0, "Position")]
+    write_files(tmp_path, frame(rows_of("February_10", HUMAN, MATCH, once), rows_of("February_11", HUMAN, MATCH, once)))
     data = load_raw(tmp_path)
     assert len(data.files) == 2
     assert data.rows["file"].nunique() == 2
@@ -79,8 +91,7 @@ def test_schema_is_the_one_measured_on_the_real_files():
 
 def test_file_with_another_schema_is_reported_and_not_loaded(tmp_path):
     write_files(tmp_path, rows_of("February_10", HUMAN, MATCH, [(0, "Position")]))
-    as_text = pa.table({"user_id": ["1440"], "match_id": [MATCH], "map_id": ["Lockdown"], "x": [1.0], "y": [1.0], "z": [1.0], "ts": [FIRST_TS], "event": ["Position"]})
-    pq.write_table(as_text, tmp_path / "February_10" / f"1440_{MATCH}")
+    write_file_with_text_events(tmp_path, "February_10", "1440", MATCH)
     data = load_raw(tmp_path)
     (other,) = [f for f in data.files if f.error is not None]
     assert (other.error, other.rows, other.has_magic) == ("unexpected schema", 1, True)
@@ -97,7 +108,8 @@ def test_file_without_rows_is_listed_with_zero_rows(tmp_path):
 
 
 def test_every_sub_folder_is_read_except_minimaps_and_hidden_files(tmp_path):
-    write_files(tmp_path, frame(rows_of("February_10", HUMAN, MATCH, [(0, "Position")]), rows_of("March_01", HUMAN, OTHER_MATCH, [(0, "Position")])))
+    once = [(0, "Position")]
+    write_files(tmp_path, frame(rows_of("February_10", HUMAN, MATCH, once), rows_of("March_01", HUMAN, OTHER_MATCH, once)))
     (tmp_path / "minimaps").mkdir()
     (tmp_path / "minimaps" / "AmbroseValley_Minimap.png").write_bytes(b"an image")
     (tmp_path / "February_10" / ".DS_Store").write_bytes(b"written by Finder")

@@ -105,7 +105,8 @@ def check_journeys(journeys: pd.DataFrame) -> None:
         raise ValueError(f"player ids are not unique in their first {PUBLIC_ID_LENGTH} characters")
     shared = journeys.loc[journeys["id"].duplicated(), "id"]
     if len(shared):
-        raise ValueError(f"{len(shared)} journeys share their id with another, e.g. {shared.iloc[0]}: a match with several humans without an account id")
+        why = "a match with several humans without an account id"
+        raise ValueError(f"{len(shared)} journeys share their id with another, e.g. {shared.iloc[0]}: {why}")
 
 
 def match_table(journeys: pd.DataFrame) -> pd.DataFrame:

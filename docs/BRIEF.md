@@ -18,7 +18,7 @@ Status key: ☐ not started · ◐ in progress · ☑ done and verified.
 
 | # | Requirement | How this project meets it | Phase | Status |
 |---|---|---|---|---|
-| R1 | Load and parse the provided parquet data | Offline Python pipeline (pyarrow) reads all 1,243 files and writes static assets for the app | 2 | ☑ `make data`: 89,104 rows in, 88,617 out, counts reconciled with the profile; 78 tests |
+| R1 | Load and parse the provided parquet data | Offline Python pipeline (pyarrow) reads all 1,243 files and writes static assets for the app | 2 | ☑ `make data`: 89,104 rows in, 88,617 out, counts reconciled with the profile and pinned in a test of the committed files |
 | R2 | Show player journeys on the correct minimap, with world coordinates mapped properly | One tested projection function; UV stored, pixels computed from the real image size | 2, 3, 4 | ◐ projection and proof images exist |
 | R3 | Tell humans and bots apart visually | Colour and line style and head shape, with a legend | 4 | ☐ |
 | R4 | Show kills, deaths, loot and storm deaths as distinct markers | Shape and colour per event type, tooltip names the event | 4 | ☐ |

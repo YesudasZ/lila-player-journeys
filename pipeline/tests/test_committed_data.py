@@ -22,7 +22,16 @@ DATA = ROOT / "web" / "public" / "data"
 
 ROWS_IN = 89_104
 REMOVED = {"spare_copy_of_journey": 88, "second_half_of_file_written_twice": 190, "kill_mirroring_killed": 3, "movement_after_death": 206}
-ROWS_LEFT = {"Position": 50_931, "BotPosition": 21_712, "Kill": 0, "Killed": 3, "BotKill": 2_406, "BotKilled": 697, "KilledByStorm": 39, "Loot": 12_829}
+ROWS_LEFT = {
+    "Position": 50_931,
+    "BotPosition": 21_712,
+    "Kill": 0,
+    "Killed": 3,
+    "BotKill": 2_406,
+    "BotKilled": 697,
+    "KilledByStorm": 39,
+    "Loot": 12_829,
+}
 JOURNEYS = {"total": 1_242, "human": 798, "anonymous": 17, "bot": 444}
 TOTALS = {
     "matches": 796,
@@ -161,7 +170,8 @@ def test_match_entries_count_exactly_the_rows_of_their_journeys(manifest, journe
         counts["loot"] += sum(code in groups["loot"] for code in journey["e"])
         last_row[journey["match"]] = max(last_row[journey["match"]], journey["t"][-1])
     for match in manifest["matches"]:
-        assert {name: counted[match["id"]][name] for name in TOTALS if name != "matches"} == {name: match[name] for name in TOTALS if name != "matches"}, match["id"]
+        recorded = {name: match[name] for name in TOTALS if name != "matches"}
+        assert {name: counted[match["id"]][name] for name in recorded} == recorded, match["id"]
         assert match["span"] == last_row[match["id"]], match["id"]
 
 

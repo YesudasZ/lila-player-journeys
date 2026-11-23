@@ -3,7 +3,6 @@ import json
 import sys
 
 import numpy as np
-import pyarrow as pa
 import pyarrow.parquet as pq
 import pytest
 from PIL import Image
@@ -14,7 +13,19 @@ from pipeline.dataset import EVENTS, FULL_ID, SCHEMA
 from pipeline.encode import decode_uv
 from pipeline.journeys import journey_table
 from pipeline.maps import MAPS, uv_to_world
-from pipeline.tests.helpers import FIRST_TS, HUMAN, LATE_MATCH, MATCH, OTHER_HUMAN, OTHER_MATCH, THIRD_MATCH, frame, rows_of, write_files
+from pipeline.tests.helpers import (
+    FIRST_TS,
+    HUMAN,
+    LATE_MATCH,
+    MATCH,
+    OTHER_HUMAN,
+    OTHER_MATCH,
+    THIRD_MATCH,
+    frame,
+    rows_of,
+    write_file_with_text_events,
+    write_files,
+)
 
 CODE = {event: code for code, event in enumerate(EVENTS)}
 HUMAN_EVENTS = [
@@ -29,6 +40,8 @@ HUMAN_EVENTS = [
     (15, "BotKill"),
 ]
 ANONYMOUS_ONCE = [(0, "Position"), (20, "Position"), (25, "Loot")]
+KILLED_BY_A_PLAYER = [(0, "Position"), (5, "Position"), (8, "Kill", 1.0, 1.0), (8, "Killed", 1.0, 1.0)]
+KILLED_BY_THE_STORM_LATER = [(30, "Position"), (35, "Position"), (40, "KilledByStorm")]  # this match starts last
 MINIMAP_SIZES = {"AmbroseValley": (40, 40), "GrandRift": (40, 38), "Lockdown": (60, 60)}
 OUTPUT_FILES = [
     "fixtures/projection.json",
@@ -50,8 +63,8 @@ def dataset():
         rows_of("February_10", "1440", MATCH, [(5, "BotPosition"), (8, "BotKill"), (10, "BotPosition"), (11, "BotKilled")]),
         rows_of("February_10", "999", MATCH, [(5, "BotPosition"), (10, "BotPosition")]),
         rows_of("February_11", "1379", OTHER_MATCH, ANONYMOUS_ONCE + ANONYMOUS_ONCE, map_id="GrandRift"),  # written twice
-        rows_of("February_11", OTHER_HUMAN, THIRD_MATCH, [(0, "Position"), (5, "Position"), (8, "Kill", 1.0, 1.0), (8, "Killed", 1.0, 1.0)], map_id="Lockdown"),
-        rows_of("February_11", HUMAN, LATE_MATCH, [(30, "Position"), (35, "Position"), (40, "KilledByStorm")], map_id="Lockdown"),  # starts last
+        rows_of("February_11", OTHER_HUMAN, THIRD_MATCH, KILLED_BY_A_PLAYER, map_id="Lockdown"),
+        rows_of("February_11", HUMAN, LATE_MATCH, KILLED_BY_THE_STORM_LATER, map_id="Lockdown"),
     )
 
 
@@ -74,6 +87,10 @@ def read(path):
     return json.loads(path.read_text())
 
 
+def by_event(**counts):
+    return {event: counts.get(event, 0) for event in EVENTS}
+
+
 def written(folder):
     return sorted(str(path.relative_to(folder)) for path in folder.rglob("*") if path.is_file() and "player_data" not in path.parts)
 
@@ -85,7 +102,12 @@ def test_build_writes_exactly_these_files(built):
 def test_cleaning_report_counts_every_rule(built):
     folder, report = built
     assert report["rows_in"] == 37
-    assert report["removed"] == {"spare_copy_of_journey": 9, "second_half_of_file_written_twice": 3, "kill_mirroring_killed": 1, "movement_after_death": 1}
+    assert report["removed"] == {
+        "spare_copy_of_journey": 9,
+        "second_half_of_file_written_twice": 3,
+        "kill_mirroring_killed": 1,
+        "movement_after_death": 1,
+    }
     assert report["rows_out"] == 23
     assert report["journeys"] == {"total": 6, "human": 4, "anonymous": 1, "bot": 2}
     saved = read(folder / "out" / "cleaning_report.json")
@@ -96,9 +118,9 @@ def test_cleaning_report_counts_every_rule(built):
 
 def test_report_counts_the_rows_left_per_event_and_per_actor(built):
     _, report = built
-    assert report["rows_out_by_event"] == {"Position": 9, "BotPosition": 4, "Kill": 0, "Killed": 1, "BotKill": 3, "BotKilled": 2, "KilledByStorm": 1, "Loot": 3}
-    assert report["events_of_human_journeys"] == {"Position": 9, "BotPosition": 0, "Kill": 0, "Killed": 1, "BotKill": 2, "BotKilled": 1, "KilledByStorm": 1, "Loot": 3}
-    assert report["events_of_bot_journeys"] == {"Position": 0, "BotPosition": 4, "Kill": 0, "Killed": 0, "BotKill": 1, "BotKilled": 1, "KilledByStorm": 0, "Loot": 0}
+    assert report["rows_out_by_event"] == by_event(Position=9, BotPosition=4, Killed=1, BotKill=3, BotKilled=2, KilledByStorm=1, Loot=3)
+    assert report["events_of_human_journeys"] == by_event(Position=9, Killed=1, BotKill=2, BotKilled=1, KilledByStorm=1, Loot=3)
+    assert report["events_of_bot_journeys"] == by_event(BotPosition=4, BotKill=1, BotKilled=1)
 
 
 def test_manifest_totals_and_match_entry(built):
@@ -138,7 +160,8 @@ def test_manifest_totals_and_match_entry(built):
 
 def test_manifest_lists_matches_by_map_then_by_start(built):
     manifest = read(built[0] / "out" / "manifest.json")
-    assert [(m["id"], m["start"] - FIRST_TS, m["span"]) for m in manifest["matches"]] == [("aaaaaaaa", 0, 15), ("bbbbbbbb", 0, 25), ("cccccccc", 0, 8), ("0d0d0d0d", 30, 10)]
+    listed = [(m["id"], m["start"] - FIRST_TS, m["span"]) for m in manifest["matches"]]
+    assert listed == [("aaaaaaaa", 0, 15), ("bbbbbbbb", 0, 25), ("cccccccc", 0, 8), ("0d0d0d0d", 30, 10)]
 
 
 def test_manifest_carries_the_constants_the_app_needs(built):
@@ -154,8 +177,10 @@ def test_manifest_maps_and_days(built):
     folder, _ = built
     manifest = read(folder / "out" / "manifest.json")
     maps = {entry["id"]: entry for entry in manifest["maps"]}
-    assert {map_id: (entry["matches"], entry["journeys"]) for map_id, entry in maps.items()} == {"AmbroseValley": (1, 3), "GrandRift": (1, 1), "Lockdown": (2, 2)}
-    assert [(maps[map_id]["scale"], maps[map_id]["origin_x"], maps[map_id]["origin_z"]) for map_id in ("AmbroseValley", "GrandRift")] == [(900.0, -370.0, -473.0), (581.0, -290.0, -290.0)]
+    counts = {map_id: (entry["matches"], entry["journeys"]) for map_id, entry in maps.items()}
+    assert counts == {"AmbroseValley": (1, 3), "GrandRift": (1, 1), "Lockdown": (2, 2)}
+    constants = {map_id: (entry["scale"], entry["origin_x"], entry["origin_z"]) for map_id, entry in maps.items()}
+    assert (constants["AmbroseValley"], constants["GrandRift"]) == ((900.0, -370.0, -473.0), (581.0, -290.0, -290.0))
     assert maps["Lockdown"]["name"] == "Lockdown" and maps["AmbroseValley"]["name"] == "Ambrose Valley"
     for map_id, entry in maps.items():
         assert read(folder / "out" / entry["journeys_file"])["map"] == map_id
@@ -187,9 +212,10 @@ def test_minimap_wider_than_the_limit_is_downscaled_keeping_its_aspect(tmp_path,
     monkeypatch.setattr(build_data, "MINIMAP_WIDTH", 20)
     raw = make_raw(tmp_path / "player_data", dataset())
     build(raw, tmp_path / "out", tmp_path / "fixtures")
+    downscaled = {"AmbroseValley": (20, 20), "GrandRift": (20, 19), "Lockdown": (20, 20)}
     for entry in read(tmp_path / "out" / "manifest.json")["maps"]:
         with Image.open(tmp_path / "out" / entry["minimap"]["file"]) as image:
-            assert image.size == (entry["minimap"]["width"], entry["minimap"]["height"]) == {"AmbroseValley": (20, 20), "GrandRift": (20, 19), "Lockdown": (20, 20)}[entry["id"]]
+            assert image.size == (entry["minimap"]["width"], entry["minimap"]["height"]) == downscaled[entry["id"]]
 
 
 def test_journeys_of_a_match_are_listed_humans_first_then_bots_by_number(built):
@@ -219,7 +245,8 @@ def test_time_is_counted_from_the_first_row_of_the_match(built):
 
 def test_anonymous_human_has_no_player_id(built):
     (journey,) = read(built[0] / "out" / "maps" / "GrandRift.json")["journeys"]
-    assert (journey["id"], journey["player"], journey["actor"], journey["anonymous"], journey["fate"]) == ("bbbbbbbb-anon", None, "human", True, "no_death_recorded")
+    who = (journey["id"], journey["player"], journey["actor"], journey["anonymous"], journey["fate"])
+    assert who == ("bbbbbbbb-anon", None, "human", True, "no_death_recorded")
     assert journey["t"] == [0, 20, 25]
 
 
@@ -261,7 +288,8 @@ def test_fixture_points_are_the_extremes_of_each_map_on_its_own_image_size(built
     assert rift["px"] == pytest.approx((35.0 + 290.0) / 581.0 * 40, abs=1e-5)
     assert rift["py"] == pytest.approx((1 - (-20.0 + 290.0) / 581.0) * 38, abs=1e-5)
     assert (points["Lockdown, largest z"]["x"], points["Lockdown, largest z"]["z"]) == (1.0, 1.0)
-    assert (points["Lockdown, smallest z"]["z"], points["Lockdown, largest x"]["x"], points["Lockdown, smallest x"]["x"]) == (-20.0, 50.0, 1.0)
+    assert points["Lockdown, smallest z"]["z"] == -20.0
+    assert (points["Lockdown, largest x"]["x"], points["Lockdown, smallest x"]["x"]) == (50.0, 1.0)
 
 
 def test_fixture_points_carry_the_integer_codes_and_what_they_decode_to(built):
@@ -336,7 +364,8 @@ def test_counts_are_reconciled_with_the_profiler_metric_of_the_same_meaning(buil
 
 
 def run_main(monkeypatch, tmp_path, raw, profile):
-    monkeypatch.setattr(sys, "argv", ["build_data", "--raw", str(raw), "--out", str(tmp_path / "out"), "--fixtures", str(tmp_path / "fixtures"), "--profile", str(profile)])
+    folders = ["--raw", str(raw), "--out", str(tmp_path / "out"), "--fixtures", str(tmp_path / "fixtures")]
+    monkeypatch.setattr(sys, "argv", ["build_data", *folders, "--profile", str(profile)])
     build_data.main()
 
 
@@ -386,6 +415,10 @@ def in_milliseconds():
     return rows.assign(ts=rows["ts"] * 1000)
 
 
+def renamed_file():
+    return rows_of("February_12", OTHER_HUMAN, OTHER_MATCH, [(0, "Position")]).assign(file="February_12/renamed")
+
+
 def two_ids_in_one_file():
     rows = rows_of("February_12", OTHER_HUMAN, OTHER_MATCH, [(0, "Position"), (5, "Position")])
     rows.loc[1, "user_id"] = HUMAN
@@ -399,11 +432,14 @@ def two_ids_in_one_file():
         (rows_of("February_12", OTHER_HUMAN, OTHER_MATCH, [(0, "Position")], map_id="Atlantis"), "unknown map ids \\['Atlantis'\\]"),
         (rows_of("February_12", OTHER_HUMAN, OTHER_MATCH, [(0, "Position", float("nan"), 0.0)]), "null or non-finite values"),
         (two_ids_in_one_file(), "a file holds several user, match or map ids"),
-        (rows_of("February_12", OTHER_HUMAN, OTHER_MATCH, [(0, "Position")]).assign(file="February_12/renamed"), "a file is not named <user_id>_<match_id>"),
+        (renamed_file(), "a file is not named <user_id>_<match_id>"),
         (rows_of("February_12", "guest", OTHER_MATCH, [(0, "Position")]), "neither a UUID nor a number"),
         (rows_of("unsorted", OTHER_HUMAN, OTHER_MATCH, [(0, "Position")]), "not day folders such as February_10: \\['unsorted'\\]"),
         (in_milliseconds(), "which is not Unix seconds"),
-        (rows_of("February_10", OTHER_HUMAN, MATCH, [(0, "Position", 9999.0, 0.0)]), "1 rows are off the minimap, e.g. x 9999.0, z 0.0 on AmbroseValley in February_10/9f8e7d6c_aaaaaaaa"),
+        (
+            rows_of("February_10", OTHER_HUMAN, MATCH, [(0, "Position", 9999.0, 0.0)]),
+            "1 rows are off the minimap, e.g. x 9999.0, z 0.0 on AmbroseValley in February_10/9f8e7d6c_aaaaaaaa",
+        ),
         (rows_of("February_10", OTHER_HUMAN, MATCH, [(0, "Position", 0.0, -9999.0)]), "1 rows are off the minimap"),
     ],
 )
@@ -423,9 +459,9 @@ def test_build_fails_on_an_unreadable_file_and_says_why(tmp_path):
 
 def test_build_fails_on_a_file_with_another_schema(tmp_path):
     raw = make_raw(tmp_path / "player_data", dataset())
-    as_text = pa.table({"user_id": ["1444"], "match_id": [MATCH], "map_id": ["AmbroseValley"], "x": [1.0], "y": [1.0], "z": [1.0], "ts": [FIRST_TS], "event": ["BotPosition"]})
-    pq.write_table(as_text, raw / "February_10" / f"1444_{MATCH}")
-    with pytest.raises(ValueError, match="1 files do not have the expected schema, e.g. February_10/1444_aaaaaaaa.nakama-0: .*event: string"):
+    write_file_with_text_events(raw, "February_10", "1444", MATCH)
+    message = "1 files do not have the expected schema, e.g. February_10/1444_aaaaaaaa.nakama-0: .*event: string"
+    with pytest.raises(ValueError, match=message):
         build(raw, tmp_path / "out", tmp_path / "fixtures")
 
 

@@ -21,12 +21,15 @@ def encode_uv(values: np.ndarray) -> np.ndarray:
 
 
 def decode_uv(codes: np.ndarray) -> np.ndarray:
+    """Codes back to u or v. The app does the same division; the projection fixture is computed with this function."""
     return np.asarray(codes, dtype=np.float64) / UV_STEPS
 
 
 def encode_elevation(y: np.ndarray) -> np.ndarray:
+    """Elevation in world units as whole tenths of a unit."""
     return np.rint(np.asarray(y, dtype=np.float64) * ELEVATION_STEPS_PER_UNIT).astype(np.int64)
 
 
 def decode_elevation(codes: np.ndarray) -> np.ndarray:
+    """Codes back to elevation in world units."""
     return np.asarray(codes, dtype=np.float64) / ELEVATION_STEPS_PER_UNIT

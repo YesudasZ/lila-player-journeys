@@ -27,7 +27,7 @@ import numpy as np
 import pandas as pd
 from PIL import Image, ImageDraw, ImageFont
 
-from pipeline.dataset import MOVEMENT_EVENTS, load_raw
+from pipeline.dataset import COMBAT_DEATH_EVENTS, EVENT_GROUPS, KILL_EVENTS, MOVEMENT_EVENTS, load_raw
 from pipeline.maps import MAPS, MapConfig, uv_to_pixel, world_to_uv
 from pipeline.minimap import load_minimap
 
@@ -45,10 +45,6 @@ STORM = (204, 121, 167)
 INK = (12, 12, 13)
 PAPER = (242, 241, 236)
 ACCENT = (46, 196, 182)
-
-KILL_EVENTS = ("Kill", "BotKill")
-DEATH_BY_COMBAT_EVENTS = ("Killed", "BotKilled")
-STORM_EVENT = "KilledByStorm"
 
 
 @dataclass(frozen=True)
@@ -127,7 +123,11 @@ def _diamond(draw: ImageDraw.ImageDraw, x: float, y: float, r: float, colour: tu
     draw.polygon([(x, y - r), (x + r, y), (x, y + r), (x - r, y)], fill=(*colour, 255), outline=(*INK, 255))
 
 
-MARKERS = ((KILL_EVENTS, _triangle, KILL, "kill"), (DEATH_BY_COMBAT_EVENTS, _cross, DEATH, "death"), ((STORM_EVENT,), _diamond, STORM, "storm death"))
+MARKERS = (
+    (KILL_EVENTS, _triangle, KILL, "kill"),
+    (COMBAT_DEATH_EVENTS, _cross, DEATH, "death"),
+    (EVENT_GROUPS["storm_death"], _diamond, STORM, "storm death"),
+)
 
 
 def draw_samples(minimap: Image.Image, cfg: MapConfig, part: pd.DataFrame, orientation: Orientation, with_markers: bool) -> Image.Image:
@@ -188,8 +188,9 @@ def orientation_sheet(minimap: Image.Image, cfg: MapConfig, movement: pd.DataFra
         top = gap + (index // 4) * (panel_height + label_height + gap)
         sheet.paste(draw_samples(small, cfg, movement, orientation, with_markers=False), (left, top))
         name = orientation.label + ("  (README)" if orientation.is_readme else "")
-        draw.text((left + 4, top + panel_height + 3), name, fill=ACCENT if orientation.is_readme else PAPER, font=font)
-        draw.text((left + 4, top + panel_height + 23), f"{shares[orientation]:.2%} of samples off the map", fill=ACCENT if orientation.is_readme else PAPER, font=font)
+        colour = ACCENT if orientation.is_readme else PAPER
+        draw.text((left + 4, top + panel_height + 3), name, fill=colour, font=font)
+        draw.text((left + 4, top + panel_height + 23), f"{shares[orientation]:.2%} of samples off the map", fill=colour, font=font)
         if orientation.is_readme:
             draw.rectangle((left - 3, top - 3, left + PANEL_WIDTH + 2, top + panel_height + 2), outline=ACCENT, width=3)
     return sheet
@@ -199,7 +200,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--raw", type=Path, default=Path("data/raw/player_data"), help="the unzipped player_data folder")
     parser.add_argument("--out", type=Path, default=Path("docs/img"), help="folder for the proof images")
-    parser.add_argument("--report", type=Path, default=Path("docs/profile/orientation_check.json"), help="where to write the orientation numbers")
+    report_default = Path("docs/profile/orientation_check.json")
+    parser.add_argument("--report", type=Path, default=report_default, help="where to write the orientation numbers")
     args = parser.parse_args()
 
     rows = load_raw(args.raw).rows
@@ -213,14 +215,18 @@ def main() -> None:
         surround = black_surround(minimap)
         shares = {o: share_off_map(surround, *to_pixels(cfg, movement, minimap.size, o)) for o in ORIENTATIONS}
         overlay(minimap, cfg, part).save(args.out / f"overlay_{map_id}.jpg", quality=90, subsampling=0, optimize=True)
-        orientation_sheet(minimap, cfg, movement, shares).save(args.out / f"orientation_{map_id}.jpg", quality=88, subsampling=0, optimize=True)
+        sheet = orientation_sheet(minimap, cfg, movement, shares)
+        sheet.save(args.out / f"orientation_{map_id}.jpg", quality=88, subsampling=0, optimize=True)
         report[map_id] = {
             "movement_samples": len(movement),
             "black_surround_share_of_image": round(float(surround.mean()), 4),
-            "share_of_samples_off_the_map": [{"orientation": o.label, "readme": o.is_readme, "share": round(share, 4)} for o, share in shares.items()],
+            "share_of_samples_off_the_map": [
+                {"orientation": o.label, "readme": o.is_readme, "share": round(share, 4)} for o, share in shares.items()
+            ],
         }
         impostor = min(share for o, share in shares.items() if not o.is_readme)
-        print(f"{map_id}: README orientation {shares[README_ORIENTATION]:.2%} of samples off the map; best wrong orientation {impostor:.2%}")
+        readme = shares[README_ORIENTATION]
+        print(f"{map_id}: README orientation {readme:.2%} of samples off the map; best wrong orientation {impostor:.2%}")
     args.report.write_text(json.dumps(report, indent=2) + "\n")
     print(f"images in {args.out}/, numbers in {args.report}")
 

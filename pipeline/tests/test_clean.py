@@ -86,7 +86,8 @@ def test_file_that_only_looks_repetitive_is_left_alone():
 
 
 def test_file_repeating_its_events_at_other_positions_is_not_written_twice():
-    rows = rows_of("February_10", HUMAN, MATCH, [(0, "Position", 1.0, 1.0), (5, "Position", 2.0, 2.0), (0, "Position", 3.0, 3.0), (5, "Position", 4.0, 4.0)])
+    elsewhere = [(0, "Position", 1.0, 1.0), (5, "Position", 2.0, 2.0), (0, "Position", 3.0, 3.0), (5, "Position", 4.0, 4.0)]
+    rows = rows_of("February_10", HUMAN, MATCH, elsewhere)
     assert len(keep_first_half_of_files_written_twice(rows)) == 4
 
 
@@ -168,7 +169,12 @@ def test_rows_come_out_in_time_order_with_file_order_inside_a_second():
 def test_twin_inside_a_file_written_twice_is_counted_under_both_rules_in_order():
     once = [(0, "Position"), (5, "Kill", 1.0, 1.0), (5, "Killed", 1.0, 1.0)]
     cleaned = clean(rows_of("February_10", HUMAN, MATCH, once + once))
-    assert cleaned.removed == {"spare_copy_of_journey": 0, "second_half_of_file_written_twice": 3, "kill_mirroring_killed": 1, "movement_after_death": 0}
+    assert cleaned.removed == {
+        "spare_copy_of_journey": 0,
+        "second_half_of_file_written_twice": 3,
+        "kill_mirroring_killed": 1,
+        "movement_after_death": 0,
+    }
 
 
 def test_rules_do_not_rely_on_row_labels():

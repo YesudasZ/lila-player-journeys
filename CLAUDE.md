@@ -23,10 +23,11 @@ Do not redo finished work. If PROGRESS.md and the code disagree, trust the code,
 ## Layout
 
 ```
-pipeline/     offline data code: maps.py (projection), dataset.py (loader), profile_data.py, verify_overlay.py, tests/
+pipeline/     offline data code: dataset.py (loader), clean.py (the four rules), journeys.py (actor, fate, match counts), maps.py (projection),
+              encode.py, minimap.py, build_data.py (writes web/public/data/), profile_data.py (measurements), verify_overlay.py (mapping proof), tests/
 analysis/     statistics behind INSIGHTS.md (Phase 10)
-web/          the app (Phase 3 onward)
-docs/         PROGRESS.md (status, single source of truth), BRIEF.md, DATA_NOTES.md, PLAN.md, profile/ (measurements), img/ (mapping proof)
+web/          the app (Phase 3 onward); web/public/data/ is written by `make data` and committed
+docs/         PROGRESS.md (status, single source of truth), BRIEF.md, DATA_NOTES.md, DATA_FORMAT.md (the files the app loads), PLAN.md, profile/ (measurements), img/ (mapping proof)
 .claude/      settings.json (permission rules), commands/resume.md
 data/raw/     unzipped player_data (git-ignored)
 _inbox/       the assignment PDF and zip (git-ignored)
@@ -36,10 +37,11 @@ _inbox/       the assignment PDF and zip (git-ignored)
 ## Commands
 
 ```bash
-make setup      # .venv + pinned dependencies
-make test       # pytest, no raw data needed
+make test       # pytest, no raw data needed; creates .venv on first use
+make data       # raw data -> web/public/data/ and the projection fixture; writes nothing unless every check passes
 make profile    # measure the raw data -> docs/profile/
 make overlay    # mapping proof images -> docs/img/
+make help       # all targets
 ```
 
 Run pipeline modules as `.venv/bin/python -m pipeline.<module>` from the repo root.
@@ -52,7 +54,7 @@ Run pipeline modules as `.venv/bin/python -m pipeline.<module>` from the repo ro
 4. Document every assumption. Do not get blocked: make a reasonable assumption and flag it.
 5. Quality over quantity: no half-working features, no placeholder UI, no dead code. Small, typed, readable modules; pure logic apart from UI.
 6. Raw data and the PDF stay out of git. No secrets. Ask before `git push`, `gh repo create`, installing a dependency, deleting files or deploying.
-7. Coordinate mapping lives in one tested function per language. The per-map constants exist only in `pipeline/maps.py`; the app gets them through the manifest.
+7. Coordinate mapping lives in one tested function per language. The per-map constants exist only in `pipeline/maps.py`; the app gets them through the manifest. The same goes for event groups, fates and the sample step (`pipeline/dataset.py`, `pipeline/journeys.py`): the app reads them from the manifest and repeats none of them.
 8. Do not copy code from other people's public solutions to this assignment.
 9. Player ids are production data: never print, commit or publish a full user UUID. A player's public id is the first eight characters of the UUID and a match's public id the first eight of its match id (both unique in this dataset; the build checks it). Bot numbers are not personal and are used as they are.
 10. Update `docs/PROGRESS.md` after **every** completed sub-step, not only at phase end. Keep its "Exactly where I stopped" section current at all times.
@@ -74,8 +76,10 @@ Measured unless marked as an assumption (A1 to A8 in DATA_NOTES.md).
 - 743 of 796 matches contain a single file. Only 52 matches have bot journeys. No player-versus-player kill is verifiable: the 3 Kill rows each mirror a Killed row of the same file.
 - Position is recorded about every 5 s and not while the player stands still. Across a longer gap the player is taken to hold still, then move in the last 5 s (assumption A6).
 - **Cleaning, four rules in order** (expected removals from the profiler's `cleaning` topic): keep one copy of the journey stored twice, the one filed with most of its match (88 rows); keep the first half of the three files written twice (190); drop a Kill row mirrored by a Killed row (3); drop movement rows after a death row in (`ts`, file order) (206). 88,617 rows and 1,242 journeys remain. Repeated Loot and BotKill rows are kept.
-- Always sort by (`ts`, row order in the file): `ts` has one-second resolution.
-- No extraction or match-end event exists. A human journey without a death row is "no death recorded". Match length is not in the data: the measurable quantity is the observed span of the recorded files.
+- Always sort by (`ts`, row order in the file): `ts` has one-second resolution. After cleaning no file has rows out of time order and no journey has two death rows; the build stops if either appears.
+- **The app's data is described in `docs/DATA_FORMAT.md`.** Every row, whatever its event, is where the journey's owner stood in that second. A journey's path is its rows up to and including its death row. A match entry counts every marker once: kills, deaths, storm_deaths and loot, plus bot_kills and bot_deaths. A journey's `fate` is one of a closed list. Ids are text, and only `actor` says human or bot.
+- A changed number in `web/public/data/` has to be accepted in `pipeline/tests/test_committed_data.py`, which holds the Phase 2 numbers as literals.
+- No extraction or match-end event exists. A human journey without a death row is "no death recorded". Match length is not in the data: the measurable quantity is the observed span of the recorded files (382 s at the median in the raw files; 380 s after cleaning, which is what the manifest holds).
 - Mapping uses the README's formula and constants: `u = (x - origin_x) / scale`, `v = (z - origin_z) / scale`, pixel `(u * W, (1 - v) * H)`. Orientation is proven; scale and origin are right to about 1 to 2% of the map width (assumption A8). Minimaps are 4320x4320, 2160x2158 and 9000x9000, not 1024x1024. All rows land inside the image. `y` is elevation and is kept in the app's data.
 - Day folders are UTC days, by time of writing. The date filter uses the folder name.
 
@@ -103,7 +107,7 @@ Measured unless marked as an assumption (A1 to A8 in DATA_NOTES.md).
 | kill | `#F0E442` | triangle |
 | death | `#D55E00` | cross |
 | storm death | `#CC79A7` | diamond |
-| loot | `#009E73` | small square, off by default |
+| loot | `#009E73` | small square; on in single-match view, off in all-matches view |
 
 Every marker gets a dark outline. Fonts: Space Grotesk (headings), Inter (UI), JetBrains Mono (numbers).
 

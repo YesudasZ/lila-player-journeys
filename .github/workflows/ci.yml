@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   pipeline:
     name: Pipeline tests (Python ${{ matrix.python-version }})

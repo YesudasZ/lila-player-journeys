@@ -32,7 +32,10 @@ def tracked_files():
     return [name for name in listing.split("\0") if name and (ROOT / name).is_file()]
 
 
-@pytest.mark.parametrize("name", ["data/raw/player_data/February_10/1440_match.nakama-0", "_inbox/brief.pdf", "player_data.zip", "export.parquet"])
+RAW_INPUT_NAMES = ["data/raw/player_data/February_10/1440_match.nakama-0", "_inbox/brief.pdf", "player_data.zip", "export.parquet"]
+
+
+@pytest.mark.parametrize("name", RAW_INPUT_NAMES)
 def test_raw_inputs_would_be_caught(name):
     assert RAW_INPUT.search(name)
 

@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-23 11:36 IST
+Last updated: 2026-11-23 11:45 IST
 
 ## Current phase
 
@@ -44,17 +44,18 @@ Phase 2 deliverables and acceptance numbers are in PLAN.md, "Phase 2".
   - [x] b. Data format for the app, described in the new `docs/DATA_FORMAT.md`: each journey has an `id` and a `fate` (was: the raw death event); match entries and totals gain `bot_kills` (170), so every marker is counted once; the manifest carries `event_groups`, `fates` and `sample_step_seconds`; the projection fixture has the integer codes and what they decode to; a match filed under two day folders goes to the later one instead of stopping the build; bots are listed in numeric order. The row arrays are unchanged. Bundles are now 470, 54 and 162 kB gzipped
   - [x] c. The build writes nothing until the leak, size and profile checks have passed. `pipeline/tests/test_committed_data.py` reads the committed files and holds the accepted numbers as literals, so the check no longer depends on the profiler alone. The profiler gained 4 metrics on the span after cleaning (380 median, 887 max, 162 matches shorter by at most 5 s)
   - [x] d. Tests for every gap the mutation run found (storm deaths, positions in rules 1 to 3, rule order, manifest and report fields, raw-data checks, the full-id and size guards, minimap downscaling, fixture points): 149 tests in all. A second mutation run in 2.9f has to confirm them
-  - [ ] e. Docs, CLAUDE.md, Makefile, CI
-  - [ ] f. Profiler tidy-up; a second check of the fixes
+  - [x] e. Documents brought in line: CLAUDE.md (layout, commands, data facts, loot default), README, ARCHITECTURE.md, DATA_NOTES.md (span after cleaning, path points, fate names, what the build now checks), PLAN.md (changed lines listed in its last section, for the user's review), BRIEF.md. Makefile creates `.venv` on first use, checks the Python version and has `make help`. CI token limited to read. No line over 140 characters outside the profiler; the overlay script uses the shared event groups (`make overlay` output unchanged)
+  - [ ] f. Running since about 11:40 IST as background workflow `phase2-fixes-verify` (3 agents): the profiler is being restructured (its output must stay byte-identical); two agents re-check the fixes on a frozen copy of commit `36ce717` (recomputation from the raw files with attack inputs, and a second mutation run). Results not in yet
 - [ ] 2.10 Phase-end checks; status to "DONE (awaiting my review)"; stop
 
 ## Exactly where I stopped
 
-- Last completed: 2.9a to 2.9d, committed. `make test` passes (149 tests); `make data` and `make profile` pass and their output is committed.
-- In progress: 2.9e, the documents that still describe the old state: CLAUDE.md (layout, commands, data facts), README, ARCHITECTURE.md, PLAN.md (Phases 3, 4 and 6 wording), DATA_NOTES.md (span, playback), BRIEF.md; then the Makefile and CI nits.
-- The review result is in `.local/phase2-review-result.raw` (not in git).
+- Last completed: 2.9a to 2.9e, committed. `make test` passes (149 tests); `make data`, `make profile` and `make overlay` pass and leave the committed files unchanged.
+- In flight: 2.9f, the background workflow `phase2-fixes-verify`. One of its agents edits `pipeline/profile_data.py` (and may add `pipeline/profile/` and `pipeline/tests/test_profile_data.py`) in this working tree: uncommitted changes to those files are its work in progress. Do not edit those files until it reports. `.local/session-pointers.md` says where its result will be.
+- When it reports: check that `make profile` leaves `docs/profile/` unchanged, read its diff, run `make test`, commit as `phase-2: profiler split into small modules`. Save the result to `.local/phase2-fixes-verify-result.raw`, reproduce each finding of the two checking agents, fix what holds.
+- Then add a test that no tracked Python file has a line over 140 characters (it would fail today on the profiler).
 - Nothing is pushed since `2f0d706`. Ask before pushing.
-- **NEXT:** 2.9e, then 2.9f (profiler tidy-up and a second, independent check of the fixes), then 2.10.
+- **NEXT:** finish 2.9f as above, then 2.10.
 
 ## Decisions and assumptions made
 
@@ -72,6 +73,14 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 - The README's coordinate transform and constants are used unchanged, with the real image sizes [20, 21, A8]. Elevation is kept in the app's data.
 - Commit messages carry no `Co-Authored-By` line (user's choice; the rule is in `CLAUDE.md`). Earlier commit messages were rewritten to remove it.
 
+2026-11-23, from the Phase 2 review (each is described in PLAN.md's last section or in DATA_FORMAT.md, and waits for the user's review):
+- Every row is a point of its owner's path, not only the movement rows; a journey's path ends at its death row.
+- kills count Kill and BotKill rows; bots' kills are counted as `bot_kills`. Every marker is counted once in the manifest.
+- A journey has a `fate` from a closed list instead of the raw death event, and an `id`.
+- The manifest's span is measured after cleaning (380 s median, 887 s maximum).
+- A match filed under two day folders goes to the later one. A file out of time order after cleaning, or a journey with two death rows, stops the build.
+- Python lines are at most 140 characters. A linter and a type checker (ruff, mypy) would need new dependencies: asked in the open questions.
+
 2026-11-23:
 - The user approved PLAN.md with the recommended answers: deadline Thu 26 Nov (end of day until the hour is known); the scope ladder as written; one data bundle per map with heatmaps binned in the browser; public ids are 8-character prefixes of player and match ids; the README's map constants; one review per phase.
 - The stale "Contributors" box on GitHub: the user chose to wait for GitHub to refresh it.
@@ -82,6 +91,8 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 2. The "Outside claims about this dataset, tested" table in DATA_NOTES.md shows that claims from outside were checked. Keep it, or drop it before submission?
 3. `/resume` is also the name of a built-in Claude Code command (reopen a past conversation). Keep the name, or rename it (for example `/where`)?
 4. At what hour on Thu 26 Nov is the submission due?
+5. The review asked for a linter and a type checker in CI (ruff and mypy, development-only dependencies). Add them? The code already keeps to one line length and has type hints, but nothing checks them.
+6. PLAN.md's last section lists the lines the Phase 2 review changed after your approval. Do you agree with them, above all "every row is a point of the path"?
 
 ## Commands that work
 
@@ -100,6 +111,6 @@ Not available yet: dev server and `npm run check` (Phase 3).
 
 - Commits stay local until the user approves each push.
 - GitHub's "Contributors" box still showed two contributors on 2026-11-23 10:45 IST, about 11 hours after the rewrite was pushed; GitHub's API lists one. The user chose to wait. Recheck before submission (also a Phase 11 check). Fallbacks: recreate the repo, or GitHub Support.
-- `ARCHITECTURE.md` is a first draft of about 900 words. It has to fit one printed page by Phase 10: trim it then.
+- `ARCHITECTURE.md` is a first draft of about 1,000 words. It has to fit one printed page by Phase 10: trim it then.
 - The README's map constants may be 1.5 to 2% too large in x on two maps (`docs/profile/crosscheck.md`, section 4). Kept as documented, by the user's decision.
-- 56 of the profiler's 231 metrics were added after the blind cross-check and were not re-derived by it (the cleaning counts among them were confirmed by a skeptic).
+- 60 of the profiler's 235 metrics were added after the blind cross-check and were not re-derived by it (the cleaning counts among them were confirmed by a skeptic).

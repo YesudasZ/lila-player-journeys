@@ -1,21 +1,30 @@
 # Offline data tasks. The raw data is not in git: unzip player_data.zip into data/raw/ first.
-PY  := .venv/bin/python
-RAW := data/raw/player_data
+PY   := .venv/bin/python
+RAW  := data/raw/player_data
+VENV := .venv/.installed
 
-.PHONY: setup data profile overlay test
+.PHONY: help setup data profile overlay test
 
-setup:    ## create .venv and install the pipeline dependencies
+help:     ## list these targets
+	@awk -F ':.*## ' '/^[a-z]+:.*## / {printf "make %-8s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+# The environment is created on first use and again whenever the pinned versions change.
+$(VENV): pipeline/requirements.txt
+	@python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 12) else "Python 3.12 or newer is needed; python3 is " + sys.version.split()[0])'
 	python3 -m venv .venv
 	$(PY) -m pip install -r pipeline/requirements.txt
+	@touch $@
 
-data:     ## build the app's data files -> web/public/data/, checked against the profile report
+setup: $(VENV)    ## create .venv and install the pipeline dependencies
+
+data: $(VENV)     ## build the app's data files -> web/public/data/; nothing is written unless every check passes
 	$(PY) -m pipeline.build_data --raw $(RAW) --out web/public/data --fixtures web/src/lib/__fixtures__ --profile docs/profile/profile_report.json
 
-profile:  ## measure the raw data -> docs/profile/profile_report.{json,md}
+profile: $(VENV)  ## measure the raw data -> docs/profile/profile_report.{json,md}
 	$(PY) -m pipeline.profile_data --raw $(RAW) --out docs/profile
 
-overlay:  ## draw the coordinate-mapping proof images -> docs/img/
+overlay: $(VENV)  ## draw the coordinate-mapping proof images -> docs/img/
 	$(PY) -m pipeline.verify_overlay --raw $(RAW) --out docs/img
 
-test:     ## unit tests (no raw data needed)
+test: $(VENV)     ## run the tests (no raw data needed)
 	$(PY) -m pytest -q

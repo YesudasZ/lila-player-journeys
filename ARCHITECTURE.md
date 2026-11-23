@@ -7,7 +7,7 @@
 | Part | Choice | Why |
 |---|---|---|
 | Data pipeline | Python, pyarrow, pandas, Pillow; runs offline | pyarrow exposes the raw integer behind the mistyped `ts` column. The dataset is small (89,104 rows): a full build takes 3 seconds |
-| What the browser loads | Static files: a manifest, one JSON bundle per map, WebP minimaps | No server and no database to keep alive. The largest bundle is 463 kB gzipped |
+| What the browser loads | Static files: a manifest, one JSON bundle per map, WebP minimaps | No server and no database to keep alive. The largest bundle is 470 kB gzipped |
 | App | Vite, React, TypeScript, Tailwind, Zustand; drawn on Canvas 2D | The largest map has about 61,000 rows: within reach of a plain canvas, too many for SVG nodes, too few to need WebGL |
 | Hosting | Vercel, static | A push deploys; a reviewer opens a link |
 
@@ -18,20 +18,21 @@ player_data/February_*/<user>_<match>.nakama-0     1,243 Parquet files, not in g
   │ pipeline/dataset.py      read; keep the raw ts integer; decode the event bytes
   │ pipeline/build_data.py   check: stop on anything the pipeline was not built for
   │ pipeline/clean.py        four rules, 89,104 → 88,617 rows
-  │ pipeline/journeys.py     human or bot, death, public ids, counts per match
+  │ pipeline/journeys.py     human or bot, fate, public ids, counts per match
   │ pipeline/maps.py         world (x, z) → (u, v)
+  │ pipeline/encode.py       u, v and elevation as small integers
   ▼
-web/public/data/   manifest.json · maps/<Map>.json · minimaps/<Map>.webp     committed
+web/public/data/   manifest.json · maps/<Map>.json · minimaps/<Map>.webp · cleaning_report.json     committed
   ▼
 browser            manifest → one map bundle → typed arrays → canvas layers
 ```
 
-`make data` rebuilds these files and fails if its counts differ from the measured profile in `docs/profile/`.
+`make data` builds everything in memory and writes nothing unless every check passes: no full player id in any file, no bundle over 700 kB gzipped, and the same counts as the profile in `docs/profile/`. The profile shares the cleaning code, so the accepted numbers are also written out in a test that reads the committed files. The same build writes the reference points for the app's projection tests. Every field is described in `docs/DATA_FORMAT.md`.
 
 ## Mapping game coordinates to the minimap
 
 1. The dataset README gives every map a `scale` and an origin: `u = (x - origin_x) / scale`, `v = (z - origin_z) / scale`. The `y` column is elevation and takes no part.
-2. u and v are fractions of the image, so they do not depend on its size. That matters: the README says 1024×1024, the files are 4320², 2160×2158 and 9000². The pipeline stores u and v, never pixels.
+2. u and v are fractions of the image, so they do not depend on its size. That matters: the README says 1024×1024, the files are 4320², 2160×2158 and 9000². The pipeline stores u and v, never pixels: as integers on a grid of 65,535 steps, finer than 0.02 world units.
 3. The app multiplies by the size of the image it actually draws: `px = u × width`, `py = (1 − v) × height`. The flip is there because image rows count downward and z counts upward.
 4. One function per language holds this. The constants exist only in `pipeline/maps.py` and reach the app through the manifest.
 

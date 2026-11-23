@@ -4,7 +4,7 @@
 
 Requirements: [BRIEF.md](BRIEF.md). Data facts and decisions: [DATA_NOTES.md](DATA_NOTES.md). Status: [PROGRESS.md](PROGRESS.md).
 
-This is the second version. The first was reviewed by an independent agent acting as a studio reviewer (6 blockers, 22 should-fix); see [profile/crosscheck.md](profile/crosscheck.md). What changed is listed at the end.
+This is the second version. The first was reviewed by an independent agent acting as a studio reviewer (6 blockers, 22 should-fix); see [profile/crosscheck.md](profile/crosscheck.md). What changed is listed at the end. **The review of Phase 2 changed a few lines after the approval; they are listed in the last section and wait for your review.**
 
 ## Schedule
 
@@ -46,21 +46,22 @@ Storm deaths are markers only: 39 points, 5 on Grand Rift, are not a heatmap.
 **Deliverables**
 - `pipeline/clean.py`: the four rules of DATA_NOTES.md ("Cleaning"), each returning what it removed.
 - `pipeline/build_data.py` writing `web/public/data/`, which **is committed** (the host builds from the repo and has no raw data):
-  - `manifest.json`: per map the scale and origin from `maps.py` and the shipped minimap's width and height, measured after encoding; the day folders; one entry per match with id, map, day, start time, observed span, file count, and counts as defined below.
-  - `maps/<Map>.json`: every journey of the map as integer arrays: seconds since match start, u and v on a 0 to 65,535 grid, elevation, event code. Per journey: match id, public id, actor (human or bot), an "anonymous" flag for the 17 placeholder-id journeys, fate.
+  - `manifest.json`: per map the scale and origin from `maps.py` and the shipped minimap's width and height, measured after encoding; the day folders; one entry per match with id, map, day, start time, observed span, and the counts defined below (humans plus bots is the file count).
+  - `maps/<Map>.json`: every journey of the map as integer arrays: seconds since match start, u and v on a 0 to 65,535 grid, elevation, event code. Per journey: an id of its own, match id, public id, actor (human or bot), an "anonymous" flag for the 17 placeholder-id journeys, fate.
   - `minimaps/<Map>.webp`, about 2048 px wide, aspect ratio kept.
   - `cleaning_report.json`: rows in, rows removed per rule, rows left per event.
-  - `web/src/lib/__fixtures__/projection.json`: reference points for the TypeScript projection tests (the README's worked example and the extreme u and v of each map).
+  - `web/src/lib/__fixtures__/projection.json`: reference points for the TypeScript projection tests (the README's worked example and the extreme u and v of each map, each with its integer codes and what they decode to).
+  - [DATA_FORMAT.md](DATA_FORMAT.md): these files, field by field, and what the app may rely on.
 - Public ids: a match is its first 8 characters and so is a UUID player (both unique, checked by the build: 796 and 245). Bots keep their number. No full player UUID is written anywhere.
 - Tests on synthetic files: each cleaning rule including the tie-break of rule 1; ordering by (`ts`, file order); the human/bot rule with a placeholder-id human; fate for humans and for bots without a death; a Kill/Killed twin counted as one death; repeated Loot rows kept; a late kill kept; no full UUID in any output; positions surviving the integer encoding to within 0.25 world units; the build failing on an unknown event or an unreadable file.
-- `make data`. A GitHub Actions workflow running `make test` and a check that no raw data, PDF or full player UUID is in the tree.
+- `make data`. A GitHub Actions workflow running the tests, among them a check that no raw data, PDF or full player UUID is in the tree.
 - First draft of `ARCHITECTURE.md` (stack, data flow, coordinate mapping, assumptions): its content already exists in DATA_NOTES.md.
 
-**Manifest counts, per match:** human journeys, anonymous human journeys, bot journeys; kills = BotKill rows in human journeys; deaths = BotKilled and Killed rows in human journeys; storm deaths; loot rows; bot deaths = BotKilled rows in bot journeys.
+**Manifest counts, per match:** human journeys, anonymous human journeys, bot journeys; kills = Kill and BotKill rows in human journeys; deaths = Killed and BotKilled rows in human journeys; storm deaths; loot rows; bot kills and bot deaths = the same rows in bot journeys. Every marker is counted exactly once.
 
 **Acceptance** (expected values are the profiler's `cleaning` metrics)
-- `make data` rebuilds everything from `data/raw/` in under a minute and exits non-zero if `cleaning_report.json` differs from the profiler: 88, 190, 3 and 206 rows removed, 88,617 left.
-- Manifest totals: 796 matches, 284/201/162/112/37 per day folder, 798 human journeys of which 17 anonymous, 444 bot journeys, 2,236 kills, 404 deaths, 39 storm deaths, 12,829 loot rows, 296 bot deaths.
+- `make data` rebuilds everything from `data/raw/` in under a minute. If its counts differ from the profiler it exits non-zero and writes nothing: 88, 190, 3 and 206 rows removed, 88,617 left.
+- Manifest totals: 796 matches, 284/201/162/112/37 per day folder, 798 human journeys of which 17 anonymous, 444 bot journeys, 2,236 kills, 404 deaths, 39 storm deaths, 12,829 loot rows, 170 bot kills, 296 bot deaths. `pipeline/tests/test_committed_data.py` holds these numbers and checks the committed files against them.
 - Each map bundle is under 700 KB gzipped.
 - CI is green on `main`.
 
@@ -80,7 +81,7 @@ Storm deaths are markers only: 39 points, 5 on Grand Rift, are not a heatmap.
 - **Step 9.1, first deployment** (see Phase 9).
 
 **Acceptance**
-- `uvToPixel` matches every point of `projection.json` to within 0.5 px, including on the 2160×2158 image; pixel to world and back returns the same point to within 0.01 world units.
+- From the integer codes of every point of `projection.json`, `uvToPixel` gives the fixture's pixel to within 0.5 px, including on the non-square 2048×2046 image (the shipped Grand Rift minimap); pixel to world and back returns the same point to within 0.01 world units.
 - Each minimap is drawn at the aspect ratio recorded in the manifest (unit test on the layout function).
 - `npm run check` green, CI green, no console errors on the hosted URL.
 
@@ -95,10 +96,11 @@ Storm deaths are markers only: 39 points, 5 on Grand Rift, are not a heatmap.
 - Markers by shape and colour: kill, death, storm death, loot. Identical events at the same spot and second collapse into one marker with a count.
 - Loot markers are on in single-match view and off in all-matches view; the toggle is always visible in the legend.
 - Hover tooltip: event, who, time, world coordinates and elevation. An anonymous journey reads "human (no account id)". Click a journey to focus it and dim the rest. Legend.
+- Human or bot comes from the journey's `actor`, marker types from the manifest's `event_groups`; no event name or id pattern is repeated in the app.
 
 **Acceptance**, on three named matches: `fbbc5d02` (16 journeys, one of them anonymous), `a476eb57` (one journey, 218 rows), `5a081fe4` (ends in a storm death)
-- For each journey the path has as many vertices as the bundle has movement rows, and a journey with a death ends at the death's position (unit test on the function that builds draw lists).
-- Per marker type, the counts shown add up to the manifest entry of the match.
+- For each journey the path's points are its rows up to and including its death row: every row holds where its owner stood ([DATA_FORMAT.md](DATA_FORMAT.md)). A journey with a death therefore ends at the death's position (unit test on the function that builds draw lists).
+- Per marker type, the counts shown add up to the manifest entry of the match: kill markers = kills + bot kills, death markers = deaths + bot deaths.
 - In a greyscale screenshot of `fbbc5d02`, humans, bots and each marker type can still be told apart. If the loot square and the bot's square head cannot, loot becomes a ring.
 - Hover picks the nearest marker within 10 screen pixels.
 
@@ -111,12 +113,12 @@ Storm deaths are markers only: 39 points, 5 on Grand Rift, are not a heatmap.
 **Deliverables**
 - Sidebar: day chips (multi-select, labelled as UTC days, "partial" on 14 Feb), match list sorted busiest first with a "has bots" flag, single-match or all-matches mode, toggles for humans, bots and each event type. Should 3: fate filter.
 - "N matches, M journeys" on every aggregated view.
-- State in a Zustand store synced with the URL: `map`, `days`, `match`, `mode`, `show`, `fate`, and the viewport. Phase 6 adds `t`, Phase 7 adds `heat`. A "copy link" button. Designed empty states.
+- State in a Zustand store synced with the URL: `map`, `days`, `match`, `journey` (the focused journey's id), `mode`, `show`, `fate`, and the viewport. Phase 6 adds `t`, Phase 7 adds `heat`. A "copy link" button. Designed empty states.
 - First visit lands on Ambrose Valley, all matches, traffic heatmap (from Phase 7).
 
 **Acceptance**
-- Encoding the state to a URL and decoding it returns the same state (unit test, extended in Phases 6 and 7).
-- Selecting each day alone lists 284, 201, 162, 112 and 37 matches; each map alone lists 566, 171 and 59 (unit test on the selector, against the manifest).
+- Encoding the state to a URL and decoding it returns the same state (unit test, extended in Phases 6 and 7). The test includes the match ids `03359228` and `5e373986`, which look like numbers and must stay text.
+- Selecting each day alone lists 284, 201, 162, 112 and 37 matches; each map alone lists 566, 171 and 59 (unit test on the selector, against the manifest). The day filter uses a match's `day`, never the date of its `start`: `e325a53a` starts at 23:58 UTC on 9 Feb and belongs to February_10.
 - A combination with no data shows an explanation, not a blank map.
 
 **Verify locally:** change filters, reload, paste the URL into a private window.
@@ -127,12 +129,12 @@ Storm deaths are markers only: 39 points, 5 on Grand Rift, are not a heatmap.
 
 **Deliverables**
 - A `requestAnimationFrame` clock outside React; React receives throttled updates for the read-out only.
-- Position at a time (assumption A6): linear across a 5 s step; across a longer gap the player holds still and moves during the last 5 s; after the last sample the player stays put until the death row or the end of the journey.
+- Position at a time (assumption A6; rule 4 of [DATA_FORMAT.md](DATA_FORMAT.md)): the head moves along the journey's path, whose points are all its rows up to the death row. It moves in a straight line across a gap of up to 5 s; across a longer gap it holds still and moves during the last 5 s; after the last point it stays put. The pipeline gets the reference implementation, a small pure function, and writes a fixture of journeys with the expected head positions; the TypeScript function is tested against that fixture.
 - Play and pause, speeds 1x to 60x, scrubber with event ticks, keyboard shortcuts (space, arrows). Markers appear as time passes. `t` joins the URL.
 - Should 5: all-matches playback. Could 2: density strip.
 
 **Acceptance**
-- Unit tests of position-at-time: a 5 s step, a long gap, a death long after the last sample, a journey with one sample.
+- Unit tests of position-at-time, from the pipeline's fixture: a 5 s step, a long gap, a death long after the last sample, two rows in the same second, a journey with one row.
 - The scrubber's end equals the manifest's observed span for the three named matches.
 - No React render per frame. Frame time under 16 ms while playing `fbbc5d02` at 20x for 10 s, measured in Chrome's Performance panel without throttling; the reading is written into PROGRESS.md.
 - Scrubbing to a death shows the death marker at the head of that path.
@@ -146,7 +148,7 @@ Storm deaths are markers only: 39 points, 5 on Grand Rift, are not a heatmap.
 **Deliverables**
 - Core layers, binned in the browser from the map bundle so they follow the active filters: traffic (movement samples, labelled as such), kills (where players stood when they killed), deaths (where they fell). Human journeys by default; the sidebar toggles decide, there is no second switch.
 - Grid cells of a fixed size in world units, a blur, one perceptual colour ramp per layer, opacity, a legend with the real counts and the number of matches behind them. `heat` joins the URL.
-- Should 1: "no recorded path" layer. Path segments, not samples, are rasterised; a cell counts as crossed if any human segment passes through it; the layer is limited to the map artwork and says in its legend that roofs, rocks and water are included.
+- Should 1: "no recorded path" layer. Path segments, not samples, are rasterised; a cell counts as crossed if any human segment passes through it; the layer is limited to the map artwork and says in its legend that roofs, rocks and water are included. The artwork mask comes from the pipeline (the flood fill that `verify_overlay.py` already uses), not from a second implementation in the browser.
 - Should 2: loot layer. Could 1: time-spent layer, where each gap's seconds go to the cell of its earlier sample, capped at 60 s.
 
 **Acceptance**
@@ -228,3 +230,18 @@ Still open, to settle before submission:
 | Elevation dropped | Kept in the data and shown in the tooltip | Floors overlap in 2D |
 | "Duration" of a match | "Observed span" | Match length is not in the data |
 | Insights from a script on the raw data | From the published bundles, each visible in the tool | They must be learned with the tool |
+
+## Changed after the Phase 2 review (23 Nov 2026), for your review
+
+Three independent reviewers checked Phase 2 (recomputation from the raw files, mutation testing, and a reading as the app's developer). No blocker; the fixes changed these lines of the approved plan.
+
+| Was | Now | Why |
+|---|---|---|
+| A path's points are the movement rows | They are all rows of the journey up to its death row | Every row holds where its owner stood. A path of movement rows alone ends 2.4 units short of the death marker at the median and 25.6 at most, and Phase 4 asked for both "movement rows only" and "ends at the death" |
+| kills = BotKill rows of humans; bots' kills counted nowhere | kills = Kill and BotKill rows of humans; new count: bot kills (170) | "Marker counts add up to the manifest" could not hold: `fbbc5d02` has 0 kills by humans and 5 by bots |
+| Per journey: the raw death event | Per journey: a `fate` from a closed list, and an id | "BotKilled" meant "killed by a bot" for a human and "this bot died" for a bot; a link to one journey needs an id |
+| Projection test on the 2160×2158 image | On the shipped 2048×2046 image, from integer codes | The app never sees the original image, and it only ever gets integer codes |
+| Playback rule written once, in this plan | Reference implementation and fixture in the pipeline (Phase 6) | The rule contradicted itself; one tested function per language, as for the projection |
+| A match with files in two day folders stops the build | It is filed under the later folder | A match can end around midnight. After cleaning there is none in this data |
+| CI runs `make test` | CI runs pytest directly | Same tests; no virtual environment needed on the runner |
+| URL state without a journey | `journey` joins the URL state | Focusing a journey is a view worth sharing |

@@ -15,7 +15,8 @@ def test_uv_to_world_undoes_world_to_uv(map_id):
 
 def test_readme_worked_example():
     # README: AmbroseValley, x=-301.45, z=-355.55 -> u=0.0762, v=0.1305 -> pixel (78, 890) on a 1024 image
-    assert (README_EXAMPLE.map_id, README_EXAMPLE.x, README_EXAMPLE.z, README_EXAMPLE.image_size) == ("AmbroseValley", -301.45, -355.55, 1024)
+    example = (README_EXAMPLE.map_id, README_EXAMPLE.x, README_EXAMPLE.z, README_EXAMPLE.image_size)
+    assert example == ("AmbroseValley", -301.45, -355.55, 1024)
     u, v = world_to_uv(README_EXAMPLE.map_id, README_EXAMPLE.x, README_EXAMPLE.z)
     assert u == pytest.approx(0.0762, abs=5e-5)
     assert v == pytest.approx(0.1305, abs=5e-5)

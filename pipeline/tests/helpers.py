@@ -76,3 +76,11 @@ def write_files(raw_root: Path, rows: pd.DataFrame) -> None:
         path = raw_root / file_id
         path.parent.mkdir(parents=True, exist_ok=True)
         pq.write_table(table, path)
+
+
+def write_file_with_text_events(raw_root: Path, day: str, user_id: str, match_id: str) -> None:
+    """A valid Parquet file that is not shaped like the real ones: its event column holds text, not bytes."""
+    columns = {"user_id": [user_id], "match_id": [match_id], "map_id": ["AmbroseValley"], "x": [1.0], "y": [1.0], "z": [1.0]}
+    path = raw_root / day / f"{user_id}_{match_id}"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    pq.write_table(pa.table(columns | {"ts": [FIRST_TS], "event": ["Position"]}), path)

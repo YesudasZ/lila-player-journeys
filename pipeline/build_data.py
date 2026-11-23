@@ -72,7 +72,8 @@ def check_raw(data: RawData) -> None:
     rows, problems = data.rows, []
     not_parquet = [f for f in data.files if not f.schema or not f.has_magic]
     if not_parquet:
-        problems.append(f"{len(not_parquet)} files are not readable Parquet, e.g. {not_parquet[0].file}: {not_parquet[0].error or 'no PAR1 magic bytes'}")
+        first = not_parquet[0]
+        problems.append(f"{len(not_parquet)} files are not readable Parquet, e.g. {first.file}: {first.error or 'no PAR1 magic bytes'}")
     other_schema = [f for f in data.files if f.schema and f.schema != EXPECTED_SCHEMA]
     if other_schema:
         problems.append(f"{len(other_schema)} files do not have the expected schema, e.g. {other_schema[0].file}: {other_schema[0].schema}")
@@ -111,7 +112,8 @@ def with_uv(rows: pd.DataFrame) -> pd.DataFrame:
     off = located[~(located["u"].between(0.0, 1.0) & located["v"].between(0.0, 1.0))]
     if len(off):
         first = off.iloc[0]
-        raise ValueError(short_ids(f"{len(off)} rows are off the minimap, e.g. x {first['x']:.1f}, z {first['z']:.1f} on {first['map_id']} in {first['file']}"))
+        where = f"x {first['x']:.1f}, z {first['z']:.1f} on {first['map_id']} in {first['file']}"
+        raise ValueError(short_ids(f"{len(off)} rows are off the minimap, e.g. {where}"))
     return located
 
 
@@ -201,7 +203,8 @@ def manifest_text(journeys: pd.DataFrame, matches: pd.DataFrame, minimap_sizes: 
     }
     listing = matches.reset_index().sort_values(["map_id", "start", "match"])
     entries = [
-        {"id": m.match, "map": m.map_id, "day": m.day, "start": int(m.start), "span": int(m.span)} | {name: int(getattr(m, name)) for name in MATCH_COUNTS}
+        {"id": m.match, "map": m.map_id, "day": m.day, "start": int(m.start), "span": int(m.span)}
+        | {name: int(getattr(m, name)) for name in MATCH_COUNTS}
         for m in listing.itertuples()
     ]
     return _lines(head, "matches", entries)
@@ -243,16 +246,25 @@ def projection_fixtures(rows: pd.DataFrame, minimap_sizes: dict[str, tuple[int, 
     taken from the data also carry an elevation and its code.
     """
     example = README_EXAMPLE
-    points: list[Json] = [{"name": "README worked example", "map": example.map_id, "x": example.x, "z": example.z, "width": example.image_size, "height": example.image_size}]
+    size = example.image_size
+    points: list[Json] = [
+        {"name": "README worked example", "map": example.map_id, "x": example.x, "z": example.z, "width": size, "height": size}
+    ]
     for map_id in MAPS:
         on_map = rows[rows["map_id"] == map_id]
         if on_map.empty:
             continue
         width, height = minimap_sizes[map_id]
-        extremes = {"smallest x": on_map["x"].idxmin(), "largest x": on_map["x"].idxmax(), "smallest z": on_map["z"].idxmin(), "largest z": on_map["z"].idxmax()}
+        extremes = {
+            "smallest x": on_map["x"].idxmin(),
+            "largest x": on_map["x"].idxmax(),
+            "smallest z": on_map["z"].idxmin(),
+            "largest z": on_map["z"].idxmax(),
+        }
         for label, index in extremes.items():
             row = rows.loc[index]
-            points.append({"name": f"{map_id}, {label}", "map": map_id, "x": float(row["x"]), "z": float(row["z"]), "y": float(row["y"]), "width": width, "height": height})
+            position = {"x": float(row["x"]), "z": float(row["z"]), "y": float(row["y"])}
+            points.append({"name": f"{map_id}, {label}", "map": map_id} | position | {"width": width, "height": height})
     for point in points:
         u, v = world_to_uv(point["map"], point["x"], point["z"])
         px, py = uv_to_pixel(u, v, point["width"], point["height"])
@@ -261,7 +273,8 @@ def projection_fixtures(rows: pd.DataFrame, minimap_sizes: dict[str, tuple[int, 
         coded_px, coded_py = uv_to_pixel(coded_u, coded_v, point["width"], point["height"])
         coded_x, coded_z = uv_to_world(point["map"], coded_u, coded_v)
         point.update(u=round(u, 9), v=round(v, 9), px=round(px, 6), py=round(py, 6))
-        point.update(u_code=u_code, v_code=v_code, px_from_codes=round(coded_px, 6), py_from_codes=round(coded_py, 6), x_from_codes=round(coded_x, 6), z_from_codes=round(coded_z, 6))
+        point.update(u_code=u_code, v_code=v_code, px_from_codes=round(coded_px, 6), py_from_codes=round(coded_py, 6))
+        point.update(x_from_codes=round(coded_x, 6), z_from_codes=round(coded_z, 6))
         if "y" in point:
             y_code = int(encode_elevation(np.array([point["y"]]))[0])
             point.update(y_code=y_code, y_from_code=float(decode_elevation(np.array([y_code]))[0]))
@@ -294,7 +307,8 @@ def counts_to_reconcile(report: Json) -> dict[tuple[str, str], float]:
     counts |= {("cleaning", f"rows_after_cleaning_{event}"): count for event, count in report["rows_out_by_event"].items()}
     counts |= {("cleaning", f"matches_after_cleaning_in_{day}"): count for day, count in report["matches_by_day"].items()}
     for who in ("human", "bot"):
-        counts |= {("cleaning", f"rows_after_cleaning_{who}_{event}"): report[f"events_of_{who}_journeys"][event] for event in EVENTS_COUNTED_PER_ACTOR}
+        left = report[f"events_of_{who}_journeys"]
+        counts |= {("cleaning", f"rows_after_cleaning_{who}_{event}"): left[event] for event in EVENTS_COUNTED_PER_ACTOR}
     return counts
 
 
@@ -336,7 +350,10 @@ def build(raw_root: Path, out_dir: Path, fixtures_dir: Path, profile: Path | Non
     images = {out_dir / "minimaps" / f"{map_id}.webp": image for map_id, image in minimap_images(raw_root).items()}
     minimap_sizes = {path.stem: image_size(image) for path, image in images.items()}
     bundles = {map_id: bundle_text(map_id, rows, journeys, matches["start"]) for map_id in MAPS}
-    bundle_bytes = {map_id: {"bytes": len(text.encode()), "gzip_bytes": len(gzip.compress(text.encode(), mtime=0))} for map_id, text in bundles.items()}
+    bundle_bytes = {}
+    for map_id, text in bundles.items():
+        encoded = text.encode()
+        bundle_bytes[map_id] = {"bytes": len(encoded), "gzip_bytes": len(gzip.compress(encoded, mtime=0))}
     texts = {out_dir / "manifest.json": manifest_text(journeys, matches, minimap_sizes)}
     texts |= {out_dir / "maps" / f"{map_id}.json": text for map_id, text in bundles.items()}
     texts[out_dir / "cleaning_report.json"] = json.dumps(report, indent=2) + "\n"
