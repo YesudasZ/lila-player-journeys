@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import fixture from "./__fixtures__/projection.json";
-import { codeToUnit, pixelToUv, uvToPixel, uvToWorld, worldToUv } from "./projection.ts";
+import { codeToElevation, codeToUnit, pixelToUv, uvToPixel, uvToWorld, worldToUv } from "./projection.ts";
 
 // Reference points written by the pipeline (pipeline/build_data.py) with its own projection code.
 const { points, maps, encoding } = fixture;
@@ -63,6 +63,15 @@ describe("projection, against the pipeline's reference points", () => {
     const pixel = uvToPixel(u, v, { width: 1024, height: 1024 });
     expect([Math.round(pixel.x), Math.round(pixel.y)]).toEqual([78, 890]);
     expect([example.width, example.height]).toEqual([1024, 1024]);
+  });
+
+  it("decodes an elevation code to tenths of a world unit", () => {
+    const withElevation = points.flatMap((point) => ("y_code" in point && point.y_code !== undefined ? [point] : []));
+    expect(withElevation).toHaveLength(12);
+    for (const point of withElevation) {
+      expect(codeToElevation(point.y_code, encoding.elevation_steps_per_unit)).toBe(point.y_from_code);
+      expect(Math.abs(point.y_from_code - point.y)).toBeLessThanOrEqual(0.05);
+    }
   });
 });
 

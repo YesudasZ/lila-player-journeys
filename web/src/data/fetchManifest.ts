@@ -2,7 +2,7 @@ import { parseManifest, type Manifest } from "../lib/manifest.ts";
 import { dataUrl } from "./dataUrl.ts";
 
 /**
- * Load and check the manifest. Rejects when it cannot be fetched, and with a ManifestError when it
+ * Load and check the manifest. Rejects when it cannot be fetched, and with a DataError when it
  * is not what the app was built for.
  *
  * `afterFailure` is for a second try. The browser may have kept what the address returned the first

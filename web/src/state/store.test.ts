@@ -2,7 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } fr
 
 import { fetchManifest } from "../data/fetchManifest.ts";
 import { loadImage } from "../data/loadImage.ts";
-import { ManifestError, type Manifest, type MapEntry } from "../lib/manifest.ts";
+import type { Manifest, MapEntry } from "../lib/manifest.ts";
+import { DataError } from "../lib/reader.ts";
 import { manifest, mapOf } from "../testing/committed.ts";
 import { useAppStore } from "./store.ts";
 
@@ -120,7 +121,7 @@ describe("a load that fails", () => {
   });
 
   it("tells a data file this version cannot read from a server that cannot be reached", async () => {
-    fetched.mockRejectedValueOnce(new ManifestError("manifest.maps is empty"));
+    fetched.mockRejectedValueOnce(new DataError("manifest.maps is empty"));
     await state().loadManifest();
     expect(state().manifest).toEqual({ status: "error", failure: "refused", retrying: false });
   });
