@@ -36,16 +36,16 @@ Phase 2 deliverables and acceptance numbers are in PLAN.md, "Phase 2".
 - [x] 2.4 `pipeline/build_data.py`: manifest, map bundles, minimaps, cleaning report, projection fixtures, validation; 14 end-to-end tests on synthetic files; `make data`
 - [x] 2.5 Real data built in 3 s, byte-identical on a second run. Counts agree with the profiler and with PLAN.md: 796 matches (284/201/162/112/37 per day), 798 human journeys (17 anonymous), 444 bot journeys, 2,236 kills, 404 deaths, 39 storm deaths, 12,829 loot rows, 296 bot deaths. Bundles gzipped: 463, 53 and 160 kB. `web/public/data/` committed
 - [x] 2.6 Profiler uses `clean.py`, `EVENTS` and `actor_by_file` (one implementation of each rule); `make profile` left `docs/profile/` byte-identical
-- [ ] 2.7 GitHub Actions workflow and a repo hygiene test
+- [x] 2.7 `.github/workflows/ci.yml` (pytest on Python 3.12 and 3.14) and `pipeline/tests/test_repo_hygiene.py`. The workflow has never run: it needs a push
 - [ ] 2.8 `ARCHITECTURE.md` first draft; README section on rebuilding the data
 - [ ] 2.9 Independent review of the phase; findings fixed
 - [ ] 2.10 Phase-end checks; status to "DONE (awaiting my review)"; stop
 
 ## Exactly where I stopped
 
-- Last completed: 2.6 (this commit). `make test` (68 tests), `make data` and `make profile` pass; `docs/profile/` is unchanged by the refactor. The working tree is clean.
-- Local commits since the last push are not pushed.
-- **NEXT:** 2.7. Add `.github/workflows/ci.yml` (Python 3.12 and 3.14, `pip install -r pipeline/requirements.txt`, `python -m pytest -q`) and `pipeline/tests/test_repo_hygiene.py` (no raw data, PDF, zip or full id among the tracked files; the made-up ids of `pipeline/tests/helpers.py` are the only exception). Then 2.8: `ARCHITECTURE.md` first draft and the README's data section.
+- Last completed: 2.7 (this commit). `make test` passes with 78 tests. The working tree is clean.
+- The CI workflow exists but has never run; nothing since `3eeba7b` is pushed.
+- **NEXT:** 2.8. Write `ARCHITECTURE.md` (first draft, one page: stack and why, data flow, coordinate mapping, assumptions, trade-offs) from `docs/DATA_NOTES.md` and `docs/PLAN.md`, and add a "rebuild the data" section to `README.md`. Then 2.9: an independent review of the Phase 2 code.
 
 ## Decisions and assumptions made
 
@@ -80,7 +80,7 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 |---|---|---|
 | `unzip _inbox/player_data.zip -d data/raw` | restores the raw data | 2026-11-22 |
 | `make setup` | creates `.venv`, installs pinned dependencies | 2026-11-22, in a fresh clone |
-| `make test` | 68 unit tests, no raw data needed | 2026-11-23 10:53 |
+| `make test` | 78 unit tests, no raw data needed | 2026-11-23 10:54 |
 | `make profile` | measures the raw data → `docs/profile/` (231 metrics) | 2026-11-23 10:54 |
 | `make data` | builds `web/public/data/` and the projection fixtures, then reconciles with the profile report; 3 s | 2026-11-23 10:53 |
 | `make overlay` | proof images → `docs/img/`, about 30 s | 2026-11-22 23:33 |
