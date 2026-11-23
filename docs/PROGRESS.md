@@ -1,12 +1,12 @@
 # Progress Log
 
-Last updated: 2026-11-23 20:37 IST
+Last updated: 2026-11-23 23:06 IST
 
 ## Current phase
 
-Step 9.1, the first deployment (the end of Phase 3). Status: **DONE (awaiting my review)** in pull request [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2), from the branch `chore-first-deployment`. The tool is live at https://lila-player-journeys-psi.vercel.app.
+Phase 4, Journeys, humans versus bots, markers. Status: **DONE (awaiting my review)** in pull request [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3), from the branch `phase-4-journeys` (last code commit `acae5fa`). Pushed and opened on 23 Nov with the user's yes.
 
-Phase 3 itself is merged: the user reviewed pull request [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) and merged it on 23 Nov. All three CI checks passed on the pull request, and the checks pass on `main` locally.
+Phases 1 to 3 and step 9.1 are merged: pull requests [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) (Phase 3) and [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) (step 9.1) were reviewed and merged by the user on 23 Nov. The tool is live at https://lila-player-journeys-psi.vercel.app; production on Vercel follows `main`.
 
 Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 
@@ -17,12 +17,12 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 | 1 | Data discovery and repo setup | APPROVED | `bc63f0e` |
 | 2 | Pipeline | APPROVED | `ccc2369` |
 | 3 | App shell and map canvas (ends with the first deployment, step 9.1) | APPROVED (merged and hosted) | pull request [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) |
-| 4 | Journeys, humans versus bots, markers | NOT STARTED | |
+| 4 | Journeys, humans versus bots, markers | DONE (awaiting my review) | pull request [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3), branch `phase-4-journeys` |
 | 5 | Filters and URL state | NOT STARTED | |
 | 6 | Timeline and playback | NOT STARTED | |
 | 7 | Heatmaps | NOT STARTED | |
 | 8 | Polish | NOT STARTED | |
-| 9 | Deployment (9.1 after Phase 3, 9.2 on the last day) | 9.1 DONE (awaiting my review); 9.2 on the last day | pull request [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) |
+| 9 | Deployment (9.1 after Phase 3, 9.2 on the last day) | 9.1 APPROVED (merged); 9.2 on the last day | pull request [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) |
 | 10 | Insights and docs | NOT STARTED | |
 | 11 | Final QA | NOT STARTED | |
 
@@ -30,20 +30,30 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 
 ## Current phase task list
 
-Step 9.1 is described in PLAN.md, "Phase 9". The task lists of Phases 2 and 3 are in the history of this file (`git log -p docs/PROGRESS.md`).
+Phase 4 deliverables and acceptance criteria are in PLAN.md, "Phase 4". The task lists of Phases 2 and 3 and of step 9.1 are in the history of this file (`git log -p docs/PROGRESS.md`).
 
-- [x] 9.1.0 Pull request #1 merged by the user; `main` pulled (`884e78e`). `main` holds exactly the reviewed branch: the same tree as the branch's last commit `b972d7d`. On `main`: `npm run check` (196 tests), `npm run build` and `make test` (237 tests) pass
-- [x] 9.1.1 The Vercel project exists and production follows `main`. The user created it on 23 Nov in their own browser, under their personal Vercel account: Vercel offered the whole repo as a multi-service project, and the user imported the `web` folder as a single project with the Vite preset. Vercel's connector could not be used for this (it has no grant for the user's team). Live at https://lila-player-journeys-psi.vercel.app
-- [x] 9.1.2 Hosted site checked at 20:34 as an outside visitor (the preview pane is not signed in to Vercel), at 1280 x 800: all three maps are drawn, the coordinates and the scale bar show, wheel zoom and Fit work. 10 requests, all to the site's own address, none failed. The manifest (796 matches, 88,617 rows), the three minimaps and the three journey bundles answer 200 with the right content type. The console is empty. This closes the last open acceptance line of Phase 3
-- [x] 9.1.3 The URL is at the top of the README and in PLAN.md (Phase 9) and BRIEF.md. The repo's About website is set to it
-- [x] 9.1.4 Pushed and pull request #2 opened with the user's yes (23 Nov, 20:37); recorded here
+- [x] 4.0 The user's go for Phase 4, in this session (23 Nov). Branch `phase-4-journeys` cut from `main` at `83d973c`. This file corrected: step 9.1 is merged as pull request #2
+- [x] 4.1 Plan approved by the user in plan mode (23 Nov, 22:10) and recorded in PLAN.md, "Phase 4" and its last section. Approved with it: the sidebar arrives now; every legend row is a switch; hover also on paths; a map's journeys load when its tab opens; no new dependency; one review by two agents with a fixed budget
+- [x] 4.2 lib: `journeys.ts` (types, `parseBundle`: a bundle is checked against the manifest that came with it); `reader.ts` (the field-by-field reader, shared with the manifest; its error is now `DataError`); the elevation decoder back in `projection.ts`
+- [x] 4.3 lib: `drawList.ts`, `pick.ts`, `labels.ts`, `matches.ts`, `markerShapes.ts`. 270 tests. The draw lists of the committed data match the manifest for all 796 matches; 29 one-line faults put into the new modules are all noticed (4 were not at first, and the tests were tightened)
+- [x] 4.4 Store and data: `fetchBundle.ts`; the store holds journeys per map (loaded when a map is first opened), the open match per map, the switches set by hand and the focused journey; `state/shown.ts` gives one draw list per state. 281 tests
+- [x] 4.5 Map surface: a list of layers (`components/layers/`): minimap, journeys, and the ring around what is under the pointer on a canvas of its own, so a moving pointer redraws no journey. Hover (marker within 10 pixels, else path within 6), click to focus, Esc or a click on empty map to clear. Markers are drawn once and stamped
+- [x] 4.6 Sidebar (`Sidebar`, `MatchList`, `JourneyList`, `Legend`, `Samples`) and `MapTooltip`. 285 tests
+- [x] 4.7 Checked in the preview at 1280 x 800 (22:35), no console error:
+  - Legend against the manifest: all of Ambrose Valley 568 humans, 268 bots, 1,789 kills, 487 deaths, 17 storm deaths, 9,902 loot (hidden by default); `fbbc5d02` 2, 14, 5, 8, 0, 7 with 16 journeys listed, one "human (no account id)"; `a476eb57` 1 human, 10 kills, 58 loot; `5a081fe4` 4 kills, 1 storm death, 37 loot, "killed by storm"
+  - Hover on a kill reads "Kill, bot 1440, at 1:28, x 111 z 69, elevation 105"; a click on a path focuses its journey and its row in the list; Esc, a click on empty map and a second press on the row clear; a drag is not a click
+  - Greyscale on `fbbc5d02`: the loot square could not be told from a bot's square head, so loot is now a ring, as PLAN.md provided for
+  - Redraw of the journeys layer, Ambrose Valley, all matches, default switches: 4.7 to 8.8 ms at fit and about 5 ms while panning at zoom 1.5 (target under 16 ms). With loot switched on by hand: 25 ms at fit, 10 to 12 ms at zoom 1.5, 7 to 9 ms at zoom 3.4. `fbbc5d02`: 0.9 ms. Read from the `journeys-draw` user timing; device pixel ratio 2, map area 960 x 752
+- [x] 4.8 Independent review by two agents, each held to 40 tool calls (48 used together, about half the cost of the Phase 3 review). No blocker; 6 findings to fix and 9 small ones, several raised by both. Fixed in `acae5fa`; what changed and what was left, with reasons, is PLAN.md's last section. Each fix was checked again in the preview with real input. Raw result: `.local/phase4-review-result.raw`
+- [x] 4.9 PLAN.md, BRIEF.md and the README describe Phase 4 as built; phase-end checks pass (23:04)
+- [x] 4.10 Pushed and pull request #3 opened with the user's yes (23 Nov, 23:06); recorded here. CI and Vercel's preview run on the pull request
 
 ## Exactly where I stopped
 
-- Branch `chore-first-deployment`, cut from `main` at `884e78e`, is pushed; pull request #2 into `main` is open. It changes docs only. `main` equals `origin/main`.
-- The tool is live at https://lila-player-journeys-psi.vercel.app and checked (9.1.2).
-- Waiting for the user's review of pull request #2. The user merges it on GitHub; "Rebase and merge" keeps `main` a straight line (open question 6).
-- **NEXT:** nothing until the user has merged. After the merge and the user's go: `git switch main`, `git pull --ff-only`, look at the live site once more (Vercel deploys `main` again), then Phase 4 on a new branch cut from the updated `main`. Start Phase 4 in a fresh session with the resume protocol: this conversation is long, and a long conversation spends the usage window faster.
+- Branch `phase-4-journeys`, cut from `main` at `83d973c`, is pushed; pull request #3 into `main` is open. `main` equals `origin/main`.
+- Everything of Phase 4 is committed and pushed. `npm run check` (289 tests), `npm run build` and `make test` (237 tests) pass.
+- Waiting for the user's review of pull request #3. Vercel adds a preview link to it; the user merges on GitHub.
+- **NEXT:** nothing until the user has reviewed. If a check fails on the pull request: read the failing step, repair it on this branch, ask before pushing. After the user's merge and go: `git switch main`, `git pull --ff-only`, look at the live site, then Phase 5 (filters and URL state) on a new branch cut from the updated `main`. Start it in a fresh session with the resume protocol: this conversation is at the end of its context.
 
 ## Decisions and assumptions made
 
@@ -102,6 +112,29 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 - The branch for step 9.1 was cut right after the merge without a separate go, so that this file can record the merge without a commit on `main` (assumption, told to the user).
 - The merged branch `phase-3-app-shell` still exists locally and on GitHub. It is deleted only on the user's word.
 
+2026-11-23, after step 9.1:
+- Pull request #2 was merged with a merge commit as well; `main` is at `83d973c`. Open question 6 stands.
+- The user chose to do Phase 4 in the same session rather than in a fresh one ("Do this task here").
+
+2026-11-23, Phase 4 plan (approved in plan mode):
+- The sidebar is built in Phase 4, with the match list, the journeys of the open match and the legend; every legend row is a switch. Phase 5 keeps the day and fate filters, the tab counts, the URL state, "copy link" and the empty states.
+- A fate's wording is made from its own text ("killed_by_bot" reads "killed by bot"), so the app holds no second list of fates. Marker kinds are the keys of the manifest's `event_groups`.
+- Hover works on markers (10 pixels) and on paths (6 pixels). Click focuses a journey; Esc or a click on empty map clears.
+- A map's journeys are fetched when its tab is first opened.
+- Planned and built without planning agents; one review at the end by two agents with a fixed budget. Ultracode is on in the session; the usage rule decided.
+
+2026-11-23, while building Phase 4:
+- Loot is a small ring, not a small square: in the greyscale check a square could not be told from a bot's square head. The design tokens in CLAUDE.md say so now.
+- While all matches are open, heads and markers are drawn at 70% of their size and lines thinner and half transparent: at full size the 1,772 kill markers of Ambrose Valley hid the paths.
+- Markers are drawn once and stamped, and the ring around the hovered thing has a canvas of its own: with shapes drawn every frame the 8,988 loot markers took 28 ms.
+- In the preview pane the page draws about one frame a second while the pane is hidden, so a test there has to wait more than a second after each event before it reads the page. The app itself reacts on the next frame.
+
+2026-11-23, from the Phase 4 review (each is in PLAN.md's last section and waits for the user's review):
+- One marker stands for the events of one kind that a journey has at one spot, whatever their second. The approved plan said "same spot and second"; with that rule a tenth of the markers lay hidden under another one.
+- The draw list holds the markers in drawing order (loot, storm deaths, deaths, kills), so the pointer finds the marker on top.
+- A double-click zooms and leaves the focus alone. Each list in the sidebar is one Tab stop with arrow keys inside.
+- Hiding humans or bots clears the focus. What a tooltip says about a single event has no keyboard route until Phase 8.
+
 ## Open questions for the user
 
 1. Should `docs/PROGRESS.md`, `CLAUDE.md` and `.claude/` stay in the repo at submission? They show how the work was run with Claude Code, which the brief allows; they are also working notes in a public repo.
@@ -117,9 +150,9 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 |---|---|---|
 | `unzip _inbox/player_data.zip -d data/raw` | restores the raw data | 2026-11-22 |
 | `make setup` | creates `.venv`, installs pinned dependencies | 2026-11-22, in a fresh clone |
-| `make test` | 237 tests, no raw data needed; creates `.venv` on first use | 2026-11-23 19:49 |
-| `cd web && npm run check` | type check, ESLint with no warning allowed, 196 Vitest tests | 2026-11-23 19:49 |
-| `cd web && npm run build` | production build into `web/dist/` (not committed); JavaScript 76 kB gzipped | 2026-11-23 19:49 |
+| `make test` | 237 tests, no raw data needed; creates `.venv` on first use | 2026-11-23 23:04 |
+| `cd web && npm run check` | type check, ESLint with no warning allowed, 289 Vitest tests | 2026-11-23 23:04 |
+| `cd web && npm run build` | production build into `web/dist/` (not committed); JavaScript 82.98 kB gzipped | 2026-11-23 23:04 |
 | `cd web && npm run dev` | the app on http://localhost:5173 | 2026-11-23 17:41 |
 | `make profile` | measures the raw data → `docs/profile/` (235 metrics) | 2026-11-23 13:10 |
 | `make data` | builds `web/public/data/` and the projection fixtures; writes nothing unless every check passes, the profile report included; 3 s | 2026-11-23 13:16 |
@@ -131,7 +164,7 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 - CI: all three checks passed on pull request #1, the app job and the `@v7` actions included. The run on `main` after the merge has not been read.
 - Screenshots for pull requests and for the walkthrough: the preview pane's screenshots are not files the repo can hold. Phase 10 needs a way to write them (Playwright, a development dependency: ask first).
 - The preview pane of this session reads `~/YesudasZ/.claude/launch.json`, where the entry `lila-web` (port 5183) was added. `.claude/launch.json` in this repo (entry `web`, port 5173) is for sessions started in this folder. Vite reloads the page when a file under `web/public/` changes, so a failure test that moves a data file away cannot show the retry working; set the failure in the app's own store instead.
-- Usage: the 5-hour limit was reached on 23 Nov shortly before 17:00 IST while three planning agents ran next to a long conversation, and the two-agent review of Phase 3 took about 40% of a window. Keep agent use low, and prefer a fresh session per phase, started with the resume protocol.
+- Usage: the 5-hour limit was reached on 23 Nov shortly before 17:00 IST while three planning agents ran next to a long conversation, and the two-agent review of Phase 3 took about 40% of a window. Keep agent use low, and prefer a fresh session per phase, started with the resume protocol. The limit was reached again at 22:00 IST the same day, at the very end of step 9.1, in a conversation that had grown long; nothing was lost.
 - One of the reviewers' one-line faults is still not noticed by a test: removing the guard in `scaleBar` for `Math.log10` landing just under a whole number. No input reaches it in this JavaScript engine.
 - GitHub's "Contributors" box still showed two contributors on 2026-11-23 10:45 IST, about 11 hours after the rewrite was pushed; GitHub's API lists one. The user chose to wait. Recheck before submission (also a Phase 11 check). Fallbacks: recreate the repo, or GitHub Support.
 - `ARCHITECTURE.md` is a first draft of about 1,000 words. It has to fit one printed page by Phase 10: trim it then.

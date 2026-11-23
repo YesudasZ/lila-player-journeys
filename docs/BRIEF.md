@@ -19,10 +19,10 @@ Status key: ☐ not started · ◐ in progress · ☑ done and verified.
 | # | Requirement | How this project meets it | Phase | Status |
 |---|---|---|---|---|
 | R1 | Load and parse the provided parquet data | Offline Python pipeline (pyarrow) reads all 1,243 files and writes static assets for the app | 2 | ☑ `make data`: 89,104 rows in, 88,617 out, counts reconciled with the profile and pinned in a test of the committed files |
-| R2 | Show player journeys on the correct minimap, with world coordinates mapped properly | One tested projection function; UV stored, pixels computed from the real image size | 2, 3, 4 | ◐ the app draws the three minimaps with pan and zoom; its projection matches the pipeline's 13 reference points; journeys arrive in Phase 4 |
-| R3 | Tell humans and bots apart visually | Colour and line style and head shape, with a legend | 4 | ☐ |
-| R4 | Show kills, deaths, loot and storm deaths as distinct markers | Shape and colour per event type, tooltip names the event | 4 | ☐ |
-| R5 | Filter by map, date and/or match | All three, plus human/bot and event toggles | 5 | ☐ |
+| R2 | Show player journeys on the correct minimap, with world coordinates mapped properly | One tested projection function; UV stored, pixels computed from the real image size | 2, 3, 4 | ☑ every journey is drawn on its map as a path that ends at its death row; the app's projection matches the pipeline's 13 reference points; the markers shown equal the manifest's counts for all 796 matches (unit test) |
+| R3 | Tell humans and bots apart visually | Colour and line style and head shape, with a legend | 4 | ☑ solid sky-blue line with a round head, dashed orange line with a square head; they differ in greyscale too; legend with counts and switches |
+| R4 | Show kills, deaths, loot and storm deaths as distinct markers | Shape and colour per event type, tooltip names the event | 4 | ☑ triangle, cross, diamond and ring, each with a dark outline; the tooltip names the event, who, the time into the match, world x and z, and elevation |
+| R5 | Filter by map, date and/or match | All three, plus human/bot and event toggles | 5 | ◐ by map, and by match (all matches or one, found by typed id); switches for humans, bots and each event; the day filter comes in Phase 5 |
 | R6 | Timeline or playback to watch a match unfold | Play/pause, speeds, scrubber with an event-density strip | 6 | ☐ |
 | R7 | Heatmap overlays for kill zones, death zones or high-traffic areas | All three, plus storm deaths and never-visited areas | 7 | ☐ |
 | R8 | Hosted and reachable through a shareable link | Static site on Vercel, deep links for every view | 9 | ◐ hosted at https://lila-player-journeys-psi.vercel.app, production follows `main`; deep links come in Phase 5 |

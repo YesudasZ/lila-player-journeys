@@ -1,4 +1,4 @@
-import { ManifestError } from "../lib/manifest.ts";
+import { DataError } from "../lib/reader.ts";
 
 /**
  * Why a load failed, as far as the screen needs to know. "unreachable": no usable answer came, so
@@ -8,5 +8,5 @@ import { ManifestError } from "../lib/manifest.ts";
 export type Failure = "unreachable" | "refused";
 
 export function failureOf(error: unknown): Failure {
-  return error instanceof ManifestError ? "refused" : "unreachable";
+  return error instanceof DataError ? "refused" : "unreachable";
 }

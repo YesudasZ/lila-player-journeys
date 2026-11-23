@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import committed from "../../public/data/manifest.json";
-import { ManifestError, artworkInPixels, parseManifest } from "./manifest.ts";
+import { artworkInPixels, parseManifest } from "./manifest.ts";
+import { DataError } from "./reader.ts";
 
 /** The committed manifest as loose data that a test may damage. */
 interface Loose {
@@ -93,8 +94,8 @@ describe("a manifest that is not what the app was built for", () => {
     expect(() => parseManifest(damaged)).toThrow("manifest.maps[2].minimap.artwork is not a box inside the image");
   });
 
-  it("is refused with a ManifestError, which the app tells apart from a failed download", () => {
-    expect(() => parseManifest({ ...copy(), maps: [] })).toThrow(ManifestError);
-    expect(() => parseManifest(null)).toThrow(ManifestError);
+  it("is refused with a DataError, which the app tells apart from a failed download", () => {
+    expect(() => parseManifest({ ...copy(), maps: [] })).toThrow(DataError);
+    expect(() => parseManifest(null)).toThrow(DataError);
   });
 });

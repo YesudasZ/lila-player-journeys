@@ -3,6 +3,7 @@
  * `parseManifest` refuses a file that does not have them, so that a wrong or outdated data file
  * shows as an error and never as a wrong map.
  */
+import { DataError, Reader, asCode, asText } from "./reader.ts";
 import type { Box } from "./view.ts";
 
 /** The artwork inside a minimap image, as fractions of the image measured from its left and top edges. */
@@ -107,81 +108,20 @@ export interface Manifest {
   matches: MatchEntry[];
 }
 
-/** The data file came and is not what this version of the app reads. The message names the field. */
-export class ManifestError extends Error {
-  override name = "ManifestError";
+function countsOf(entry: Reader): Counts {
+  return {
+    humans: entry.number("humans"),
+    anonymous: entry.number("anonymous"),
+    bots: entry.number("bots"),
+    kills: entry.number("kills"),
+    deaths: entry.number("deaths"),
+    storm_deaths: entry.number("storm_deaths"),
+    loot: entry.number("loot"),
+    bot_kills: entry.number("bot_kills"),
+    bot_deaths: entry.number("bot_deaths"),
+    rows: entry.number("rows"),
+  };
 }
-
-class Reader {
-  private readonly value: Record<string, unknown>;
-  private readonly path: string;
-
-  constructor(value: unknown, path: string) {
-    if (typeof value !== "object" || value === null || Array.isArray(value)) throw new ManifestError(`${path} is missing or not an object`);
-    this.value = value as Record<string, unknown>;
-    this.path = path;
-  }
-
-  private fail(key: string, wanted: string): never {
-    throw new ManifestError(`${this.path}.${key} is missing or not ${wanted}`);
-  }
-
-  text(key: string): string {
-    const found = this.value[key];
-    return typeof found === "string" ? found : this.fail(key, "text");
-  }
-
-  number(key: string): number {
-    const found = this.value[key];
-    return typeof found === "number" && Number.isFinite(found) ? found : this.fail(key, "a number");
-  }
-
-  /** A number above zero: a size or a scale, which the map is divided by. */
-  positive(key: string): number {
-    const found = this.number(key);
-    return found > 0 ? found : this.fail(key, "above zero");
-  }
-
-  flag(key: string): boolean {
-    const found = this.value[key];
-    return typeof found === "boolean" ? found : this.fail(key, "true or false");
-  }
-
-  object(key: string): Reader {
-    return new Reader(this.value[key], `${this.path}.${key}`);
-  }
-
-  list<T>(key: string, item: (value: unknown, path: string) => T): T[] {
-    const found = this.value[key];
-    if (!Array.isArray(found)) return this.fail(key, "a list");
-    return found.map((value, index) => item(value, `${this.path}.${key}[${index}]`));
-  }
-
-  counts(): Counts {
-    return {
-      humans: this.number("humans"),
-      anonymous: this.number("anonymous"),
-      bots: this.number("bots"),
-      kills: this.number("kills"),
-      deaths: this.number("deaths"),
-      storm_deaths: this.number("storm_deaths"),
-      loot: this.number("loot"),
-      bot_kills: this.number("bot_kills"),
-      bot_deaths: this.number("bot_deaths"),
-      rows: this.number("rows"),
-    };
-  }
-}
-
-const asText = (value: unknown, path: string): string => {
-  if (typeof value !== "string") throw new ManifestError(`${path} is not text`);
-  return value;
-};
-
-const asCode = (value: unknown, path: string): number => {
-  if (typeof value !== "number" || !Number.isInteger(value)) throw new ManifestError(`${path} is not a whole number`);
-  return value;
-};
 
 function asMap(value: unknown, path: string): MapEntry {
   const map = new Reader(value, path);
@@ -189,7 +129,7 @@ function asMap(value: unknown, path: string): MapEntry {
   const artwork = minimap.object("artwork");
   const box = { left: artwork.number("left"), top: artwork.number("top"), right: artwork.number("right"), bottom: artwork.number("bottom") };
   const inside = 0 <= box.left && box.left < box.right && box.right <= 1 && 0 <= box.top && box.top < box.bottom && box.bottom <= 1;
-  if (!inside) throw new ManifestError(`${path}.minimap.artwork is not a box inside the image`);
+  if (!inside) throw new DataError(`${path}.minimap.artwork is not a box inside the image`);
   return {
     id: map.text("id"),
     name: map.text("name"),
@@ -216,12 +156,12 @@ function asMatch(value: unknown, path: string): MatchEntry {
     day: match.text("day"),
     start: match.number("start"),
     span: match.number("span"),
-    ...match.counts(),
+    ...countsOf(match),
   };
 }
 
 /**
- * The manifest, checked field by field. Anything missing or of the wrong kind is a ManifestError that
+ * The manifest, checked field by field. Anything missing or of the wrong kind is a DataError that
  * names it; so is a value that would draw a wrong map: a size or scale of zero, an artwork box that
  * is not inside its image, two maps with one id, an event code that stands for no event.
  */
@@ -231,12 +171,12 @@ export function parseManifest(value: unknown): Manifest {
   const groups = manifest.object("event_groups");
   const totals = manifest.object("totals");
   const maps = manifest.list("maps", asMap);
-  if (maps.length === 0) throw new ManifestError("manifest.maps is empty");
-  if (new Set(maps.map((map) => map.id)).size < maps.length) throw new ManifestError("manifest.maps has two maps with one id");
+  if (maps.length === 0) throw new DataError("manifest.maps is empty");
+  if (new Set(maps.map((map) => map.id)).size < maps.length) throw new DataError("manifest.maps has two maps with one id");
   const events = manifest.list("events", asText);
   const group = (name: string): number[] => {
     const codes = groups.list(name, asCode);
-    if (codes.some((code) => code < 0 || code >= events.length)) throw new ManifestError(`manifest.event_groups.${name} has a code that stands for no event`);
+    if (codes.some((code) => code < 0 || code >= events.length)) throw new DataError(`manifest.event_groups.${name} has a code that stands for no event`);
     return codes;
   };
   return {
@@ -247,7 +187,7 @@ export function parseManifest(value: unknown): Manifest {
     fates: manifest.list("fates", asText),
     maps,
     days: manifest.list("days", asDay),
-    totals: { matches: totals.number("matches"), ...totals.counts() },
+    totals: { matches: totals.number("matches"), ...countsOf(totals) },
     matches: manifest.list("matches", asMatch),
   };
 }

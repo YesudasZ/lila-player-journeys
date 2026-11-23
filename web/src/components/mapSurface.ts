@@ -1,8 +1,8 @@
 /**
- * The map surface: one canvas with the minimap, and everything that moves it.
+ * The map surface: a stack of canvases that share one view, and everything that moves it.
  *
  * This is plain DOM code on purpose. Panning and zooming happen many times a second, so they must
- * not go through a React render: the surface draws on the canvas, writes the read-out straight
+ * not go through a React render: the surface draws on the canvases, writes the read-out straight
  * into the page, and keeps the view in the store, where other parts of the app can read it.
  * What it computes lives in web/src/lib, where it is tested; here are only the events and the drawing.
  */
@@ -11,13 +11,30 @@ import { artworkInPixels, type MapEntry } from "../lib/manifest.ts";
 import type { Point, Size } from "../lib/projection.ts";
 import { unitsPerPixel, wholeUnits, worldUnder } from "../lib/readout.ts";
 import { scaleBar, scaleBarLabel } from "../lib/scaleBar.ts";
-import { clampView, fitView, imageRect, panBy, wheelZoomFactor, zoomAt, zoomLimits, type Stage, type View, type ZoomLimits } from "../lib/view.ts";
+import { clampView, fitView, panBy, wheelZoomFactor, zoomAt, zoomLimits, type Stage, type View, type ZoomLimits } from "../lib/view.ts";
 import { useAppStore } from "../state/store.ts";
 
 const DRAG_STARTS_AFTER = 3; // CSS pixels; a smaller movement is still a click
 const DOUBLE_CLICK_ZOOM = 2;
 const SCALE_BAR_MAX = 120; // CSS pixels
 const NO_VALUE = "—";
+
+/** What a layer is drawn for: the view, what it is looked at through, and the size of the minimap it lies on. */
+export interface Frame {
+  view: View;
+  stage: Stage;
+  /** The size of the minimap, in its own pixels. */
+  image: Size;
+  /** Device pixels per CSS pixel of the canvases. */
+  ratio: number;
+}
+
+/** One canvas of the stack and what draws on it. */
+export interface Layer {
+  canvas: HTMLCanvasElement;
+  /** Draw the layer. The canvas is cleared and scaled to CSS pixels before each call. */
+  draw: (context: CanvasRenderingContext2D, frame: Frame) => void;
+}
 
 /** The elements of the read-out that the surface writes into. */
 interface ReadoutParts {
@@ -32,6 +49,8 @@ export interface MapSurface {
   zoomBy: (factor: number) => void;
   /** Show the whole artwork again. */
   fit: () => void;
+  /** Draw a layer again on the next frame: what it shows has changed. */
+  invalidate: (layer: Layer) => void;
   /** Stop listening and drawing. */
   destroy: () => void;
 }
@@ -41,11 +60,19 @@ interface Parts {
   area: HTMLElement;
   /** The focusable element that receives pointer and wheel events and gives the viewport its size. */
   surface: HTMLElement;
-  canvas: HTMLCanvasElement;
   map: MapEntry;
-  image: HTMLImageElement;
+  /** The canvases, from the bottom of the stack to the top. */
+  layers: readonly Layer[];
   readout: ReadoutParts;
   onLimits: (limits: ZoomLimits) => void;
+  /** The pointer is at this point of the map, or nowhere on it (null): it left, or the map is being dragged. Also told when the map moved under a resting pointer. */
+  onPointer?: (at: Point | null, frame: Frame) => void;
+  /** A click: a press and release without a drag. The second click of a double-click is not told. */
+  onClick?: (at: Point, frame: Frame) => void;
+  /** A double-click, which zooms in: the click just told was its first half. */
+  onDoubleClick?: () => void;
+  /** Esc was pressed inside the map area. */
+  onEscape?: () => void;
 }
 
 /** Call `changed` whenever the device pixel ratio changes, for browsers whose ResizeObserver does not say so. */
@@ -68,47 +95,36 @@ function onPixelRatioChange(changed: () => void): () => void {
   };
 }
 
-export function mountMapSurface({ area, surface, canvas, map, image, readout, onLimits }: Parts): MapSurface {
-  const found = canvas.getContext("2d");
-  if (!found) throw new Error("this browser cannot draw on a canvas");
-  const context = found;
+export function mountMapSurface({ area, surface, map, layers, readout, onLimits, onPointer, onClick, onDoubleClick, onEscape }: Parts): MapSurface {
+  const contexts = new Map(
+    layers.map((layer) => {
+      const context = layer.canvas.getContext("2d");
+      if (!context) throw new Error("this browser cannot draw on a canvas");
+      return [layer, context];
+    }),
+  );
   const artwork = artworkInPixels(map.minimap);
   const imageSize: Size = { width: map.minimap.width, height: map.minimap.height };
-  const background = getComputedStyle(surface).getPropertyValue("--color-bg").trim();
 
   let viewport: Size = { width: surface.clientWidth, height: surface.clientHeight };
+  let ratio = window.devicePixelRatio;
   let pending = 0; // the animation frame that has been asked for, 0 when there is none
-  let stale = true; // the canvas does not show the current view yet
+  let rendering = false;
+  let moved = true; // the view or the size changed since the last frame
+  let pointed = false; // the pointer moved, came or left since the last frame
+  const stale = new Set<Layer>(layers); // the layers that do not show the current state yet
   let pointer: Point | null = null; // where the pointer is over the surface, in CSS pixels
   let drag: { id: number; last: Point; moved: boolean } | null = null;
+  let dragged = false; // the last release ended a drag, so the click event that follows it is not a click
   let limits: ZoomLimits | null = null;
 
   const stage = (): Stage => ({ viewport, artwork });
   /** The view in the store, brought inside the limits of the stage as it is now. */
   const view = (): View => clampView(useAppStore.getState().views[map.id] ?? fitView(artwork), stage());
+  const frameOf = (current: View): Frame => ({ view: current, stage: stage(), image: imageSize, ratio });
   const show = (next: View) => {
     useAppStore.getState().setView(map.id, next.zoom === 1 ? null : next); // a fitted map has no view of its own
   };
-
-  /** Everything that depends on the view alone: the picture, the scale bar and the zoom limits. */
-  function paint(current: View) {
-    stale = false;
-    const ratio = canvas.width / Math.max(viewport.width, 1);
-    context.setTransform(ratio, 0, 0, ratio, 0, 0);
-    context.globalCompositeOperation = "source-over";
-    context.fillStyle = background;
-    context.fillRect(0, 0, viewport.width, viewport.height);
-    // "lighten" keeps the brighter of image and background, so the image's pure black surround becomes the background
-    context.globalCompositeOperation = "lighten";
-    context.imageSmoothingQuality = "high";
-    const rect = imageRect(current, stage(), imageSize);
-    context.drawImage(image, rect.x, rect.y, rect.width, rect.height);
-
-    const bar = scaleBar(unitsPerPixel(current, stage(), imageSize, map), SCALE_BAR_MAX);
-    readout.bar.style.width = `${bar.pixels}px`;
-    readout.label.textContent = scaleBarLabel(bar.units);
-    reportLimits(zoomLimits(current, stage()));
-  }
 
   function reportLimits(next: ZoomLimits) {
     if (limits?.atFit === next.atFit && limits.atClosest === next.atClosest) return;
@@ -122,24 +138,57 @@ export function mountMapSurface({ area, surface, canvas, map, image, readout, on
     readout.z.textContent = world ? wholeUnits(world.z) : NO_VALUE;
   }
 
-  /** One frame. The canvas is drawn only when the view or the size changed; a pointer that only moves changes two numbers. */
+  /**
+   * One frame. A layer is drawn only when the view or the size changed or it was invalidated; a
+   * pointer that only moves changes two numbers, and whatever the layers make of it.
+   */
   function render() {
     pending = 0;
+    rendering = true;
     const current = view();
-    if (stale) paint(current);
+    const frame = frameOf(current);
+    if (moved) for (const layer of layers) stale.add(layer);
+    if (moved || pointed) onPointer?.(drag?.moved ? null : pointer, frame); // may invalidate a layer, which is then drawn below
+    for (const layer of layers) {
+      const context = contexts.get(layer);
+      if (!context || !stale.has(layer)) continue;
+      context.setTransform(ratio, 0, 0, ratio, 0, 0);
+      context.globalAlpha = 1;
+      context.globalCompositeOperation = "source-over";
+      context.clearRect(0, 0, viewport.width, viewport.height);
+      layer.draw(context, frame);
+    }
+    stale.clear();
+    if (moved) {
+      const bar = scaleBar(unitsPerPixel(current, frame.stage, imageSize, map), SCALE_BAR_MAX);
+      readout.bar.style.width = `${bar.pixels}px`;
+      readout.label.textContent = scaleBarLabel(bar.units);
+      reportLimits(zoomLimits(current, frame.stage));
+    }
     writePosition(current);
+    moved = false;
+    pointed = false;
+    rendering = false;
   }
 
   function schedule() {
-    pending ||= requestAnimationFrame(render);
+    if (!rendering) pending ||= requestAnimationFrame(render);
   }
 
-  /** The canvas gets one pixel per device pixel, so the map is sharp on any screen. */
+  function invalidate(layer: Layer) {
+    stale.add(layer);
+    schedule();
+  }
+
+  /** The canvases get one pixel per device pixel, so the map is sharp on any screen. */
   function resize(css: Size, device: Size) {
     viewport = css;
-    canvas.width = device.width;
-    canvas.height = device.height;
-    stale = true;
+    ratio = device.width / Math.max(css.width, 1);
+    for (const { canvas } of layers) {
+      canvas.width = device.width;
+      canvas.height = device.height;
+    }
+    moved = true;
     cancelAnimationFrame(pending);
     render(); // now, not on the next frame: resizing a canvas clears it
   }
@@ -149,10 +198,10 @@ export function mountMapSurface({ area, surface, canvas, map, image, readout, on
     if (!entry) return;
     const css = entry.contentBoxSize[0];
     const device = (entry.devicePixelContentBoxSize as readonly ResizeObserverSize[] | undefined)?.[0];
-    const ratio = window.devicePixelRatio;
+    const pixels = window.devicePixelRatio;
     resize(
       { width: css.inlineSize, height: css.blockSize },
-      device ? { width: device.inlineSize, height: device.blockSize } : { width: Math.round(css.inlineSize * ratio), height: Math.round(css.blockSize * ratio) },
+      device ? { width: device.inlineSize, height: device.blockSize } : { width: Math.round(css.inlineSize * pixels), height: Math.round(css.blockSize * pixels) },
     );
   });
   let stopWatchingRatio = () => {};
@@ -162,8 +211,8 @@ export function mountMapSurface({ area, surface, canvas, map, image, readout, on
   } catch {
     observer.observe(surface);
     stopWatchingRatio = onPixelRatioChange(() => {
-      const ratio = window.devicePixelRatio;
-      resize(viewport, { width: Math.round(viewport.width * ratio), height: Math.round(viewport.height * ratio) });
+      const pixels = window.devicePixelRatio;
+      resize(viewport, { width: Math.round(viewport.width * pixels), height: Math.round(viewport.height * pixels) });
     });
   }
 
@@ -176,6 +225,7 @@ export function mountMapSurface({ area, surface, canvas, map, image, readout, on
   /** The pointer is over the map: from here on the read-out has a position to show. */
   function onPointerSeen(event: PointerEvent) {
     pointer = position(event);
+    pointed = true;
     schedule();
   }
 
@@ -206,26 +256,42 @@ export function mountMapSurface({ area, surface, canvas, map, image, readout, on
 
   function endDrag() {
     drag = null;
+    pointed = true; // whatever was under the pointer before the drag may be under it again
     delete surface.dataset.dragging;
+    schedule();
   }
 
-  function onPointerEnd(event: PointerEvent) {
+  function onPointerUp(event: PointerEvent) {
+    if (drag?.id !== event.pointerId) return;
+    dragged = drag.moved;
+    endDrag();
+  }
+
+  function onSurfaceClick(event: MouseEvent) {
+    if (!dragged && event.detail < 2) onClick?.(position(event), frameOf(view()));
+    dragged = false;
+  }
+
+  function onPointerLost(event: PointerEvent) {
     if (drag?.id === event.pointerId) endDrag();
   }
 
   function onPointerLeave() {
     pointer = null;
+    pointed = true;
     schedule();
   }
 
   function onWheel(event: WheelEvent) {
     event.preventDefault(); // neither scroll the page nor zoom the browser
     pointer = position(event); // a wheel may turn before the pointer has moved
+    pointed = true;
     show(zoomAt(view(), wheelZoomFactor(event.deltaY, event.deltaMode, event.ctrlKey), pointer, stage()));
     schedule(); // at a zoom limit the view stays, the position under the pointer is still written
   }
 
-  function onDoubleClick(event: MouseEvent) {
+  function onSurfaceDoubleClick(event: MouseEvent) {
+    onDoubleClick?.();
     show(zoomAt(view(), DOUBLE_CLICK_ZOOM, position(event), stage()));
   }
 
@@ -235,7 +301,8 @@ export function mountMapSurface({ area, surface, canvas, map, image, readout, on
     event.preventDefault();
     if (action.kind === "pan") show(panBy(view(), action.dx, action.dy, stage()));
     else if (action.kind === "zoom") zoomBy(action.factor);
-    else fit();
+    else if (action.kind === "fit") fit();
+    else onEscape?.();
   }
 
   function zoomBy(factor: number) {
@@ -249,22 +316,24 @@ export function mountMapSurface({ area, surface, canvas, map, image, readout, on
   surface.addEventListener("pointerenter", onPointerSeen);
   surface.addEventListener("pointerdown", onPointerDown);
   surface.addEventListener("pointermove", onPointerMove);
-  surface.addEventListener("pointerup", onPointerEnd);
-  surface.addEventListener("pointercancel", onPointerEnd);
-  surface.addEventListener("lostpointercapture", onPointerEnd);
+  surface.addEventListener("pointerup", onPointerUp);
+  surface.addEventListener("pointercancel", onPointerLost);
+  surface.addEventListener("lostpointercapture", onPointerLost);
   surface.addEventListener("pointerleave", onPointerLeave);
   surface.addEventListener("wheel", onWheel, { passive: false }); // React's onWheel is passive and cannot stop the scroll
-  surface.addEventListener("dblclick", onDoubleClick);
+  surface.addEventListener("click", onSurfaceClick);
+  surface.addEventListener("dblclick", onSurfaceDoubleClick);
   area.addEventListener("keydown", onKeyDown);
   const stopListening = useAppStore.subscribe((state, before) => {
     if (state.views[map.id] === before.views[map.id]) return;
-    stale = true;
+    moved = true;
     schedule();
   });
 
   return {
     zoomBy,
     fit,
+    invalidate,
     destroy() {
       observer.disconnect();
       stopWatchingRatio();
@@ -273,12 +342,13 @@ export function mountMapSurface({ area, surface, canvas, map, image, readout, on
       surface.removeEventListener("pointerenter", onPointerSeen);
       surface.removeEventListener("pointerdown", onPointerDown);
       surface.removeEventListener("pointermove", onPointerMove);
-      surface.removeEventListener("pointerup", onPointerEnd);
-      surface.removeEventListener("pointercancel", onPointerEnd);
-      surface.removeEventListener("lostpointercapture", onPointerEnd);
+      surface.removeEventListener("pointerup", onPointerUp);
+      surface.removeEventListener("pointercancel", onPointerLost);
+      surface.removeEventListener("lostpointercapture", onPointerLost);
       surface.removeEventListener("pointerleave", onPointerLeave);
       surface.removeEventListener("wheel", onWheel);
-      surface.removeEventListener("dblclick", onDoubleClick);
+      surface.removeEventListener("click", onSurfaceClick);
+      surface.removeEventListener("dblclick", onSurfaceDoubleClick);
       area.removeEventListener("keydown", onKeyDown);
     },
   };
