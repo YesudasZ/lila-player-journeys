@@ -1,10 +1,10 @@
 # Progress Log
 
-Last updated: 2026-11-23 23:46 IST
+Last updated: 2026-11-23 23:52 IST
 
 ## Current phase
 
-Phase 5, Filters and URL state. Status: **DONE (awaiting my review)** on the branch `phase-5-filters`, last code commit `d44647d`. Not pushed yet: the push and the pull request wait for the user's yes.
+Phase 5, Filters and URL state. Status: **DONE (awaiting my review)** on the branch `phase-5-filters`, pull request [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4), last code commit `d44647d`. Pushed; it waits for the user's review and merge.
 
 Phases 1 to 4 and step 9.1 are merged: pull requests [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) (Phase 3), [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) (step 9.1) and [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3) (Phase 4) were reviewed and merged by the user on 23 Nov. The tool is live at https://lila-player-journeys-psi.vercel.app and shows Phase 4; production on Vercel follows `main`.
 
@@ -18,7 +18,7 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 | 2 | Pipeline | APPROVED | `ccc2369` |
 | 3 | App shell and map canvas (ends with the first deployment, step 9.1) | APPROVED (merged and hosted) | pull request [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) |
 | 4 | Journeys, humans versus bots, markers | APPROVED (merged) | pull request [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3) |
-| 5 | Filters and URL state | DONE (awaiting my review) | branch `phase-5-filters`, `d44647d`; pull request not opened yet |
+| 5 | Filters and URL state | DONE (awaiting my review) | pull request [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4), branch `phase-5-filters`, `d44647d` |
 | 6 | Timeline and playback | NOT STARTED | |
 | 7 | Heatmaps | NOT STARTED | |
 | 8 | Polish | NOT STARTED | |
@@ -49,14 +49,14 @@ Phase 5 deliverables and acceptance criteria are in PLAN.md, "Phase 5". The task
   - In the preview at 1280 x 800, no console message: with the fate "killed by storm" the list holds 17 matches on Ambrose Valley, as the manifest has, and the legend reads "17 matches, 17 journeys"; a link to a match that the fate rules out (`a476eb57`) opens all matches; the tabs are named "Ambrose Valley, 566 matches"; "Clear filters" leaves the keyboard focus on "Days (UTC)", and from the note over the map on the map; a switch turned off and on leaves the address bare; `view=-1e9,1e12,9999` is dropped
   - Two faults of the list's fix were seen there and fixed in `d44647d`: an empty list said "No match id contains “”.", and one match left read "All 1 matches". Now "No match on Lockdown passes the filters." and "All matches (1)"
   - Checks at 23:46: `npm run check` (347 tests), `npm run build`, `make test` (237 tests)
-- [ ] 5.9 On the user's yes: push the branch, open the pull request, record it here, read the first CI run. Then stop for the review
+- [x] 5.9 On the user's yes (23 Nov, 23:52): the branch is pushed and pull request [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4) is open. Its description gives the evidence for each acceptance criterion, what differs from the plan and what was not verified. CI runs on the pull request and is read there
 
 ## Exactly where I stopped
 
-- Branch `phase-5-filters`, cut from `main` at `fb2aa02`; local only, nothing pushed. `main` equals `origin/main`.
-- Everything of Phase 5 is committed. At 23:46: `npm run check` (347 tests), `npm run build` and `make test` (237 tests) pass. The review's fixes were looked at in the preview (step 5.8).
-- Waiting for the user's yes to push the branch and open the pull request.
-- **NEXT:** on yes: `git push -u origin phase-5-filters`; `gh pr create` into `main` (what the phase delivers, the evidence for each acceptance criterion, what differs from the plan, how to verify; no attribution line; no screenshots, and why); record the pull request here in one docs commit and push it; read the first CI run. Then stop. After the user's merge and go: `git switch main`, `git pull --ff-only`, look at the live site, then Phase 6 on a new branch, in a fresh session.
+- Branch `phase-5-filters`, cut from `main` at `fb2aa02`, is pushed; pull request [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4) into `main` is open. `main` equals `origin/main`.
+- Everything of Phase 5 is committed and pushed. At 23:46: `npm run check` (347 tests), `npm run build` and `make test` (237 tests) pass. The review's fixes were looked at in the preview (step 5.8).
+- Waiting for the user's review and merge of pull request #4. "Copy link" still needs one click on the pull request's Vercel preview: the preview pane refuses clipboard access, so only its refusal message was seen.
+- **NEXT:** changes asked for in the review go onto this branch. After the user's merge and go: `git switch main`, `git pull --ff-only`, look at the live site, then Phase 6 on a new branch (a fresh session keeps the usage low; the user decides).
 
 ## Decisions and assumptions made
 
