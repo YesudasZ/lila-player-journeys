@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-24 00:39 IST
+Last updated: 2026-11-24 00:42 IST
 
 ## Current phase
 
@@ -38,8 +38,8 @@ Phase 6 deliverables and acceptance criteria are in PLAN.md, "Phase 6". The task
 - [x] 6.2 Pipeline (24 Nov, 00:35): `pipeline/playback.py` with `head_at`, the rule of DATA_FORMAT.md as code, tested against values worked out by hand. `make data` leaves `web/public/data/` as it was and writes `web/src/lib/__fixtures__/playback.json` (4,876 bytes): five real journeys, the shortest that show each case, and one made-up journey of one row, with 100 heads in all. DATA_NOTES.md: A6 now says the playback rule in full, and A9 is the journey of one row (no path in the data has one: the shortest has 2 rows). `make test`: 252 tests
 - [x] 6.3 lib (24 Nov, 00:35): `web/src/lib/playback.ts`. `headAt` gives every head of the fixture exactly, with no rounding; the heads of a draw list at a time; how many of a marker's events have happened by a time; the clock's step, which counts at most 100 ms of real time for a frame; the speeds; the slider's keys. `npm run check`: 364 tests
 - [x] 6.4 The clock and the link (24 Nov, 00:39): `web/src/state/playback.ts`, a plain Zustand store with `time`, `end`, `playing` and `speed`. It runs on `requestAnimationFrame` only while playing, follows the open match (523 s, 780 s and 878 s for the three named matches), opens a match whole and paused, takes the time of a link once, counts at most 100 ms for a late frame and pauses when the tab is hidden. `t` is in `lib/link.ts` (after `match`, to a tenth of a second, kept only with its match and below its span) and in the address: written with `replaceState` when the time comes to rest, never while the match plays. The app does not start the clock yet; that comes with the timeline bar. `npm run check`: 391 tests
-- [ ] 6.5 The draw list keeps the times of a marker's events; picking by time
-- [ ] 6.6 The journeys layer draws the moment
+- [x] 6.5 Marker times and picking (24 Nov, 00:42): in `lib/drawList.ts` a marker keeps the time of each of its events (`times`, which replaces `last`); `lib/pick.ts` finds a marker only from its first event on, and a path only as far as it is drawn. The tooltip gets the count of the events that have happened and the time of the last of them
+- [x] 6.6 The layer draws the moment (24 Nov, 00:42): `layers/journeysLayer.ts` listens to the clock. Before the end of a match it draws every path as far as its head has come, the heads where the journeys are, and the markers of what has happened with their counts; what is under a resting pointer is looked up again when the time moves. The whole match and all matches keep their cached paths. Tested in lib: the head of a journey is on its death marker from the second of the death. Not looked at in the preview yet: nothing starts the clock before step 6.7. `npm run check`: 394 tests
 - [ ] 6.7 The timeline bar, the keys, the slider's look
 - [ ] 6.8 Checked in the preview; the frame-time reading
 - [ ] 6.9 Independent review by two agents, each held to 40 tool calls; fixes
@@ -49,8 +49,8 @@ Phase 6 deliverables and acceptance criteria are in PLAN.md, "Phase 6". The task
 ## Exactly where I stopped
 
 - Branch `phase-6-timeline`, cut from `main` at `89dfde3`; local only, nothing pushed. `main` equals `origin/main`.
-- Steps 6.2 to 6.4 are committed: the reference function, the fixture, the pure functions, the clock and `t` in the link. Nothing of playback is on screen yet, and `App.tsx` does not call `startPlayback()` yet.
-- **NEXT:** step 6.5: in `lib/drawList.ts` a marker keeps the times of its events (`times`, which replaces `last`; `MapTooltip.tsx`, `journeysLayer.ts` and the tests of draw list and pick use `last`); `lib/pick.ts` takes what has happened by the time. Then 6.6, the layer draws the moment, and 6.7, the timeline bar with `startPlayback()` in `App.tsx`.
+- Steps 6.2 to 6.6 are committed: the reference function, the fixture, the pure functions, the clock, `t` in the link, marker times, picking by time, and the layer that draws the moment. `App.tsx` does not call `startPlayback()` yet, so nothing of it shows on screen.
+- **NEXT:** step 6.7: `web/src/components/Timeline.tsx` (Play and Pause with the title "Play/Pause (Space when the map or timeline is focused)", the time, the slider with ticks, the speed), a third grid row in `App.tsx` with `startPlayback()`, Space in `lib/mapKeys.ts` and `mapSurface.ts`, the slider's look in `styles.css`. Then 6.8: the preview, and the frame-time reading on `fbbc5d02` and `d0a38c30`.
 
 ## Decisions and assumptions made
 

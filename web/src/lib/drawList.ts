@@ -61,10 +61,11 @@ export interface Marker {
   kind: MarkerKind;
   /** The index of its journey in the draw list's `journeys`. */
   journey: number;
-  /** The first of the rows it stands for, and the last. */
+  /** The first of the rows it stands for: where it is drawn. */
   row: number;
-  last: number;
-  /** How many rows it stands for: the events of its kind that its journey has at this spot. */
+  /** The time of every row it stands for, in the order of the rows: seconds since the start of the match, never decreasing. */
+  times: number[];
+  /** How many rows it stands for: the events of its kind that its journey has at this spot. The length of `times`. */
   count: number;
 }
 
@@ -135,9 +136,9 @@ export function buildDrawList(all: readonly Journey[], match: string | null, sho
       const known = seen.get(same);
       if (known) {
         known.count += 1;
-        known.last = row;
+        known.times.push(journey.t[row]);
       } else {
-        const marker: Marker = { kind, journey: index, row, last: row, count: 1 };
+        const marker: Marker = { kind, journey: index, row, times: [journey.t[row]], count: 1 };
         seen.set(same, marker);
         markers.push(marker);
       }

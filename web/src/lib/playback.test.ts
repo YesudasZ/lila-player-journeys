@@ -61,6 +61,18 @@ describe("the heads of a match at a time", () => {
     expect(startsLater).toContain(true); // bots that join after 5 s
     expect(headsAt(list, 0, step).map((head) => head === null)).toEqual(startsLater);
   });
+
+  it("have the head of a journey on its death marker from the second of the death, and no such marker before", () => {
+    const deaths = list.markers.filter((marker) => marker.kind === "death" || marker.kind === "storm_death");
+    expect(deaths.length).toBeGreaterThan(5);
+    for (const marker of deaths) {
+      const drawn = list.journeys[marker.journey];
+      const [died] = marker.times;
+      expect(marker.row).toBe(drawn.pathLength - 1); // the death row ends the path
+      expect(headsAt(list, died, step)[marker.journey]).toEqual({ x: drawn.x[marker.row], y: drawn.y[marker.row], row: marker.row });
+      expect([happened(marker.times, died - 0.1), happened(marker.times, died)]).toEqual([0, 1]);
+    }
+  });
 });
 
 describe("the clock's step", () => {

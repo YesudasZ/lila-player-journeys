@@ -11,7 +11,7 @@ function drawn(points: [number, number][], pathLength = points.length): DrawnJou
 function listOf(journeys: DrawnJourney[], markers: Marker[] = []): DrawList {
   return { journeys, markers, counts: { humans: 0, bots: 0, kill: 0, death: 0, storm_death: 0, loot: 0 }, matches: 1, single: true };
 }
-const marker = (journey: number, row: number): Marker => ({ kind: "kill", journey, row, last: row, count: 1 });
+const marker = (journey: number, row: number, time = 0): Marker => ({ kind: "kill", journey, row, times: [time], count: 1 });
 /** The reach in image pixels of 10 screen pixels at a scale of the view. */
 const reachAt = (scale: number) => 10 / scale;
 
@@ -81,5 +81,28 @@ describe("the path under the pointer", () => {
 
   it("does not trip over two rows at the same spot", () => {
     expect(pickPath({ x: 2, y: 2 }, 6, listOf([drawn([[0, 0], [0, 0], [50, 0]])]))?.journey).toBe(0);
+  });
+});
+
+describe("what is under the pointer at a moment of playback", () => {
+  it("is no marker before its first event", () => {
+    const list = listOf([drawn([[100, 100], [112, 100]])], [marker(0, 0, 30), marker(0, 1, 60)]);
+    expect(pickMarker({ x: 100, y: 100 }, 10, list, 29.9)).toBeNull();
+    expect(pickMarker({ x: 100, y: 100 }, 10, list, 30)).toBe(0);
+    expect(pickMarker({ x: 111, y: 100 }, 10, list, 59)).toBeNull(); // the nearer marker has not happened, the other is out of reach
+    expect(pickMarker({ x: 111, y: 100 }, 10, list, 60)).toBe(1);
+    expect(pickMarker({ x: 111, y: 100 }, 10, list)).toBe(1); // without a time everything has happened
+  });
+
+  it("is a path only as far as it is drawn, and no journey that is not on the map yet", () => {
+    const list = listOf([drawn([[0, 0], [100, 0], [100, 100]]), drawn([[0, 50], [100, 50]])]);
+    const onSecondStretch = { x: 100, y: 60 };
+    expect(pickPath(onSecondStretch, 5, list)).toEqual({ journey: 0, row: 2 });
+    expect(pickPath(onSecondStretch, 5, list, [3, 2])).toEqual({ journey: 0, row: 2 });
+    expect(pickPath(onSecondStretch, 5, list, [2, 2])).toBeNull(); // that stretch is not drawn yet
+    expect(pickPath({ x: 50, y: 50 }, 5, list, [3, 2])).toEqual({ journey: 1, row: 1 });
+    expect(pickPath({ x: 50, y: 50 }, 5, list, [3, 0])).toBeNull(); // the second journey is not on the map yet
+    expect(pickPath({ x: 0, y: 50 }, 5, list, [3, 1])).toEqual({ journey: 1, row: 0 }); // one row drawn is a point
+    expect(pickPath({ x: 60, y: 50 }, 5, list, [3, 1])).toBeNull();
   });
 });

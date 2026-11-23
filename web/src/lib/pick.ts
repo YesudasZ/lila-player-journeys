@@ -6,11 +6,16 @@
 import type { DrawList } from "./drawList.ts";
 import type { Point } from "./projection.ts";
 
-/** The index of the nearest marker within `reach` of a point, or null. Of two equally near, the later one in the draw list wins: it is drawn on top. */
-export function pickMarker(at: Point, reach: number, list: DrawList): number | null {
+/**
+ * The index of the nearest marker within `reach` of a point, or null. Of two equally near, the later
+ * one in the draw list wins: it is drawn on top. At a moment of playback only a marker whose first
+ * event has happened by `until` is there to be found.
+ */
+export function pickMarker(at: Point, reach: number, list: DrawList, until = Infinity): number | null {
   let best: number | null = null;
   let nearest = reach * reach;
   for (const [index, marker] of list.markers.entries()) {
+    if (marker.times[0] > until) continue;
     const drawn = list.journeys[marker.journey];
     const dx = drawn.x[marker.row] - at.x;
     const dy = drawn.y[marker.row] - at.y;
@@ -31,13 +36,17 @@ export interface PickedRow {
 
 /**
  * The nearest path within `reach` of a point, or null: its journey, and the row at the nearer end
- * of the nearest stretch of the path, since only a row has a time and a place of its own.
+ * of the nearest stretch of the path, since only a row has a time and a place of its own. At a
+ * moment of playback `rows` says for every journey how many rows of its path are drawn: none for a
+ * journey that is not on the map yet.
  */
-export function pickPath(at: Point, reach: number, list: DrawList): PickedRow | null {
+export function pickPath(at: Point, reach: number, list: DrawList, rows?: readonly number[]): PickedRow | null {
   let best: PickedRow | null = null;
   let nearest = reach * reach;
   for (const [index, { x, y, pathLength }] of list.journeys.entries()) {
-    const last = pathLength - 1; // rows after it, kills recorded after a death, are not part of the line
+    const drawn = rows ? Math.min(rows[index], pathLength) : pathLength;
+    if (drawn === 0) continue;
+    const last = drawn - 1; // rows after it are not part of the line: kills recorded after a death, and what has not happened yet
     for (let row = 0; row < Math.max(last, 1); row += 1) {
       const next = Math.min(row + 1, last); // a path of one row is a point
       const alongX = x[next] - x[row];

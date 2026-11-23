@@ -20,7 +20,7 @@ export function MapTooltip({ hover, map, manifest }: { hover: Hover | null; map:
   const world = uvToWorld(codeToUnit(journey.u[row], steps), codeToUnit(journey.v[row], steps), map);
   const across = at.x > viewport.width / 2 ? `calc(-100% - ${GAP}px)` : `${GAP}px`;
   const down = at.y > viewport.height - ROOM_BELOW ? `calc(-100% - ${GAP}px)` : `${GAP}px`;
-  const until = marker && journey.t[marker.last] > journey.t[row] ? ` to ${clock(journey.t[marker.last])}` : "";
+  const until = marker && marker.until > journey.t[row] ? ` to ${clock(marker.until)}` : "";
 
   return (
     <div

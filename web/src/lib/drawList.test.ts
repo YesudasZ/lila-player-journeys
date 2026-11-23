@@ -71,8 +71,8 @@ describe("the draw list", () => {
     const repeated = journey("a", [MOVE, LOOT, LOOT, LOOT, LOOT, BOT_KILL, LOOT], { seconds: [0, 5, 5, 5, 9, 9, 12], spots: [10, 20, 20, 20, 20, 20, 30] });
     const list = buildDrawList([repeated], null, ALL, KINDS, GRID);
     expect(kindsOf(list.markers)).toEqual(["loot x4", "loot x1", "kill x1"]); // another spot and another kind stay apart
-    expect([list.markers[0].row, list.markers[0].last]).toEqual([1, 4]); // from the first of its rows to the last
-    expect([list.markers[1].row, list.markers[1].last]).toEqual([6, 6]);
+    expect([list.markers[0].row, list.markers[0].times]).toEqual([1, [5, 5, 5, 9]]); // drawn at the first of its rows, with the time of each
+    expect([list.markers[1].row, list.markers[1].times]).toEqual([6, [12]]);
     expect(list.counts.loot).toBe(5); // the legend counts rows, not markers
   });
 
