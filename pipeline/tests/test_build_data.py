@@ -47,6 +47,7 @@ KILLED_BY_A_PLAYER = [(0, "Position"), (5, "Position"), (8, "Kill", 1.0, 1.0), (
 KILLED_BY_THE_STORM_LATER = [(30, "Position"), (35, "Position"), (40, "KilledByStorm")]  # this match starts last
 MINIMAP_SIZES = {"AmbroseValley": (40, 40), "GrandRift": (40, 38), "Lockdown": (60, 60)}
 OUTPUT_FILES = [
+    "fixtures/playback.json",
     "fixtures/projection.json",
     "out/cleaning_report.json",
     "out/manifest.json",

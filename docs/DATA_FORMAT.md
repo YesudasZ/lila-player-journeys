@@ -9,7 +9,7 @@
 | `minimaps/<Map>.webp` | the minimap, 2048 pixels wide | 177, 165 and 193 kB |
 | `cleaning_report.json` | rows in, rows removed per rule, rows left. The app does not need it | 1 kB |
 
-The pipeline also writes `web/src/lib/__fixtures__/projection.json`, the reference points for the app's projection tests.
+The pipeline also writes two fixtures for the app's tests into `web/src/lib/__fixtures__/`: `projection.json`, the reference points for the projection, and `playback.json`, journeys with the head that `pipeline/playback.py` gives at many times, which holds the app to rule 4 below.
 
 ## manifest.json
 

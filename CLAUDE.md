@@ -24,7 +24,7 @@ Do not redo finished work. If PROGRESS.md and the code disagree, trust the code,
 
 ```
 pipeline/     offline data code: dataset.py (loader), clean.py (the four rules), journeys.py (actor, fate, match counts), maps.py (projection),
-              encode.py, minimap.py, build_data.py (writes web/public/data/), profile_data.py and profile/ (measurements, one module per topic),
+              encode.py, minimap.py, playback.py (the reference for the app's playback), build_data.py (writes web/public/data/ and the test fixtures), profile_data.py and profile/ (measurements, one module per topic),
               verify_overlay.py (mapping proof), tests/
 analysis/     statistics behind INSIGHTS.md (Phase 10)
 web/          the app: src/lib/ (pure functions with their Vitest files), src/state/ (Zustand), src/data/ (loading), src/testing/ (the committed manifest for tests), src/components/
@@ -40,7 +40,7 @@ _inbox/       the assignment PDF and zip (git-ignored)
 
 ```bash
 make test       # pytest, no raw data needed; creates .venv on first use
-make data       # raw data -> web/public/data/ and the projection fixture; writes nothing unless every check passes
+make data       # raw data -> web/public/data/ and the two test fixtures; writes nothing unless every check passes
 make profile    # measure the raw data -> docs/profile/
 make overlay    # mapping proof images -> docs/img/
 make help       # all targets
@@ -81,7 +81,7 @@ Phases 1 and 2 were committed straight to `main`. From Phase 3 on:
 
 ## Data facts (evidence, row by row: `docs/DATA_NOTES.md`; independent check: `docs/profile/crosscheck.md`)
 
-Measured unless marked as an assumption (A1 to A8 in DATA_NOTES.md).
+Measured unless marked as an assumption (A1 to A9 in DATA_NOTES.md).
 
 - 1,243 Parquet files (no extension), 89,104 rows, 796 matches, 3 maps. One file is one journey, one player or bot in one match; one journey is stored twice.
 - `ts` is **Unix seconds** in a `timestamp[ms]` column. Read the raw int64; never let a library convert it.
