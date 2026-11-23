@@ -1,10 +1,10 @@
 # Progress Log
 
-Last updated: 2026-11-23 23:20 IST
+Last updated: 2026-11-23 23:35 IST
 
 ## Current phase
 
-Phase 5, Filters and URL state. Status: **IN PROGRESS** on the branch `phase-5-filters` (plan approved; no pull request yet).
+Phase 5, Filters and URL state. Status: **DONE (awaiting my review)** on the branch `phase-5-filters`, last code commit `ac23e1b`. Not pushed yet: the push and the pull request wait for the user's yes.
 
 Phases 1 to 4 and step 9.1 are merged: pull requests [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) (Phase 3), [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) (step 9.1) and [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3) (Phase 4) were reviewed and merged by the user on 23 Nov. The tool is live at https://lila-player-journeys-psi.vercel.app and shows Phase 4; production on Vercel follows `main`.
 
@@ -18,7 +18,7 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 | 2 | Pipeline | APPROVED | `ccc2369` |
 | 3 | App shell and map canvas (ends with the first deployment, step 9.1) | APPROVED (merged and hosted) | pull request [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) |
 | 4 | Journeys, humans versus bots, markers | APPROVED (merged) | pull request [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3) |
-| 5 | Filters and URL state | IN PROGRESS | branch `phase-5-filters` |
+| 5 | Filters and URL state | DONE (awaiting my review) | branch `phase-5-filters`, `ac23e1b`; pull request not opened yet |
 | 6 | Timeline and playback | NOT STARTED | |
 | 7 | Heatmaps | NOT STARTED | |
 | 8 | Polish | NOT STARTED | |
@@ -42,15 +42,16 @@ Phase 5 deliverables and acceptance criteria are in PLAN.md, "Phase 5". The task
   - Lockdown with the fate "killed by player": the note "No journey on Lockdown has the fate “killed by player”." with "Clear filters", which brings back 171 matches and 295 journeys
   - A link with a match, a focused journey, loot switched on, a view and a day, given in another order, opens exactly that view and is rewritten in the canonical order; a link with an unknown map, match, day and a broken view keeps only its fate
   - "Copy link": the preview pane refuses clipboard access, so only the refusal message could be seen there ("Copy the address from the address bar"); the address it would copy equals the address bar's
-- [ ] 5.6 Independent review by two agents, each held to 40 tool calls. Launched at 23:20 as the background workflow `phase5-review`; results not in yet; fixes follow
-- [ ] 5.7 Docs, phase-end checks; ask once to push the branch and open the pull request; stop
+- [x] 5.6 Independent review by two agents, each held to 40 tool calls (51 used together). No blocker; 6 findings to fix and 7 small ones, several raised by both. Fixed in `ac23e1b`; what changed and what was left is PLAN.md's last section. Raw result: `.local/phase5-review-result.raw`
+- [x] 5.7 PLAN.md, BRIEF.md and the README describe Phase 5 as built; phase-end checks pass (23:35): `npm run check` (345 tests), `npm run build`, `make test` (237 tests)
+- [ ] 5.8 On the user's yes: push the branch, open the pull request, record it here, read the first CI run. Then stop for the review
 
 ## Exactly where I stopped
 
-- Branch `phase-5-filters`, cut from `main` at `fb2aa02`; local only. `main` equals `origin/main`.
-- Done and committed: 5.2 to 5.5. Phase 5 is built and checked in the preview; `npm run check` (326 tests), `npm run build` and `make test` (237 tests) pass.
-- In flight: 5.6, the review workflow `phase5-review` (two agents, read-only on the project; one drives the dev server on port 5183 in the preview pane, tab `tab-1`). Its result goes to `.local/phase5-review-result.raw`.
-- **NEXT:** when the review reports: reproduce each finding, fix what holds, re-run the checks, commit. Then 5.7: PLAN.md as built with a section on what the review changed, BRIEF.md (R5 and R8) and the README's status line, the commands table of this file, status "DONE (awaiting my review)"; ask once to push the branch and open the pull request.
+- Branch `phase-5-filters`, cut from `main` at `fb2aa02`; local only, nothing pushed. `main` equals `origin/main`.
+- Everything of Phase 5 is committed. At 23:35: `npm run check` (345 tests), `npm run build` and `make test` (237 tests) pass. The review's fixes were not looked at again in the preview; the unit tests cover them.
+- Waiting for the user's yes to push the branch and open the pull request.
+- **NEXT:** on yes: `git push -u origin phase-5-filters`; `gh pr create` into `main` (what the phase delivers, the evidence for each acceptance criterion, what differs from the plan, how to verify; no attribution line; no screenshots, and why); record the pull request here in one docs commit and push it; read the first CI run. Then stop. After the user's merge and go: `git switch main`, `git pull --ff-only`, look at the live site, then Phase 6 on a new branch, in a fresh session.
 
 ## Decisions and assumptions made
 
@@ -137,6 +138,12 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 - The user chose again to do the next phase in the same session ("Do this task here").
 - After a switch of branches the dev server of the preview has to be restarted: Vite lost its styles once after one.
 
+2026-11-23, from the Phase 5 review (each is in PLAN.md's last section and waits for the user's review):
+- The match list offers only what the day and fate filters leave, and a match they rule out cannot be opened.
+- A linked focus is kept only when its journey is drawn; a view from a link has to be closer than fit, at most 64 times, and on the image; a switch put back to shown is forgotten.
+- "Clear filters" hands the keyboard focus to the filters or to the map.
+- Left: a reload within 300 ms of a change loses that change.
+
 ## Open questions for the user
 
 1. Should `docs/PROGRESS.md`, `CLAUDE.md` and `.claude/` stay in the repo at submission? They show how the work was run with Claude Code, which the brief allows; they are also working notes in a public repo.
@@ -152,9 +159,9 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 |---|---|---|
 | `unzip _inbox/player_data.zip -d data/raw` | restores the raw data | 2026-11-22 |
 | `make setup` | creates `.venv`, installs pinned dependencies | 2026-11-22, in a fresh clone |
-| `make test` | 237 tests, no raw data needed; creates `.venv` on first use | 2026-11-23 23:04 |
-| `cd web && npm run check` | type check, ESLint with no warning allowed, 289 Vitest tests | 2026-11-23 23:04 |
-| `cd web && npm run build` | production build into `web/dist/` (not committed); JavaScript 82.98 kB gzipped | 2026-11-23 23:04 |
+| `make test` | 237 tests, no raw data needed; creates `.venv` on first use | 2026-11-23 23:35 |
+| `cd web && npm run check` | type check, ESLint with no warning allowed, 345 Vitest tests | 2026-11-23 23:35 |
+| `cd web && npm run build` | production build into `web/dist/` (not committed); JavaScript 85.43 kB gzipped | 2026-11-23 23:35 |
 | `cd web && npm run dev` | the app on http://localhost:5173 | 2026-11-23 17:41 |
 | `make profile` | measures the raw data → `docs/profile/` (235 metrics) | 2026-11-23 13:10 |
 | `make data` | builds `web/public/data/` and the projection fixtures; writes nothing unless every check passes, the profile report included; 3 s | 2026-11-23 13:16 |

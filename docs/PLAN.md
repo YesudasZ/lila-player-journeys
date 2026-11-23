@@ -203,7 +203,7 @@ web/src/components/                Sidebar, MatchList, JourneyList, Legend, MapT
 - The view lives in the URL: `map`, `days`, `match`, `journey` (the focused journey's id), `show` and `hide` (the switches set by hand), `fate`, and `view` (the open map's point and zoom). There is no `mode`: a link with a match shows that match. Every part is left out at its default, so the bare address is the default view. The address is rewritten in place, 300 ms after the last change, so Back and Forward leave the tool. Numbers are rounded: the point to a tenth of an image pixel, the zoom to a thousandth. Phase 6 adds `t`, Phase 7 adds `heat`.
 - On opening a link, whatever the data does not have is dropped quietly and the rest is kept.
 - "Copy link" at the right end of the top bar: it copies the address of the current view and says "Link copied" for two seconds; if the browser refuses, it says to copy the address from the address bar.
-- Nothing to show: when the filters leave no journey on the open map, a note over the map says so in plain words ("No journey on Lockdown was killed by a player."), with "Clear filters". The map stays visible.
+- Nothing to show: when the filters leave no journey on the open map, a note over the map says so in plain words ("No journey on Lockdown has the fate “killed by player”."), with "Clear filters". The map stays visible.
 - First visit lands on Ambrose Valley, all matches (the traffic heatmap joins in Phase 7).
 
 **Files**
@@ -423,3 +423,22 @@ Left as it is:
 | What a tooltip says has no way in by keyboard | Phase 8 | The journey list gives who and fate; a journey's events as text belong with the keyboard pass of Phase 8 |
 | With loot switched on by hand, all matches of Ambrose Valley redraw in 14 to 25 ms at fit | Left | The default view takes 2.5 to 9 ms; a moving pointer no longer redraws journeys; only zooming at fit with loot on is slower than a frame |
 | Hiding humans or bots clears the focus even when the focused journey is of the other kind | Left | One click brings the focus back; telling the kinds apart would need a search through the journeys in the store |
+
+## Changed after the Phase 5 review (23 Nov 2026), for your review
+
+Two independent reviewers checked Phase 5, each held to 40 tool calls (51 used together): one in a real browser against the data, one on code quality, accessibility and the strength of the tests. No blocker; 6 findings to fix and 7 small ones, several raised by both.
+
+What held, as the reviewers measured it: the tabs, the match list and the legend equal the manifest for three choices of days on all three maps; the fate filter's counts equal the bundles; five views built by hand came back the same after a reload; eleven odd links were handled as promised and the ids `03359228` and `5e373986` stayed text; 40 wheel events gave one rewrite of the address, 302 ms after the last, and no history entry.
+
+| Was | Now | Why |
+|---|---|---|
+| With a fate chosen, the list still offered every match of the chosen days | The list offers only the matches the filters leave, and the store refuses one they rule out | A match without a journey of the chosen fate could be opened; it was empty, the note said something false about the whole map, and a reload showed another view |
+| A focus from a link was kept when its journey exists | It is kept only when its journey is drawn | A journey hidden by a filter or a switch stayed in the address and lit up when the filters were cleared |
+| Any three numbers were a view | A view from a link has to be closer than fit, at most 64 times, and centred on the image | `view=1024,1024,0` and `view=-1e9,1e12,9999` stayed in the address although the screen showed something else |
+| A switch put back to shown stayed in the address as `show=` | It is forgotten; only loot is kept, since it follows the view | The plan says every part is left out at its default |
+| "Clear filters" took the keyboard focus with it | The focus goes to the filters, or from the note to the map | Both buttons remove themselves when pressed |
+| A tab read "Ambrose Valley566", the last day "14 Febpartial" | The tab is named "Ambrose Valley, 566 matches"; a real space before "partial" | A margin is not a space for a screen reader |
+| The empty note was a status element that appeared with its button inside | The sentence sits in a status element that is always on the page; the button is outside it | Such a region is announced unreliably |
+| No test for the address sync or for what happens when a link's journeys arrive | Both are tested (345 tests) | 6 of a reviewer's 12 one-line faults had slipped through there |
+
+Left as it is: a reload within 300 ms of a change loses that change (the price of not rewriting the address on every frame); the wording of the note follows the fate's own text ("has the fate “killed by player”") rather than the plan's first sentence, which PLAN.md now quotes as built.
