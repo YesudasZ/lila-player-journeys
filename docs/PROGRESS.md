@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-23 17:19 IST
+Last updated: 2026-11-23 17:41 IST
 
 ## Current phase
 
@@ -32,10 +32,11 @@ Phase 3 deliverables, the screen design, the package versions and the acceptance
 
 - [x] 3.0 Plan approved by the user on 23 Nov (plan mode). Decided: ESLint with TypeScript 6.0.3; double-click zooms in; the artwork is fitted, with its box written into the manifest by the pipeline; fonts bundled; a two-agent review at the end. Branch cut from `main` at `24559ce`. Nothing installed yet
 - [x] 3.1 Pipeline: `black_surround` now lives in `pipeline/minimap.py` (one implementation, also used by the proof images); `artwork_box` gives each minimap's artwork as fractions of the image; the manifest holds it as `minimap.artwork`. Boxes: Ambrose Valley 0.022 / 0.0396 / 0.8037 / 0.9517, Grand Rift 0.0767 / 0.1911 / 0.9556 / 0.8773, Lockdown 0.0605 / 0.0327 / 0.8989 / 0.8926 (left / top / right / bottom), pinned in `test_committed_data.py`, which also checks that every recorded position lies inside its box. 237 tests; `make data` changed only `manifest.json`; `make overlay` output unchanged
-- [ ] 3.2 Scaffold `web/`: `package.json` with the exact versions, Vite, TypeScript, ESLint, Vitest and Tailwind configuration, `npm install` (approved), `npm run check` and `npm run build` run
-- [ ] 3.3 `web/src/lib/`: `projection.ts`, `view.ts`, `scaleBar.ts`, `manifest.ts`, each with its tests
-- [ ] 3.4 Store and data loading: manifest, minimap images, selected map, one view per map
-- [ ] 3.5 Components: TopBar and MapTabs, MapView with `useCanvasLayer`, MapReadout, ZoomControls, StatusMessage; theme tokens and fonts
+- [x] 3.2 `web/` scaffolded: 21 packages at exactly the approved versions (239 in the lockfile), TypeScript 6.0.3 strict, ESLint 10 with type-aware rules and the React hooks rules, Vitest, Tailwind v4 with the LILA Night tokens and no default palette, fonts bundled. `npm run check` and `npm run build` pass (JavaScript 75 kB gzipped)
+- [x] 3.3 `web/src/lib/`: `projection.ts`, `view.ts`, `scaleBar.ts`, `manifest.ts`; 111 Vitest tests. All 13 fixture points match from their integer codes
+- [x] 3.4 `state/store.ts` (Zustand) and `data/`: the manifest, then the open map's image, then the other two; a retry after a failure asks the server afresh
+- [x] 3.5 Components: `TopBar`, `MapTabs`, `MapPanel`, `MapView` with `mapSurface.ts` (plain DOM code: canvas in device pixels, wheel, drag, double-click, keys), `MapReadout`, `ZoomControls`, `StatusMessage`
+- [x] 3.7 Checked in the preview pane at 1280 x 800 on all three maps: the artwork fits; the README's example point reads x -302, z -354 under the cursor (1 screenshot pixel is 2 units there); wheel zoom and drag keep the point under the cursor; double-click, the keys `+ - 0` and the arrows, and the three buttons work, with the buttons unavailable at their limits; tabs by click and by arrow keys; keyboard focus ring on the map; both error states with "Try again"; no console error. No screenshot files: the preview's screenshots cannot be written into the repo (see Known issues)
 - [ ] 3.6 CI: second job for the app; current versions of the GitHub actions
 - [ ] 3.7 Check in the preview pane on all three maps; screenshots for the pull request
 - [ ] 3.8 Independent review with two agents; fixes
@@ -43,11 +44,9 @@ Phase 3 deliverables, the screen design, the package versions and the acceptance
 
 ## Exactly where I stopped
 
-- Branch `phase-3-app-shell`, cut from `main` at `24559ce`. `main` equals `origin/main`. This commit records the approved Phase 3 plan; the branch is local, nothing of it is pushed.
-- Last completed: 3.1 (the artwork box in the pipeline and the manifest). No app code exists yet and no package is installed.
-- CI run #3 on `24559ce` (the last commit made on `main`) passed.
-- One planning agent (tool configuration against current documentation) had not reported when this was written. Its result is optional: the configuration is verified by running `npm run check` and `npm run build`.
-- **NEXT:** 3.2 (scaffold `web/`), then 3.3 onward in order. Commit after each sub-step. `npm install` in `web/` is approved for exactly the versions in PLAN.md, Phase 3.
+- Branch `phase-3-app-shell`, cut from `main` at `24559ce`; local only, nothing pushed. `main` equals `origin/main`.
+- Last completed: 3.1 to 3.5 and 3.7. The app runs: `cd web && npm run dev`. `npm run check` (111 tests), `npm run build` and `make test` (237 tests) pass.
+- **NEXT:** 3.6 (second CI job, current action versions), 3.8 (review by two agents, fixes), 3.9 (README, BRIEF.md, phase-end checks, ask to push and open the pull request).
 
 ## Decisions and assumptions made
 
@@ -70,6 +69,11 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 - Double-click zooms in at the pointer instead of resetting; the Fit button and `0` reset. The artwork inside each minimap is fitted, not the whole image; the pipeline writes its box into the manifest. Tabs show map names only; match counts join in Phase 5.
 - A view is the image point at the viewport centre plus a zoom relative to fit, so it survives a resize and can go into the URL in Phase 5.
 - Fonts are bundled with the app (three `@fontsource-variable` packages).
+
+2026-11-23, while building Phase 3:
+- The map may be moved only as far as the fitted map shows empty space on that side. A stricter rule (never more than the margin beyond the artwork) made the map slide sideways when zooming at a point near its edge, so the point under the cursor was lost.
+- The map surface is plain DOM code (`web/src/components/mapSurface.ts`), not React: it draws, listens and writes the read-out without a render. React renders the frame around it.
+- Double requests and slow image decodes seen in the preview pane were the pane running hidden, not the app.
 
 2026-11-23, git flow (user's choice "Yes, per phase"):
 - From Phase 3 on, each phase is done on its own branch and reaches `main` through one pull request that the user merges after review ("Rebase and merge"). `main` holds reviewed work only; once Vercel is connected, `main` is what is live and each pull request gets a preview link. Pull request descriptions carry no attribution line. Step 9.1 (creating the Vercel project) moves to right after the Phase 3 pull request is merged.
@@ -100,16 +104,20 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 |---|---|---|
 | `unzip _inbox/player_data.zip -d data/raw` | restores the raw data | 2026-11-22 |
 | `make setup` | creates `.venv`, installs pinned dependencies | 2026-11-22, in a fresh clone |
-| `make test` | 237 tests, no raw data needed; creates `.venv` on first use | 2026-11-23 13:16 |
+| `make test` | 237 tests, no raw data needed; creates `.venv` on first use |
+| `cd web && npm run check` | type check, ESLint and 111 Vitest tests | 2026-11-23 17:41 |
+| `cd web && npm run build` | production build into `web/dist/` (not committed) | 2026-11-23 17:41 |
+| `cd web && npm run dev` | the app on http://localhost:5173 | 2026-11-23 17:41 | 2026-11-23 13:16 |
 | `make profile` | measures the raw data → `docs/profile/` (235 metrics) | 2026-11-23 13:10 |
 | `make data` | builds `web/public/data/` and the projection fixtures; writes nothing unless every check passes, the profile report included; 3 s | 2026-11-23 13:16 |
 | `make overlay` | proof images → `docs/img/`, about 30 s | 2026-11-23 13:10 |
 
-Not available yet: dev server and `npm run check` (Phase 3).
 
 ## Known issues / TODO later
 
 - Commits stay local until the user approves each push.
+- Screenshots for pull requests and for the walkthrough: the preview pane's screenshots are not files the repo can hold. Phase 10 needs a way to write them (Playwright, a development dependency: ask first).
+- The preview pane of this session reads `~/YesudasZ/.claude/launch.json`, where the entry `lila-web` (port 5183) was added. `.claude/launch.json` in this repo (entry `web`, port 5173) is for sessions started in this folder.
 - Usage: the 5-hour limit was reached on 23 Nov shortly before 17:00 IST while three planning agents ran next to a long conversation. Keep agent use low (a two-agent review per phase), and prefer a fresh session per phase, started with the resume protocol.
 - CI prints a warning, not a failure: `actions/checkout@v4` and `actions/setup-python@v5` target a deprecated Node version. Look up the current versions and update them with the next change to the workflow (Phase 3 adds `npm run check` to it).
 - GitHub's "Contributors" box still showed two contributors on 2026-11-23 10:45 IST, about 11 hours after the rewrite was pushed; GitHub's API lists one. The user chose to wait. Recheck before submission (also a Phase 11 check). Fallbacks: recreate the repo, or GitHub Support.

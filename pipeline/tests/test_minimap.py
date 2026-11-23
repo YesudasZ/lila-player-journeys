@@ -33,7 +33,8 @@ def test_nearly_black_counts_as_black_and_anything_brighter_as_artwork():
 
 
 def test_artwork_box_is_given_as_fractions_from_the_left_and_the_top():
-    assert artwork_box(minimap(40, 30, (10, 5, 30, 25), holes=[(15, 10, 20, 15)])) == {"left": 0.25, "top": 0.1667, "right": 0.75, "bottom": 0.8333}
+    image = minimap(40, 30, (10, 5, 30, 25), holes=[(15, 10, 20, 15)])
+    assert artwork_box(image) == {"left": 0.25, "top": 0.1667, "right": 0.75, "bottom": 0.8333}
 
 
 def test_artwork_that_fills_the_image_gives_the_whole_image():

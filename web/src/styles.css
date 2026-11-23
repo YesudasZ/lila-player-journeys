@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+/* "LILA Night": the only colours and fonts of the app (CLAUDE.md, "Design tokens"). The default palette is switched off. */
+@theme {
+  --color-*: initial;
+  --color-bg: #0c0c0d;
+  --color-surface: #141418;
+  --color-surface-2: #1c1d23;
+  --color-border: #2a2c35;
+  --color-text: #f2f1ec;
+  --color-text-muted: #9a9ca8;
+  --color-accent: #e23c8c;
+  --color-accent-2: #2ec4b6;
+  --color-highlight: #f4e27a;
+  --color-human: #56b4e9;
+  --color-bot: #e69f00;
+  --color-kill: #f0e442;
+  --color-death: #d55e00;
+  --color-storm: #cc79a7;
+  --color-loot: #009e73;
+
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Space Grotesk Variable", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
+
+  /* A status line that shows only if the wait is long enough to notice. */
+  --animate-appear-late: appear-late 150ms ease-out 250ms both;
+
+  @keyframes appear-late {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  /* A sideways swipe over the map must not go back a page. */
+  overscroll-behavior: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-appear-late {
+    animation-duration: 1ms;
+  }
+}
