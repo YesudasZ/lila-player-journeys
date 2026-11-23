@@ -1,10 +1,10 @@
 # Progress Log
 
-Last updated: 2026-11-23 19:23 IST
+Last updated: 2026-11-23 19:44 IST
 
 ## Current phase
 
-Phase 3, App shell and map canvas. Status: **DONE (awaiting my review)** on the branch `phase-3-app-shell`, last code commit `73cb25f`. Not pushed yet: the push and the pull request wait for the user's yes.
+Phase 3, App shell and map canvas. Status: **DONE (awaiting my review)** in pull request [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1), from the branch `phase-3-app-shell` (last code commit `73cb25f`). Pushed and opened on 23 Nov with the user's yes.
 
 Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 
@@ -14,7 +14,7 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 |---|---|---|---|
 | 1 | Data discovery and repo setup | APPROVED | `bc63f0e` |
 | 2 | Pipeline | APPROVED | `ccc2369` |
-| 3 | App shell and map canvas (ends with the first deployment, step 9.1) | DONE (awaiting my review) | branch `phase-3-app-shell`, `73cb25f`; pull request not opened yet |
+| 3 | App shell and map canvas (ends with the first deployment, step 9.1) | DONE (awaiting my review) | pull request [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1), branch `phase-3-app-shell` |
 | 4 | Journeys, humans versus bots, markers | NOT STARTED | |
 | 5 | Filters and URL state | NOT STARTED | |
 | 6 | Timeline and playback | NOT STARTED | |
@@ -40,14 +40,14 @@ Phase 3 deliverables, the screen design, the package versions and the acceptance
 - [x] 3.7 Checked in the preview pane at 1280 x 800 on all three maps: the artwork fits; the README's example point reads x -302, z -354 under the cursor (1 screenshot pixel is 2 units there); wheel zoom and drag keep the point under the cursor; double-click, the keys `+ - 0` and the arrows, and the three buttons work, with the buttons unavailable at their limits; tabs by click and by arrow keys; keyboard focus ring on the map; the error states; no console error. No screenshot files: the preview's screenshots cannot be written into the repo (see Known issues)
 - [x] 3.8 Independent review by two agents (behaviour in a real browser and view maths; code quality and accessibility). No blocker; 7 findings to fix and 25 small ones, several raised by both. Fixed in `f0ad05d`, `4df79b5` and `73cb25f`; what was left as it is, and why, is in PLAN.md's last section. Every fix was checked again in the preview with real clicks and keys, the three failure screens included (a data file moved away and put back; `git status` clean after). Raw result: `.local/phase3-review-result.raw`
 - [x] 3.9 README "run the app" and BRIEF.md statuses (`c78c13d`); PLAN.md and this file; phase-end checks pass
-- [ ] 3.10 On the user's yes: push the branch, open the pull request, record it here, read the first CI run (the app job and the v7 actions have not run yet). Then stop for the review
+- [x] 3.10 Pushed and pull request #1 opened with the user's yes (23 Nov, 19:44); recorded here. CI runs on the pull request, the app job and the v7 actions for the first time
 
 ## Exactly where I stopped
 
-- Branch `phase-3-app-shell`, cut from `main` at `24559ce`; local only, nothing pushed. `main` equals `origin/main`.
+- Branch `phase-3-app-shell`, cut from `main` at `24559ce`, is pushed; pull request #1 into `main` is open. `main` equals `origin/main`.
 - Everything of Phase 3 is committed. At 19:23: `npm run check` (196 tests), `npm run build` and `make test` (237 tests) pass.
-- Waiting for the user's yes to push the branch and open the pull request.
-- **NEXT:** on yes: `git push -u origin phase-3-app-shell`; `gh pr create` into `main` (what the phase delivers, the evidence for each acceptance criterion, how to verify; no attribution line; say that no screenshots are attached and why); record the pull request here in one docs commit and push it; read the first CI run and repair the workflow if a set-up step fails. Then stop. After the user's merge and go: `git switch main`, `git pull --ff-only`, then step 9.1 (the user creates the Vercel project with root directory `web`).
+- Waiting for the user's review of pull request #1. The user merges it on GitHub with "Rebase and merge"; changes asked for in the review go onto the same branch.
+- **NEXT:** nothing until the user has reviewed. If a check fails on the pull request: read the failing step, repair it on this branch, ask before pushing. After the user's merge and go: `git switch main`, `git pull --ff-only`, then step 9.1: the user creates the Vercel project with root directory `web`, the hosted URL is checked for console errors, and a one-line pull request puts the URL at the top of the README. Phase 4 starts only on the user's go, on a new branch cut from the updated `main`.
 
 ## Decisions and assumptions made
 
@@ -126,7 +126,7 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 ## Known issues / TODO later
 
 - Commits stay local until the user approves each push.
-- CI: the app job and the `@v7` actions have not run yet; they run on the pull request. The versions were looked up on 23 Nov (checkout v7.0.1, setup-python v7.1.0, setup-node v7.1.0). Read the first run.
+- CI: the app job and the `@v7` actions run for the first time on pull request #1. If a set-up step fails there, the action versions are the first suspect (looked up on 23 Nov: checkout v7.0.1, setup-python v7.1.0, setup-node v7.1.0).
 - Screenshots for pull requests and for the walkthrough: the preview pane's screenshots are not files the repo can hold. Phase 10 needs a way to write them (Playwright, a development dependency: ask first).
 - The preview pane of this session reads `~/YesudasZ/.claude/launch.json`, where the entry `lila-web` (port 5183) was added. `.claude/launch.json` in this repo (entry `web`, port 5173) is for sessions started in this folder. Vite reloads the page when a file under `web/public/` changes, so a failure test that moves a data file away cannot show the retry working; set the failure in the app's own store instead.
 - Usage: the 5-hour limit was reached on 23 Nov shortly before 17:00 IST while three planning agents ran next to a long conversation, and the two-agent review of Phase 3 took about 40% of a window. Keep agent use low, and prefer a fresh session per phase, started with the resume protocol.
