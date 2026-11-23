@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-24 00:16 IST
+Last updated: 2026-11-24 00:25 IST
 
 ## Current phase
 
@@ -159,6 +159,10 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 - No path in the data has a single row (0 of 1,242), so that case of the fixture is made up and marked so.
 - Planned and built without planning agents; one review at the end by two agents with a fixed budget. Ultracode is on in the session; the usage rule decided.
 
+2026-11-24, the user's correction to the order:
+- The note the Phase 5 plan had been approved with (six changes) reached the session after the merge of Phase 5. I built it first, on a branch of its own; then the user said to skip that branch and to put the six items into Phase 8. The built work is kept on the local branch `fix-phase-5-approved-changes` and is not part of Phase 6.
+- Until Phase 8 the address is always rewritten in place, `t` included, and Back and Forward leave the tool.
+
 ## Open questions for the user
 
 1. Should `docs/PROGRESS.md`, `CLAUDE.md` and `.claude/` stay in the repo at submission? They show how the work was run with Claude Code, which the brief allows; they are also working notes in a public repo.
@@ -184,6 +188,7 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 
 ## Known issues / TODO later
 
+- **For Phase 8, set aside by the user on 24 Nov:** the six changes the Phase 5 plan was approved with. (1) `pushState` for discrete changes (map, match, focus, days, fates, switches), `replaceState` for moving, zooming and `t`. (2) A notice when a filter hides the open match. (3) A test that the 8-character match id prefixes are unique. (4) Filter chips as `<button>` with `aria-pressed` and focus styles, which they are since Phase 5. (5) The journey id's format ("-anon", "botNNNN") in a comment and in DATA_NOTES.md. (6) The folder-day assumption (`e325a53a` belongs to February_10) in DATA_NOTES.md. All but (4) were already built and tested when they were set aside: they wait on the local branch `fix-phase-5-approved-changes` (`9a2f0a4`, `8e13ce5`; not pushed). Phase 8 takes them from there. The branch is deleted only on the user's word.
 - Commits stay local until the user approves each push.
 - CI: all three checks passed on pull request #1, the app job and the `@v7` actions included. The run on `main` after the merge has not been read.
 - Screenshots for pull requests and for the walkthrough: the preview pane's screenshots are not files the repo can hold. Phase 10 needs a way to write them (Playwright, a development dependency: ask first).

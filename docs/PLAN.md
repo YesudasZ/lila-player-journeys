@@ -239,7 +239,7 @@ web/src/components/            Filters, CopyLink, EmptyNote; MatchList, MapTabs,
 - Above the slider's track, one tick per event of the journeys that are drawn, in the colours of the map, following the legend's switches. The thumb is the time needle.
 - The clock lives outside React, in a plain Zustand store (`time`, `end`, `playing`, `speed`). It runs on `requestAnimationFrame` only while playing and follows the open match: a new match resets it to the end, paused. A frame never counts for more than 100 ms of real time, and playback pauses when the tab is hidden, so coming back to the tab never jumps ahead. Nothing in React renders per frame: the slider and the time are written straight into the page, as the map's read-out is.
 - Keys: Space plays and pauses while the focus is on the map or on the slider. On the map the arrow keys keep moving the map, as reviewed in Phase 3. On the slider, left and right step 5 s (one recorded step), with Shift 1 s, Page Up and Page Down 60 s, Home and End jump to the start and the end. Dragging the slider pauses. The Play button's title reads "Play/Pause (Space when the map or timeline is focused)"; the slider's keys are in its title and in the key help that assistive technology reads, since the tool has no visible key help.
-- `t` joins the address, after `match`, to a tenth of a second, and only when the time is not the end. A link opens paused; speed is not part of a link. The address is rewritten after a pause or a seek, never while playing, and always in place (`replaceState`, never `pushState`): Back and Forward step between maps, matches and filters, not between pauses.
+- `t` joins the address, after `match`, to a tenth of a second, and only when the time is not the end. A link opens paused; speed is not part of a link. The address is rewritten after a pause or a seek, never while playing, and always in place (`replaceState`, never `pushState`). History entries for the user's steps are a Phase 8 item; until then Back and Forward leave the tool.
 - Single match only: in the all-matches view the bar says "Open a match to play it back." Should 5 (all-matches playback) and Could 2 (density strip) are not built in this phase: by the scope ladder Should 1 and 2, which belong to Phase 7, come first.
 
 **Files**
@@ -291,6 +291,16 @@ web/src/components/                          mapSurface, MapView and App change 
 **Deliverables:** an "About the data" panel in plain language (what the README gets wrong, what the tool does about it, what "anonymous" and "no death recorded" mean); loading and error states; visible focus and labels on every sidebar, top-bar and timeline control; a notice on small screens that the tool is built for desktop; a pass over all UI text. From the Phase 3 review: the panel says that the read-out's `x` and `z` are the ground plane and `y` is height; the map's keys are shown where a sighted keyboard user finds them (today they are in the buttons' tooltips and in the text for screen readers); decide whether pinch on a touch screen and Safari's trackpad pinch are supported or named as limits in the desktop notice. From the Phase 4 review: the events of a focused journey as text in the sidebar, so that what a tooltip says can also be reached by keyboard.
 
 **Acceptance:** Lighthouse performance at least 90 on the hosted URL (desktop preset); no console errors; sidebar, top bar and timeline fully usable by keyboard, including choosing a journey from the list.
+
+**Carried over from Phase 5** (the changes its plan was approved with; the note reached the session on 24 Nov, after the merge, and the user set them aside for this phase so that Phase 6 could go on):
+- History: `pushState` for discrete changes (map, match, focus, days, fates, switches), `replaceState` for moving, zooming and `t`, so that Back and Forward walk through the views.
+- A notice when a filter hides the open match.
+- A test that the 8-character match id prefixes are unique.
+- Filter chips as `<button>` with `aria-pressed` and focus styles. They are so since Phase 5; to be confirmed here.
+- The journey id's format ("-anon", "botNNNN") in a comment and in DATA_NOTES.md.
+- The folder-day assumption (`e325a53a` belongs to February_10) in DATA_NOTES.md.
+
+The first, second, third, fifth and sixth were already built and tested when the user set them aside. They wait on the local branch `fix-phase-5-approved-changes` (commits `9a2f0a4` and `8e13ce5`, cut from `phase-6-timeline` at `728ea77`; not pushed, no pull request). Phase 8 takes them from there instead of building them again; the journey id's format still has to go into DATA_NOTES.md.
 
 ## Phase 9: Deployment (0.5 h, in two steps)
 
