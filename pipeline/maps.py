@@ -41,6 +41,19 @@ MAPS: dict[str, MapConfig] = {
 }
 
 
+@dataclass(frozen=True)
+class WorkedExample:
+    map_id: str
+    x: float
+    z: float
+    image_size: int  # width and height of the image the README computes pixels for
+    pixel: tuple[int, int]  # the pixel the README arrives at
+
+
+# The README's own worked example of the conversion. Tests, the profiler and the app's fixture all start from it.
+README_EXAMPLE = WorkedExample("AmbroseValley", x=-301.45, z=-355.55, image_size=1024, pixel=(78, 890))
+
+
 def world_to_uv(map_id: str, x: Coord, z: Coord) -> tuple[Coord, Coord]:
     """Project world (x, z) on a map to UV. Values outside [0, 1] are off the image."""
     cfg = MAPS[map_id]

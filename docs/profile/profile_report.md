@@ -273,6 +273,10 @@ Each value is listed with the exact definition used to compute it.
 | `matches_after_cleaning_in_February_12` | 162 | Distinct match_ids with at least one file in February_12/ after rules 1 to 4. |
 | `matches_after_cleaning_in_February_13` | 112 | Distinct match_ids with at least one file in February_13/ after rules 1 to 4. |
 | `matches_after_cleaning_in_February_14` | 37 | Distinct match_ids with at least one file in February_14/ after rules 1 to 4. |
+| `match_span_median_after_cleaning` | 380.0 | Median over match_ids of (largest raw ts - smallest raw ts) across the rows left after rules 1 to 4. |
+| `match_span_max_after_cleaning` | 887 | Maximum over match_ids of (largest raw ts - smallest raw ts) across the rows left after rules 1 to 4. |
+| `matches_with_shorter_span_after_cleaning` | 162 | match_ids whose span over the rows left after rules 1 to 4 is smaller than their span over all rows. |
+| `match_span_largest_loss_from_cleaning` | 5 | Largest difference, over match_ids, between the span over all rows and the span over the rows left after rules 1 to 4. |
 | `rows_after_cleaning_human_BotKill` | 2,236 | Rows left after rules 1 to 4 whose event is BotKill, in files with Position rows. |
 | `rows_after_cleaning_human_BotKilled` | 401 | Rows left after rules 1 to 4 whose event is BotKilled, in files with Position rows. |
 | `rows_after_cleaning_human_Killed` | 3 | Rows left after rules 1 to 4 whose event is Killed, in files with Position rows. |

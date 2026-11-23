@@ -20,6 +20,7 @@ import pandas as pd
 from PIL import Image
 
 from pipeline.clean import (
+    after_death,
     drop_kills_mirroring_a_death,
     end_paths_at_death,
     keep_first_half_of_files_written_twice,
@@ -28,10 +29,9 @@ from pipeline.clean import (
 )
 from pipeline.dataset import COLUMNS, DEATH_EVENTS, EVENTS, MOVEMENT_EVENTS, RawData, load_raw
 from pipeline.journeys import actor_by_file
-from pipeline.maps import MAPS, uv_to_pixel, world_to_uv
+from pipeline.maps import MAPS, README_EXAMPLE, uv_to_pixel, world_to_uv
 
 README_FILES_PER_DAY = {"February_10": 437, "February_11": 293, "February_12": 268, "February_13": 166, "February_14": 79}
-README_EXAMPLE = {"map_id": "AmbroseValley", "x": -301.45, "z": -355.55, "image": 1024, "pixel": (78, 890)}
 README_SAMPLE_TS = ("1970-01-21 11:52:07.161", "1970-01-21 11:52:21.082")  # ts of the README's two sample rows, as printed
 IST_OFFSET_SECONDS = 19_800  # UTC+05:30
 DETAIL_DEFINITIONS = {
@@ -589,7 +589,7 @@ def cleaning(rows: pd.DataFrame, files: pd.DataFrame, m: Metrics) -> dict[str, o
     # Rule 4's input in the order the rule uses, to describe the rows it removed.
     ordered = after_rule_3.sort_values(["file", "ts", "row"])
     is_death = ordered["event"].isin(DEATH_EVENTS)
-    after_death = (is_death.groupby(ordered["file"], sort=False).cumsum() - is_death) > 0
+    comes_after_death = after_death(ordered)
     death_ts = ordered["ts"].where(is_death).groupby(ordered["file"], sort=False).transform("min")
     late = ~ordered.index.isin(clean.index)
 
@@ -607,7 +607,7 @@ def cleaning(rows: pd.DataFrame, files: pd.DataFrame, m: Metrics) -> dict[str, o
     deaths_per_journey = death_rows.groupby("file").size()
     surplus = clean.duplicated(subset=["file", *COLUMNS], keep="first")
     directly_after_twin = surplus & (clean[COLUMNS] == clean[COLUMNS].shift()).all(axis=1)
-    kept_after_death = clean[after_death[clean.index] & ~clean["event"].isin(DEATH_EVENTS)]
+    kept_after_death = clean[comes_after_death[clean.index] & ~clean["event"].isin(DEATH_EVENTS)]
     m.add(topic, "journeys_after_cleaning", clean["file"].nunique(), "Files left after rules 1 to 4; each holds one (user_id, match_id) journey.")
     m.add(topic, "journeys_after_cleaning_Position", clean.loc[actor == "human", "file"].nunique(), "Of those journeys, the ones with Position rows.")
     m.add(topic, "journeys_after_cleaning_BotPosition", clean.loc[actor == "bot", "file"].nunique(), "Of those journeys, the ones with BotPosition rows.")
@@ -622,6 +622,12 @@ def cleaning(rows: pd.DataFrame, files: pd.DataFrame, m: Metrics) -> dict[str, o
     m.add(topic, "matches_in_several_day_folders_after_cleaning", (clean.groupby("match_id")["day"].nunique() > 1).sum(), "match_ids left with files in more than one day folder after rules 1 to 4.")
     for day, count in clean.groupby("day")["match_id"].nunique().items():
         m.add(topic, f"matches_after_cleaning_in_{day}", count, f"Distinct match_ids with at least one file in {day}/ after rules 1 to 4.")
+    span = clean.groupby("match_id")["ts"].max() - clean.groupby("match_id")["ts"].min()
+    span_lost = (rows.groupby("match_id")["ts"].max() - rows.groupby("match_id")["ts"].min()) - span
+    m.add(topic, "match_span_median_after_cleaning", span.median(), "Median over match_ids of (largest raw ts - smallest raw ts) across the rows left after rules 1 to 4.")
+    m.add(topic, "match_span_max_after_cleaning", span.max(), "Maximum over match_ids of (largest raw ts - smallest raw ts) across the rows left after rules 1 to 4.")
+    m.add(topic, "matches_with_shorter_span_after_cleaning", (span_lost > 0).sum(), "match_ids whose span over the rows left after rules 1 to 4 is smaller than their span over all rows.")
+    m.add(topic, "match_span_largest_loss_from_cleaning", span_lost.max(), "Largest difference, over match_ids, between the span over all rows and the span over the rows left after rules 1 to 4.")
     for who in ("human", "bot"):
         for event in ("BotKill", "BotKilled", "Killed", "KilledByStorm", "Loot"):
             m.add(topic, f"rows_after_cleaning_{who}_{event}", ((actor == who) & (clean["event"] == event)).sum(), f"Rows left after rules 1 to 4 whose event is {event}, in files with {'Position' if who == 'human' else 'BotPosition'} rows.")
@@ -710,8 +716,8 @@ def coordinates(rows: pd.DataFrame, raw_root: Path, m: Metrics) -> dict[str, obj
     xyz = rows[["x", "y", "z"]].to_numpy()
     m.add(topic, "rows_with_nan_or_infinite_coordinate", (~np.isfinite(xyz)).any(axis=1).sum(), "Rows where x, y or z is NaN or infinite.")
     m.add(topic, "rows_at_x0_z0", ((rows["x"] == 0) & (rows["z"] == 0)).sum(), "Rows where x and z are both exactly 0.")
-    u, v = world_to_uv(README_EXAMPLE["map_id"], README_EXAMPLE["x"], README_EXAMPLE["z"])
-    px, py = uv_to_pixel(u, v, README_EXAMPLE["image"], README_EXAMPLE["image"])
+    u, v = world_to_uv(README_EXAMPLE.map_id, README_EXAMPLE.x, README_EXAMPLE.z)
+    px, py = uv_to_pixel(u, v, README_EXAMPLE.image_size, README_EXAMPLE.image_size)
     m.add(topic, "readme_example_pixel_x", round(px), "README worked example (AmbroseValley, x=-301.45, z=-355.55, 1024 px image): pixel_x = u * 1024, rounded to the nearest integer.")
     m.add(topic, "readme_example_pixel_y", round(py), "Same example: pixel_y = (1 - v) * 1024, rounded to the nearest integer.")
     return {"per_map": detail}

@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-23 11:26 IST
+Last updated: 2026-11-23 11:36 IST
 
 ## Current phase
 
@@ -41,20 +41,20 @@ Phase 2 deliverables and acceptance numbers are in PLAN.md, "Phase 2".
 - [x] 2.9 Independent review of the phase (3 reviewers: recomputation, mutation testing, consumer and code quality). No blocker: all 1,242 journeys and 796 match entries were recomputed independently and agree. 59 findings (14 + 19 + 26), saved in `.local/phase2-review-result.raw`. CI run #1 on `2f0d706` is green
 - [ ] 2.9 fixes, in commits of their own:
   - [x] a. Loader and cleaning rules: one expected schema, every sub-folder read (not only `February_*`), hidden files skipped, `ts` checked to be Unix seconds, a file without rows reported, rules 2 and 3 no longer rely on row labels, rule 1 accepts a copy that was also written twice, the build stops on a file out of time order or a journey with two death rows, messages show 8-character ids. `make data` and `make profile` output unchanged
-  - [ ] b. Data format for the app: `fate`, journey ids, bot kills, event groups and the sample step in the manifest, integer codes in the projection fixture, `docs/DATA_FORMAT.md`
-  - [ ] c. The build checks everything before it writes; a test reads the committed data and pins the accepted numbers
-  - [ ] d. Tests for the mutants that survived
+  - [x] b. Data format for the app, described in the new `docs/DATA_FORMAT.md`: each journey has an `id` and a `fate` (was: the raw death event); match entries and totals gain `bot_kills` (170), so every marker is counted once; the manifest carries `event_groups`, `fates` and `sample_step_seconds`; the projection fixture has the integer codes and what they decode to; a match filed under two day folders goes to the later one instead of stopping the build; bots are listed in numeric order. The row arrays are unchanged. Bundles are now 470, 54 and 162 kB gzipped
+  - [x] c. The build writes nothing until the leak, size and profile checks have passed. `pipeline/tests/test_committed_data.py` reads the committed files and holds the accepted numbers as literals, so the check no longer depends on the profiler alone. The profiler gained 4 metrics on the span after cleaning (380 median, 887 max, 162 matches shorter by at most 5 s)
+  - [x] d. Tests for every gap the mutation run found (storm deaths, positions in rules 1 to 3, rule order, manifest and report fields, raw-data checks, the full-id and size guards, minimap downscaling, fixture points): 149 tests in all. A second mutation run in 2.9f has to confirm them
   - [ ] e. Docs, CLAUDE.md, Makefile, CI
   - [ ] f. Profiler tidy-up; a second check of the fixes
 - [ ] 2.10 Phase-end checks; status to "DONE (awaiting my review)"; stop
 
 ## Exactly where I stopped
 
-- Last completed: 2.9a (loader and cleaning fixes from the review), committed. `make test` passes (100 tests); `make data` and `make profile` still write byte-identical files.
-- In progress: 2.9b, the data format changes. They touch `pipeline/journeys.py`, `pipeline/build_data.py`, their tests, and regenerate `web/public/data/`.
-- The review result is in `.local/phase2-review-result.raw` (not in git). Findings are numbered there per reviewer; the list above says which are done.
+- Last completed: 2.9a to 2.9d, committed. `make test` passes (149 tests); `make data` and `make profile` pass and their output is committed.
+- In progress: 2.9e, the documents that still describe the old state: CLAUDE.md (layout, commands, data facts), README, ARCHITECTURE.md, PLAN.md (Phases 3, 4 and 6 wording), DATA_NOTES.md (span, playback), BRIEF.md; then the Makefile and CI nits.
+- The review result is in `.local/phase2-review-result.raw` (not in git).
 - Nothing is pushed since `2f0d706`. Ask before pushing.
-- **NEXT:** 2.9b to 2.9f in order, each ending with `make test`, `make data`, a commit and this file updated. Then 2.10.
+- **NEXT:** 2.9e, then 2.9f (profiler tidy-up and a second, independent check of the fixes), then 2.10.
 
 ## Decisions and assumptions made
 
@@ -89,9 +89,9 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 |---|---|---|
 | `unzip _inbox/player_data.zip -d data/raw` | restores the raw data | 2026-11-22 |
 | `make setup` | creates `.venv`, installs pinned dependencies | 2026-11-22, in a fresh clone |
-| `make test` | 78 unit tests, no raw data needed | 2026-11-23 10:54 |
-| `make profile` | measures the raw data → `docs/profile/` (231 metrics) | 2026-11-23 10:54 |
-| `make data` | builds `web/public/data/` and the projection fixtures, then reconciles with the profile report; 3 s | 2026-11-23 10:53 |
+| `make test` | 149 unit tests, no raw data needed | 2026-11-23 11:36 |
+| `make profile` | measures the raw data → `docs/profile/` (235 metrics) | 2026-11-23 11:36 |
+| `make data` | builds `web/public/data/` and the projection fixtures; writes nothing unless every check passes, the profile report included; 3 s | 2026-11-23 11:36 |
 | `make overlay` | proof images → `docs/img/`, about 30 s | 2026-11-22 23:33 |
 
 Not available yet: dev server and `npm run check` (Phase 3).

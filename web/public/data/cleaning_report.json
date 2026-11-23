@@ -18,17 +18,24 @@
     "Loot": 12829
   },
   "events_of_human_journeys": {
+    "Position": 50931,
+    "BotPosition": 0,
+    "Kill": 0,
+    "Killed": 3,
     "BotKill": 2236,
     "BotKilled": 401,
-    "Killed": 3,
     "KilledByStorm": 39,
-    "Loot": 12829,
-    "Position": 50931
+    "Loot": 12829
   },
   "events_of_bot_journeys": {
+    "Position": 0,
+    "BotPosition": 21712,
+    "Kill": 0,
+    "Killed": 0,
     "BotKill": 170,
     "BotKilled": 296,
-    "BotPosition": 21712
+    "KilledByStorm": 0,
+    "Loot": 0
   },
   "journeys": {
     "total": 1242,
@@ -43,5 +50,9 @@
     "February_12": 162,
     "February_13": 112,
     "February_14": 37
+  },
+  "match_span_seconds": {
+    "median": 380.0,
+    "max": 887
   }
 }

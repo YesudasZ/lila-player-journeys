@@ -15,6 +15,7 @@ OTHER_HUMAN = "9f8e7d6c-5b4a-4c3d-8e2f-1a0b9c8d7e6f"
 MATCH = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee.nakama-0"
 OTHER_MATCH = "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff.nakama-0"
 THIRD_MATCH = "cccccccc-dddd-4eee-8fff-000000000000.nakama-0"
+LATE_MATCH = "0d0d0d0d-eeee-4fff-8000-111111111111.nakama-0"  # sorts before the others by id
 FIRST_TS = 1_770_727_161  # 2026-02-10 12:39:21 UTC when read as seconds
 
 
@@ -64,9 +65,9 @@ def write_files(raw_root: Path, rows: pd.DataFrame) -> None:
                 "user_id": part["user_id"].tolist(),
                 "match_id": part["match_id"].tolist(),
                 "map_id": part["map_id"].tolist(),
-                "x": pa.array(part["x"], pa.float32()),
-                "y": pa.array(part["y"], pa.float32()),
-                "z": pa.array(part["z"], pa.float32()),
+                "x": pa.array(part["x"].to_numpy(), pa.float32()),  # from numpy, so that a NaN stays a NaN
+                "y": pa.array(part["y"].to_numpy(), pa.float32()),
+                "z": pa.array(part["z"].to_numpy(), pa.float32()),
                 "ts": pa.array(part["ts"].tolist(), pa.timestamp("ms")),
                 "event": pa.array(events, pa.binary()),
             },

@@ -2,7 +2,7 @@
 import numpy as np
 import pytest
 
-from pipeline.encode import UV_STEPS, decode_elevation, decode_uv, encode_elevation, encode_uv
+from pipeline.encode import decode_elevation, decode_uv, encode_elevation, encode_uv
 from pipeline.maps import MAPS, uv_to_world, world_to_uv
 
 
@@ -18,12 +18,14 @@ def test_world_position_survives_encoding_to_a_fraction_of_a_unit(map_id):
 
 
 def test_corners_map_to_the_ends_of_the_grid():
-    assert encode_uv(np.array([0.0, 1.0])).tolist() == [0, UV_STEPS]
+    assert encode_uv(np.array([0.0, 0.5, 1.0])).tolist() == [0, 32_768, 65_535]
+    assert decode_uv(np.array([0, 65_535])).tolist() == [0.0, 1.0]
 
 
-def test_position_off_the_image_is_an_error():
+@pytest.mark.parametrize("off_the_image", [1.01, -0.01])
+def test_position_off_the_image_is_an_error(off_the_image):
     with pytest.raises(ValueError, match="off the minimap"):
-        encode_uv(np.array([0.5, 1.01]))
+        encode_uv(np.array([0.5, off_the_image]))
 
 
 def test_elevation_keeps_a_tenth_of_a_unit():

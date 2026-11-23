@@ -2,7 +2,7 @@
 import numpy as np
 import pytest
 
-from pipeline.maps import MAPS, uv_to_pixel, uv_to_world, world_to_uv
+from pipeline.maps import MAPS, README_EXAMPLE, uv_to_pixel, uv_to_world, world_to_uv
 
 
 @pytest.mark.parametrize("map_id", sorted(MAPS))
@@ -15,11 +15,20 @@ def test_uv_to_world_undoes_world_to_uv(map_id):
 
 def test_readme_worked_example():
     # README: AmbroseValley, x=-301.45, z=-355.55 -> u=0.0762, v=0.1305 -> pixel (78, 890) on a 1024 image
-    u, v = world_to_uv("AmbroseValley", -301.45, -355.55)
+    assert (README_EXAMPLE.map_id, README_EXAMPLE.x, README_EXAMPLE.z, README_EXAMPLE.image_size) == ("AmbroseValley", -301.45, -355.55, 1024)
+    u, v = world_to_uv(README_EXAMPLE.map_id, README_EXAMPLE.x, README_EXAMPLE.z)
     assert u == pytest.approx(0.0762, abs=5e-5)
     assert v == pytest.approx(0.1305, abs=5e-5)
-    px, py = uv_to_pixel(u, v, 1024, 1024)
-    assert (round(px), round(py)) == (78, 890)
+    px, py = uv_to_pixel(u, v, README_EXAMPLE.image_size, README_EXAMPLE.image_size)
+    assert (round(px), round(py)) == README_EXAMPLE.pixel == (78, 890)
+
+
+def test_map_constants_are_the_readme_table():
+    assert {map_id: (cfg.scale, cfg.origin_x, cfg.origin_z) for map_id, cfg in MAPS.items()} == {
+        "AmbroseValley": (900.0, -370.0, -473.0),
+        "GrandRift": (581.0, -290.0, -290.0),
+        "Lockdown": (1000.0, -500.0, -500.0),
+    }
 
 
 @pytest.mark.parametrize("map_id", sorted(MAPS))

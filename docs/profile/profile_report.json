@@ -973,6 +973,22 @@
         "value": 37,
         "definition": "Distinct match_ids with at least one file in February_14/ after rules 1 to 4."
       },
+      "match_span_median_after_cleaning": {
+        "value": 380.0,
+        "definition": "Median over match_ids of (largest raw ts - smallest raw ts) across the rows left after rules 1 to 4."
+      },
+      "match_span_max_after_cleaning": {
+        "value": 887,
+        "definition": "Maximum over match_ids of (largest raw ts - smallest raw ts) across the rows left after rules 1 to 4."
+      },
+      "matches_with_shorter_span_after_cleaning": {
+        "value": 162,
+        "definition": "match_ids whose span over the rows left after rules 1 to 4 is smaller than their span over all rows."
+      },
+      "match_span_largest_loss_from_cleaning": {
+        "value": 5,
+        "definition": "Largest difference, over match_ids, between the span over all rows and the span over the rows left after rules 1 to 4."
+      },
       "rows_after_cleaning_human_BotKill": {
         "value": 2236,
         "definition": "Rows left after rules 1 to 4 whose event is BotKill, in files with Position rows."
