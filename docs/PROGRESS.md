@@ -1,10 +1,10 @@
 # Progress Log
 
-Last updated: 2026-11-23 23:04 IST
+Last updated: 2026-11-23 23:06 IST
 
 ## Current phase
 
-Phase 4, Journeys, humans versus bots, markers. Status: **DONE (awaiting my review)** on the branch `phase-4-journeys`, last code commit `acae5fa`. Not pushed yet: the push and the pull request wait for the user's yes.
+Phase 4, Journeys, humans versus bots, markers. Status: **DONE (awaiting my review)** in pull request [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3), from the branch `phase-4-journeys` (last code commit `acae5fa`). Pushed and opened on 23 Nov with the user's yes.
 
 Phases 1 to 3 and step 9.1 are merged: pull requests [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) (Phase 3) and [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) (step 9.1) were reviewed and merged by the user on 23 Nov. The tool is live at https://lila-player-journeys-psi.vercel.app; production on Vercel follows `main`.
 
@@ -17,7 +17,7 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 | 1 | Data discovery and repo setup | APPROVED | `bc63f0e` |
 | 2 | Pipeline | APPROVED | `ccc2369` |
 | 3 | App shell and map canvas (ends with the first deployment, step 9.1) | APPROVED (merged and hosted) | pull request [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) |
-| 4 | Journeys, humans versus bots, markers | DONE (awaiting my review) | branch `phase-4-journeys`, `acae5fa`; pull request not opened yet |
+| 4 | Journeys, humans versus bots, markers | DONE (awaiting my review) | pull request [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3), branch `phase-4-journeys` |
 | 5 | Filters and URL state | NOT STARTED | |
 | 6 | Timeline and playback | NOT STARTED | |
 | 7 | Heatmaps | NOT STARTED | |
@@ -46,14 +46,14 @@ Phase 4 deliverables and acceptance criteria are in PLAN.md, "Phase 4". The task
   - Redraw of the journeys layer, Ambrose Valley, all matches, default switches: 4.7 to 8.8 ms at fit and about 5 ms while panning at zoom 1.5 (target under 16 ms). With loot switched on by hand: 25 ms at fit, 10 to 12 ms at zoom 1.5, 7 to 9 ms at zoom 3.4. `fbbc5d02`: 0.9 ms. Read from the `journeys-draw` user timing; device pixel ratio 2, map area 960 x 752
 - [x] 4.8 Independent review by two agents, each held to 40 tool calls (48 used together, about half the cost of the Phase 3 review). No blocker; 6 findings to fix and 9 small ones, several raised by both. Fixed in `acae5fa`; what changed and what was left, with reasons, is PLAN.md's last section. Each fix was checked again in the preview with real input. Raw result: `.local/phase4-review-result.raw`
 - [x] 4.9 PLAN.md, BRIEF.md and the README describe Phase 4 as built; phase-end checks pass (23:04)
-- [ ] 4.10 On the user's yes: push the branch, open the pull request, record it here, read the first CI run. Then stop for the review
+- [x] 4.10 Pushed and pull request #3 opened with the user's yes (23 Nov, 23:06); recorded here. CI and Vercel's preview run on the pull request
 
 ## Exactly where I stopped
 
-- Branch `phase-4-journeys`, cut from `main` at `83d973c`; local only, nothing pushed. `main` equals `origin/main`.
-- Everything of Phase 4 is committed. At 23:04: `npm run check` (289 tests), `npm run build` and `make test` (237 tests) pass.
-- Waiting for the user's yes to push the branch and open the pull request.
-- **NEXT:** on yes: `git push -u origin phase-4-journeys`; `gh pr create` into `main` (what the phase delivers, the evidence for each acceptance criterion, what changed from the plan, how to verify; no attribution line; no screenshots, and why); record the pull request here in one docs commit and push it; read the first CI run. Then stop. After the user's merge and go: `git switch main`, `git pull --ff-only`, look at the live site, then Phase 5 on a new branch.
+- Branch `phase-4-journeys`, cut from `main` at `83d973c`, is pushed; pull request #3 into `main` is open. `main` equals `origin/main`.
+- Everything of Phase 4 is committed and pushed. `npm run check` (289 tests), `npm run build` and `make test` (237 tests) pass.
+- Waiting for the user's review of pull request #3. Vercel adds a preview link to it; the user merges on GitHub.
+- **NEXT:** nothing until the user has reviewed. If a check fails on the pull request: read the failing step, repair it on this branch, ask before pushing. After the user's merge and go: `git switch main`, `git pull --ff-only`, look at the live site, then Phase 5 (filters and URL state) on a new branch cut from the updated `main`. Start it in a fresh session with the resume protocol: this conversation is at the end of its context.
 
 ## Decisions and assumptions made
 
