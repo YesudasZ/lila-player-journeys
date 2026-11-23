@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-24 00:44 IST
+Last updated: 2026-11-24 00:48 IST
 
 ## Current phase
 
@@ -41,7 +41,14 @@ Phase 6 deliverables and acceptance criteria are in PLAN.md, "Phase 6". The task
 - [x] 6.5 Marker times and picking (24 Nov, 00:42): in `lib/drawList.ts` a marker keeps the time of each of its events (`times`, which replaces `last`); `lib/pick.ts` finds a marker only from its first event on, and a path only as far as it is drawn. The tooltip gets the count of the events that have happened and the time of the last of them
 - [x] 6.6 The layer draws the moment (24 Nov, 00:42): `layers/journeysLayer.ts` listens to the clock. Before the end of a match it draws every path as far as its head has come, the heads where the journeys are, and the markers of what has happened with their counts; what is under a resting pointer is looked up again when the time moves. The whole match and all matches keep their cached paths. Tested in lib: the head of a journey is on its death marker from the second of the death. Not looked at in the preview yet: nothing starts the clock before step 6.7. `npm run check`: 394 tests
 - [x] 6.7 The timeline bar (24 Nov, 00:44): `components/Timeline.tsx` in a third grid row under the map: Play and Pause with the title "Play/Pause (Space when the map or timeline is focused)", the time (`2:05 / 8:43`), the slider with a mark for every kind and second in which something happened, and the speed. The slider and the time are written straight into the page; React renders the bar only when play, pause, speed, the match or the journeys drawn change. Space on the map (`lib/mapKeys.ts`, `mapSurface.ts`); the slider's keys in its title and in a description for assistive technology (the tool has no visible key help); the slider's look in `styles.css`. `App.tsx` starts the clock. `npm run check`: 396 tests; build: 87.68 kB of JavaScript gzipped. Not looked at in the preview yet
-- [ ] 6.8 Checked in the preview; the frame-time reading
+- [ ] 6.8 Checked in the preview, in part (24 Nov, 00:48; pane at 1280 x 800). **Seen:**
+  - `?match=fbbc5d02`: the bar is 56 px high under the map (grid rows 48, 696 and 56 px; the sidebar spans both). Play has the title "Play/Pause (Space when the map or timeline is focused)"; the time reads "8:43 / 8:43"; the slider runs from 0 to 523 with 19 marks; speeds 1x to 60x, 10x chosen
+  - Scrubbing: the journeys layer paints 835 pixels at 0:00 (the heads at their starts), 34,928 at 1:57 and 67,118 for the whole match. The first death of the match (`fbbc5d02-5787de75`, at 118 s): no death colour at its spot at 117 s, death colour there at 118 s
+  - The slider's keys, from 118 s: right 123, Shift+left 122, Page Up 182, Page Down 122, Home 0, End 523, left 518
+  - Space on the slider plays: 27 s of the match in 3.2 s at 10x. The address stays `?match=fbbc5d02&t=118` while it plays and reads `&t=127` after the pause (the time was 126.997 and is rounded)
+  - The slider's end is 523 for `fbbc5d02`, 780 for `a476eb57` and 878 for `5a081fe4`; with all matches the bar says "Open a match to play it back."
+  - A reload at `?match=fbbc5d02&t=120.5` opens paused at "2:00 / 8:43" with the slider at 120.5 and keeps the address
+  - **Not seen yet:** the map at the reloaded moment (its image had not loaded after 9 s in the pane); a console without errors (it held errors of Vite's hot reload from this session's branch switches: files of the parked branch that are gone, and a second copy of React after Vite optimised its dependencies again; restart the dev server, load once, read the console); Space on the map itself; dragging the slider with the pointer; 1x and 60x; the tooltip while the time is before the end; the frame-time reading on `fbbc5d02` and `d0a38c30` at 20x for 10 s with the count of React commits, which needs the pane visible
 - [ ] 6.9 Independent review by two agents, each held to 40 tool calls; fixes
 - [ ] 6.10 Docs and phase-end checks; status "DONE (awaiting my review)"
 - [ ] 6.11 On the user's yes: push the branch, open the pull request, record it here, read the first CI run. Then stop for the review
@@ -49,8 +56,9 @@ Phase 6 deliverables and acceptance criteria are in PLAN.md, "Phase 6". The task
 ## Exactly where I stopped
 
 - Branch `phase-6-timeline`, cut from `main` at `89dfde3`; local only, nothing pushed. `main` equals `origin/main`.
-- Steps 6.2 to 6.7 are committed: everything of playback is built, and none of it has been looked at in the preview yet.
-- **NEXT:** step 6.8: restart the preview's dev server (the branch was switched), then open `?match=fbbc5d02`: the bar, Play at 1x and 60x, scrub, pause and reload; the slider's end for `fbbc5d02`, `a476eb57` and `5a081fe4` (523, 780, 878); a death marker on the head; no console error. The frame-time reading on `fbbc5d02` and `d0a38c30` at 20x for 10 s needs the browser pane visible. Then 6.9, the review by two agents, and 6.10.
+- Steps 6.2 to 6.7 are committed on `phase-6-timeline` (local only, nothing pushed): everything of playback is built. At 00:48 on 24 Nov: `npm run check` (396 tests), `npm run build` (87.68 kB of JavaScript gzipped) and `make test` (252 tests) pass.
+- Step 6.8 is half done: what was seen in the preview and what was not is in its entry above. The work stopped there because the 5-hour usage window was nearly used up.
+- **NEXT:** finish 6.8: `preview_stop` and `preview_start` for `lila-web` (the dev server saw two branch switches), open `?match=fbbc5d02`, and go through the "Not seen yet" list; ask the user to show the browser pane for the frame-time reading. Then 6.9: the review by two agents, each held to 40 tool calls. Then 6.10: PLAN.md "Phase 6" as built, BRIEF.md, README, ARCHITECTURE.md's mention of the clock, the commands table below, status "DONE (awaiting my review)", and the short manual test script for the closing message. Then ask once to push and open the pull request.
 
 ## Decisions and assumptions made
 
@@ -163,6 +171,12 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 - The note the Phase 5 plan had been approved with (six changes) reached the session after the merge of Phase 5. I built it first, on a branch of its own; then the user said to skip that branch and to put the six items into Phase 8. The built work is kept on the local branch `fix-phase-5-approved-changes` and is not part of Phase 6.
 - Until Phase 8 the address is always rewritten in place, `t` included, and Back and Forward leave the tool.
 
+2026-11-24, while building Phase 6:
+- Should 5 (all-matches playback) and Could 2 (density strip) are not built; the draw list already holds what they would need (the times of every marker).
+- A double-click on the map still zooms without changing the focus; with playback nothing about it changed.
+- The first frame after Play counts for no time: it only sets the moment to count from, so the clock needs no clock of its own to start.
+- The commits `5b2fb2a` and `fcbf93b` of this branch fail `make test`: a line of the new test file was longer than 140 characters, which the hygiene test saw only once the file was tracked. Fixed in `1b963f5`. From now on `make test` runs after `git add`.
+
 ## Open questions for the user
 
 1. Should `docs/PROGRESS.md`, `CLAUDE.md` and `.claude/` stay in the repo at submission? They show how the work was run with Claude Code, which the brief allows; they are also working notes in a public repo.
@@ -178,7 +192,7 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 |---|---|---|
 | `unzip _inbox/player_data.zip -d data/raw` | restores the raw data | 2026-11-22 |
 | `make setup` | creates `.venv`, installs pinned dependencies | 2026-11-22, in a fresh clone |
-| `make test` | 237 tests, no raw data needed; creates `.venv` on first use | 2026-11-23 23:46 |
+| `make test` | 252 tests, no raw data needed; creates `.venv` on first use | 2026-11-23 23:46 |
 | `cd web && npm run check` | type check, ESLint with no warning allowed, 347 Vitest tests | 2026-11-23 23:46 |
 | `cd web && npm run build` | production build into `web/dist/` (not committed); JavaScript 85.48 kB gzipped | 2026-11-23 23:46 |
 | `cd web && npm run dev` | the app on http://localhost:5173 | 2026-11-23 17:41 |
