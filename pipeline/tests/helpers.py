@@ -8,7 +8,7 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from pipeline.dataset import id_kind
+from pipeline.dataset import SCHEMA, id_kind
 
 HUMAN = "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d"
 OTHER_HUMAN = "9f8e7d6c-5b4a-4c3d-8e2f-1a0b9c8d7e6f"
@@ -69,7 +69,8 @@ def write_files(raw_root: Path, rows: pd.DataFrame) -> None:
                 "z": pa.array(part["z"], pa.float32()),
                 "ts": pa.array(part["ts"].tolist(), pa.timestamp("ms")),
                 "event": pa.array(events, pa.binary()),
-            }
+            },
+            schema=SCHEMA,
         )
         path = raw_root / file_id
         path.parent.mkdir(parents=True, exist_ok=True)

@@ -1,4 +1,6 @@
 """The four cleaning rules, each on the smallest data that shows it."""
+import numpy as np
+import pandas as pd
 import pytest
 
 from pipeline.clean import (
@@ -33,15 +35,33 @@ def test_journey_stored_twice_keeps_the_copy_filed_with_most_of_its_match():
     assert len(rows) - len(kept) == len(WALK)
 
 
-def test_tie_between_copies_goes_to_the_first_file_by_name():
+def test_tie_between_copies_goes_to_the_folder_that_sorts_first():
     rows = frame(rows_of("February_11", HUMAN, MATCH, WALK), rows_of("February_10", HUMAN, MATCH, WALK))
     assert keep_one_copy_per_journey(rows)["file"].unique().tolist() == [f"February_10/{HUMAN}_{MATCH}"]
 
 
 def test_copies_that_differ_are_an_error_not_a_silent_drop():
     rows = frame(rows_of("February_10", HUMAN, MATCH, WALK), rows_of("February_11", HUMAN, MATCH, WALK + [(15, "Loot")]))
+    with pytest.raises(ValueError, match="same journey with different rows") as failure:
+        keep_one_copy_per_journey(rows)
+    assert HUMAN[:8] in str(failure.value) and HUMAN not in str(failure.value)  # a message never carries a full id
+
+
+def test_copies_differing_only_in_position_are_an_error():
+    rows = frame(
+        rows_of("February_10", HUMAN, MATCH, [(0, "Position", 1.0, 1.0), (5, "Position", 2.0, 2.0)]),
+        rows_of("February_11", HUMAN, MATCH, [(0, "Position", 1.0, 1.0), (5, "Position", 9.0, 2.0)]),
+    )
     with pytest.raises(ValueError, match="same journey with different rows"):
         keep_one_copy_per_journey(rows)
+
+
+@pytest.mark.parametrize("day_written_twice", ["February_10", "February_11"])
+def test_copy_that_was_also_written_twice_is_still_the_same_journey(day_written_twice):
+    days = {"February_10": WALK, "February_11": WALK} | {day_written_twice: WALK + WALK}
+    cleaned = clean(frame(*(rows_of(day, HUMAN, MATCH, written) for day, written in days.items())))
+    assert events(cleaned.rows) == WALK
+    assert cleaned.removed["spare_copy_of_journey"] + cleaned.removed["second_half_of_file_written_twice"] == 2 * len(WALK)
 
 
 def test_same_player_in_two_matches_is_two_journeys():
@@ -65,6 +85,11 @@ def test_file_that_only_looks_repetitive_is_left_alone():
     assert len(keep_first_half_of_files_written_twice(rows)) == 4
 
 
+def test_file_repeating_its_events_at_other_positions_is_not_written_twice():
+    rows = rows_of("February_10", HUMAN, MATCH, [(0, "Position", 1.0, 1.0), (5, "Position", 2.0, 2.0), (0, "Position", 3.0, 3.0), (5, "Position", 4.0, 4.0)])
+    assert len(keep_first_half_of_files_written_twice(rows)) == 4
+
+
 # Rule 3
 
 
@@ -79,6 +104,12 @@ def test_kill_without_a_twin_is_kept():
     assert len(drop_kills_mirroring_a_death(frame(elsewhere, earlier))) == 6
 
 
+def test_kill_at_another_elevation_is_not_a_twin():
+    rows = rows_of("February_10", HUMAN, MATCH, [(0, "Position"), (5, "Kill", 3.0, 4.0), (5, "Killed", 3.0, 4.0)])
+    rows.loc[rows["event"] == "Killed", "y"] = np.float32(50.0)
+    assert len(drop_kills_mirroring_a_death(rows)) == 3
+
+
 # Rule 4
 
 
@@ -90,6 +121,11 @@ def test_path_ends_at_the_death_row():
         [(0, "Position"), (5, "Position"), (5, "BotKilled"), (5, "Position"), (8, "Position"), (9, "BotKill"), (9, "Loot")],
     )
     assert events(end_paths_at_death(rows)) == [(0, "Position"), (5, "Position"), (5, "BotKilled"), (9, "BotKill"), (9, "Loot")]
+
+
+def test_storm_death_ends_the_path():
+    rows = rows_of("February_10", HUMAN, MATCH, [(0, "Position"), (5, "KilledByStorm"), (7, "Position"), (8, "Loot")])
+    assert events(end_paths_at_death(rows)) == [(0, "Position"), (5, "KilledByStorm"), (8, "Loot")]
 
 
 def test_bot_path_ends_at_its_death_too():
@@ -124,9 +160,39 @@ def test_clean_reports_what_each_rule_removed():
     assert len(cleaned.rows) == len(rows) - 8
 
 
-def test_clean_orders_rows_by_time_and_keeps_file_order_within_a_second():
+def test_rows_come_out_in_time_order_with_file_order_inside_a_second():
     rows = rows_of("February_10", HUMAN, MATCH, [(5, "Position"), (5, "Loot"), (0, "Position"), (5, "BotKill")])
-    assert events(clean(rows).rows) == [(0, "Position"), (5, "Position"), (5, "Loot"), (5, "BotKill")]
+    assert events(end_paths_at_death(rows)) == [(0, "Position"), (5, "Position"), (5, "Loot"), (5, "BotKill")]
+
+
+def test_twin_inside_a_file_written_twice_is_counted_under_both_rules_in_order():
+    once = [(0, "Position"), (5, "Kill", 1.0, 1.0), (5, "Killed", 1.0, 1.0)]
+    cleaned = clean(rows_of("February_10", HUMAN, MATCH, once + once))
+    assert cleaned.removed == {"spare_copy_of_journey": 0, "second_half_of_file_written_twice": 3, "kill_mirroring_killed": 1, "movement_after_death": 0}
+
+
+def test_rules_do_not_rely_on_row_labels():
+    files = [
+        rows_of("February_10", HUMAN, MATCH, WALK + WALK),
+        rows_of("February_10", OTHER_HUMAN, MATCH, [(0, "Position"), (5, "Kill", 1.0, 1.0), (5, "Killed", 1.0, 1.0), (6, "Loot")]),
+    ]
+    cleaned = clean(pd.concat(files))  # both files number their rows from 0
+    assert events(cleaned.rows[cleaned.rows["user_id"] == HUMAN]) == WALK
+    assert events(cleaned.rows[cleaned.rows["user_id"] == OTHER_HUMAN]) == [(0, "Position"), (5, "Killed"), (6, "Loot")]
+
+
+# What the rules do not cover stops the cleaning
+
+
+def test_file_written_three_times_is_an_error_not_a_shuffled_path():
+    with pytest.raises(ValueError, match="1 files have rows out of time order") as failure:
+        clean(rows_of("February_10", HUMAN, MATCH, WALK + WALK + WALK))
+    assert HUMAN not in str(failure.value)
+
+
+def test_journey_with_two_death_rows_is_an_error():
+    with pytest.raises(ValueError, match="1 journeys have more than one death row"):
+        clean(rows_of("February_10", HUMAN, MATCH, WALK + [(12, "BotKilled"), (12, "KilledByStorm")]))
 
 
 def test_identical_loot_rows_are_kept():

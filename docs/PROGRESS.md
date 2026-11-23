@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-23 10:59 IST
+Last updated: 2026-11-23 11:26 IST
 
 ## Current phase
 
@@ -38,16 +38,23 @@ Phase 2 deliverables and acceptance numbers are in PLAN.md, "Phase 2".
 - [x] 2.6 Profiler uses `clean.py`, `EVENTS` and `actor_by_file` (one implementation of each rule); `make profile` left `docs/profile/` byte-identical
 - [x] 2.7 `.github/workflows/ci.yml` (pytest on Python 3.12 and 3.14) and `pipeline/tests/test_repo_hygiene.py`. The workflow has never run: it needs a push
 - [x] 2.8 `ARCHITECTURE.md` first draft (stack, data flow, coordinate mapping, assumptions, trade-offs); README has a data pipeline section and a CI badge; BRIEF.md statuses updated
-- [ ] 2.9 Independent review of the phase: launched 2026-11-23 about 11:00 IST as a background workflow (3 reviewers); results not in yet; findings not applied
+- [x] 2.9 Independent review of the phase (3 reviewers: recomputation, mutation testing, consumer and code quality). No blocker: all 1,242 journeys and 796 match entries were recomputed independently and agree. 59 findings (14 + 19 + 26), saved in `.local/phase2-review-result.raw`. CI run #1 on `2f0d706` is green
+- [ ] 2.9 fixes, in commits of their own:
+  - [x] a. Loader and cleaning rules: one expected schema, every sub-folder read (not only `February_*`), hidden files skipped, `ts` checked to be Unix seconds, a file without rows reported, rules 2 and 3 no longer rely on row labels, rule 1 accepts a copy that was also written twice, the build stops on a file out of time order or a journey with two death rows, messages show 8-character ids. `make data` and `make profile` output unchanged
+  - [ ] b. Data format for the app: `fate`, journey ids, bot kills, event groups and the sample step in the manifest, integer codes in the projection fixture, `docs/DATA_FORMAT.md`
+  - [ ] c. The build checks everything before it writes; a test reads the committed data and pins the accepted numbers
+  - [ ] d. Tests for the mutants that survived
+  - [ ] e. Docs, CLAUDE.md, Makefile, CI
+  - [ ] f. Profiler tidy-up; a second check of the fixes
 - [ ] 2.10 Phase-end checks; status to "DONE (awaiting my review)"; stop
 
 ## Exactly where I stopped
 
-- Last completed: 2.8. All Phase 2 code, tests, CI file and the architecture draft are committed; `make test` (78 tests), `make data` and `make profile` pass. The working tree is clean.
-- In flight: the independent review (2.9) runs in the background of the 23 Nov session. Its result exists only in that session until it is copied to `.local/phase2-review-result.raw`. If the session is gone, `.local/session-pointers.md` says where its transcripts are; otherwise re-run a review or go straight to 2.10.
-- Do not change files under `pipeline/` while the review is running.
-- Pushed on the user's go at 2026-11-23 10:59 IST, up to and including this commit: the first push that carries the CI workflow. Its result has not been looked at yet (check it in 2.10: https://github.com/YesudasZ/lila-player-journeys/actions).
-- **NEXT:** when the review reports, save it to `.local/`, verify each finding by reproducing it, fix what holds, re-run `make test`, `make data` and `make profile`, commit as `phase-2: apply review findings`. Then 2.10.
+- Last completed: 2.9a (loader and cleaning fixes from the review), committed. `make test` passes (100 tests); `make data` and `make profile` still write byte-identical files.
+- In progress: 2.9b, the data format changes. They touch `pipeline/journeys.py`, `pipeline/build_data.py`, their tests, and regenerate `web/public/data/`.
+- The review result is in `.local/phase2-review-result.raw` (not in git). Findings are numbered there per reviewer; the list above says which are done.
+- Nothing is pushed since `2f0d706`. Ask before pushing.
+- **NEXT:** 2.9b to 2.9f in order, each ending with `make test`, `make data`, a commit and this file updated. Then 2.10.
 
 ## Decisions and assumptions made
 

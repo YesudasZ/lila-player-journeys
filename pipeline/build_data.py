@@ -28,7 +28,7 @@ import pandas as pd
 from PIL import Image
 
 from pipeline.clean import Cleaned, clean
-from pipeline.dataset import COLUMNS, EVENTS, RawData, load_raw
+from pipeline.dataset import COLUMNS, EPOCH_SECONDS, EVENTS, EXPECTED_SCHEMA, RawData, day_date, load_raw, short_ids
 from pipeline.encode import ELEVATION_STEPS_PER_UNIT, UV_STEPS, encode_elevation, encode_uv
 from pipeline.journeys import check_journeys, journey_table, match_table
 from pipeline.maps import MAPS, uv_to_pixel, world_to_uv
@@ -43,12 +43,29 @@ README_EXAMPLE = {"name": "README worked example", "map": "AmbroseValley", "x": 
 _FULL_UUID = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
 
 
+def _is_day_folder(name: str) -> bool:
+    try:
+        day_date(name, 2000)  # a leap year, so that February_29 is a day folder too
+    except ValueError:
+        return False
+    return True
+
+
 def check_raw(data: RawData) -> None:
     """Raise ValueError when the raw files are not what this pipeline was built for."""
     rows, problems = data.rows, []
-    unreadable = [f.file for f in data.files if f.error is not None or not f.has_magic]
-    if unreadable:
-        problems.append(f"{len(unreadable)} files are not readable Parquet, e.g. {unreadable[0]}")
+    not_parquet = [f for f in data.files if not f.schema or not f.has_magic]
+    if not_parquet:
+        problems.append(f"{len(not_parquet)} files are not readable Parquet, e.g. {not_parquet[0].file}: {not_parquet[0].error or 'no PAR1 magic bytes'}")
+    other_schema = [f for f in data.files if f.schema and f.schema != EXPECTED_SCHEMA]
+    if other_schema:
+        problems.append(f"{len(other_schema)} files do not have the expected schema, e.g. {other_schema[0].file}: {other_schema[0].schema}")
+    if empty := [f.file for f in data.files if f.error is None and f.rows == 0]:
+        problems.append(f"{len(empty)} files hold no rows, e.g. {empty[0]}")
+    if odd_folders := sorted({f.day for f in data.files if not _is_day_folder(f.day)}):
+        problems.append(f"folders that are not day folders such as February_10: {odd_folders}")
+    if not rows["ts"].between(*EPOCH_SECONDS).all():
+        problems.append(f"ts runs from {rows['ts'].min()} to {rows['ts'].max()}, which is not Unix seconds")
     if unknown := sorted(set(rows["event"]) - set(EVENTS)):
         problems.append(f"unknown event values {unknown}")
     if unknown := sorted(set(rows["map_id"]) - set(MAPS)):
@@ -62,7 +79,7 @@ def check_raw(data: RawData) -> None:
     if (rows["id_kind"] == "other").any():
         problems.append("a user_id is neither a UUID nor a number")
     if problems:
-        raise ValueError("raw data check failed: " + "; ".join(problems))
+        raise ValueError(short_ids("raw data check failed: " + "; ".join(problems)))
 
 
 def with_uv(rows: pd.DataFrame) -> pd.DataFrame:

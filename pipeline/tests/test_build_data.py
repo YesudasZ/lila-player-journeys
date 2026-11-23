@@ -3,11 +3,13 @@ import json
 import re
 
 import numpy as np
+import pyarrow as pa
+import pyarrow.parquet as pq
 import pytest
 from PIL import Image
 
 from pipeline.build_data import build, counts_to_reconcile, differences_from_profile
-from pipeline.dataset import EVENTS
+from pipeline.dataset import EVENTS, SCHEMA
 from pipeline.encode import decode_uv
 from pipeline.maps import MAPS, uv_to_world
 from pipeline.tests.helpers import FIRST_TS, HUMAN, MATCH, OTHER_HUMAN, OTHER_MATCH, THIRD_MATCH, frame, rows_of, write_files
@@ -158,8 +160,41 @@ def test_build_fails_on_data_it_was_not_built_for(tmp_path, extra, message):
         build(raw, tmp_path / "out", tmp_path / "fixtures")
 
 
-def test_build_fails_on_an_unreadable_file(tmp_path):
+def in_milliseconds():
+    rows = rows_of("February_12", OTHER_HUMAN, OTHER_MATCH, [(0, "Position"), (5, "Position")])
+    return rows.assign(ts=rows["ts"] * 1000)
+
+
+@pytest.mark.parametrize(
+    ("extra", "message"),
+    [
+        (rows_of("unsorted", OTHER_HUMAN, OTHER_MATCH, [(0, "Position")]), "not day folders such as February_10: \\['unsorted'\\]"),
+        (in_milliseconds(), "which is not Unix seconds"),
+    ],
+)
+def test_build_fails_on_a_folder_or_a_time_unit_it_does_not_know(tmp_path, extra, message):
+    raw = make_raw(tmp_path / "player_data", frame(dataset(), extra))
+    with pytest.raises(ValueError, match=message):
+        build(raw, tmp_path / "out", tmp_path / "fixtures")
+
+
+def test_build_fails_on_an_unreadable_file_and_says_why(tmp_path):
     raw = make_raw(tmp_path / "player_data", dataset())
     (raw / "February_10" / "broken.nakama-0").write_bytes(b"not parquet")
-    with pytest.raises(ValueError, match="not readable Parquet"):
+    with pytest.raises(ValueError, match="1 files are not readable Parquet, e.g. February_10/broken.nakama-0: ArrowInvalid"):
+        build(raw, tmp_path / "out", tmp_path / "fixtures")
+
+
+def test_build_fails_on_a_file_with_another_schema(tmp_path):
+    raw = make_raw(tmp_path / "player_data", dataset())
+    as_text = pa.table({"user_id": ["1444"], "match_id": [MATCH], "map_id": ["AmbroseValley"], "x": [1.0], "y": [1.0], "z": [1.0], "ts": [FIRST_TS], "event": ["BotPosition"]})
+    pq.write_table(as_text, raw / "February_10" / f"1444_{MATCH}")
+    with pytest.raises(ValueError, match="1 files do not have the expected schema, e.g. February_10/1444_aaaaaaaa.nakama-0: .*event: string"):
+        build(raw, tmp_path / "out", tmp_path / "fixtures")
+
+
+def test_build_fails_on_a_file_without_rows(tmp_path):
+    raw = make_raw(tmp_path / "player_data", dataset())
+    pq.write_table(SCHEMA.empty_table(), raw / "February_10" / f"1444_{MATCH}")
+    with pytest.raises(ValueError, match="1 files hold no rows"):
         build(raw, tmp_path / "out", tmp_path / "fixtures")

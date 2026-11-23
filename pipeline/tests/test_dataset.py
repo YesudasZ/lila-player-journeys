@@ -3,10 +3,12 @@
 Like the real data: no .parquet extension, events stored as bytes, and Unix
 seconds sitting inside a timestamp[ms] column.
 """
+import pyarrow as pa
+import pyarrow.parquet as pq
 import pytest
 
-from pipeline.dataset import UNDECODABLE, id_kind, load_raw
-from pipeline.tests.helpers import FIRST_TS, HUMAN, MATCH, frame, rows_of, write_files
+from pipeline.dataset import DEATH_EVENTS, EVENT_GROUPS, EVENTS, EXPECTED_SCHEMA, SCHEMA, UNDECODABLE, day_date, day_dates, id_kind, load_raw, short_ids
+from pipeline.tests.helpers import FIRST_TS, HUMAN, MATCH, OTHER_MATCH, frame, rows_of, write_files
 
 
 def test_ts_keeps_the_raw_integer_seconds(tmp_path):
@@ -61,9 +63,70 @@ def test_unreadable_file_is_reported_with_its_error(tmp_path):
     assert len(data.rows) == 1
 
 
+def test_file_too_short_to_be_parquet_is_reported_too(tmp_path):
+    write_files(tmp_path, rows_of("February_10", HUMAN, MATCH, [(0, "Position")]))
+    (tmp_path / "February_10" / "cut_short.nakama-0").write_bytes(b"PAR")
+    (broken,) = [f for f in load_raw(tmp_path).files if f.error is not None]
+    assert (broken.name, broken.has_magic, broken.schema) == ("cut_short.nakama-0", False, "")
+
+
+def test_schema_is_the_one_measured_on_the_real_files():
+    assert EXPECTED_SCHEMA == (
+        "user_id: string not null; match_id: string not null; map_id: string not null; "
+        "x: float not null; y: float not null; z: float not null; ts: timestamp[ms] not null; event: binary not null"
+    )
+
+
+def test_file_with_another_schema_is_reported_and_not_loaded(tmp_path):
+    write_files(tmp_path, rows_of("February_10", HUMAN, MATCH, [(0, "Position")]))
+    as_text = pa.table({"user_id": ["1440"], "match_id": [MATCH], "map_id": ["Lockdown"], "x": [1.0], "y": [1.0], "z": [1.0], "ts": [FIRST_TS], "event": ["Position"]})
+    pq.write_table(as_text, tmp_path / "February_10" / f"1440_{MATCH}")
+    data = load_raw(tmp_path)
+    (other,) = [f for f in data.files if f.error is not None]
+    assert (other.error, other.rows, other.has_magic) == ("unexpected schema", 1, True)
+    assert "event: string" in other.schema
+    assert data.rows["user_id"].unique().tolist() == [HUMAN]
+
+
+def test_file_without_rows_is_listed_with_zero_rows(tmp_path):
+    write_files(tmp_path, rows_of("February_10", HUMAN, MATCH, [(0, "Position")]))
+    pq.write_table(SCHEMA.empty_table(), tmp_path / "February_10" / f"1440_{MATCH}")
+    data = load_raw(tmp_path)
+    assert [(f.rows, f.error) for f in data.files] == [(0, None), (1, None)]
+    assert len(data.rows) == 1
+
+
+def test_every_sub_folder_is_read_except_minimaps_and_hidden_files(tmp_path):
+    write_files(tmp_path, frame(rows_of("February_10", HUMAN, MATCH, [(0, "Position")]), rows_of("March_01", HUMAN, OTHER_MATCH, [(0, "Position")])))
+    (tmp_path / "minimaps").mkdir()
+    (tmp_path / "minimaps" / "AmbroseValley_Minimap.png").write_bytes(b"an image")
+    (tmp_path / "February_10" / ".DS_Store").write_bytes(b"written by Finder")
+    (tmp_path / "README.md").write_text("not in a folder")
+    data = load_raw(tmp_path)
+    assert [f.day for f in data.files] == ["February_10", "March_01"]
+    assert all(f.error is None for f in data.files)
+
+
 def test_missing_data_folder_is_a_clear_error(tmp_path):
     with pytest.raises(FileNotFoundError):
         load_raw(tmp_path)
+
+
+def test_day_folders_are_dated_and_ordered_by_date_not_by_name():
+    rows = frame(rows_of("February_10", HUMAN, MATCH, [(0, "Position")]), rows_of("February_9", HUMAN, OTHER_MATCH, [(0, "Position")]))
+    assert list(day_dates(rows).items()) == [("February_9", "2026-02-09"), ("February_10", "2026-02-10")]
+    with pytest.raises(ValueError):
+        day_date("minimaps", 2026)
+
+
+def test_every_event_is_in_exactly_one_group():
+    grouped = [event for events in EVENT_GROUPS.values() for event in events]
+    assert sorted(grouped) == sorted(EVENTS)
+    assert DEATH_EVENTS == ("Killed", "BotKilled", "KilledByStorm")
+
+
+def test_short_ids_cuts_every_full_id_to_its_public_prefix():
+    assert short_ids(f"February_10/{HUMAN}_{MATCH} and 1440_{MATCH}") == "February_10/1a2b3c4d_aaaaaaaa.nakama-0 and 1440_aaaaaaaa.nakama-0"
 
 
 @pytest.mark.parametrize(
