@@ -1,10 +1,10 @@
 # Progress Log
 
-Last updated: 2026-11-23 20:19 IST
+Last updated: 2026-11-23 20:34 IST
 
 ## Current phase
 
-Step 9.1, the first deployment (the end of Phase 3). Status: **IN PROGRESS** on the branch `chore-first-deployment`, waiting for the user to create the Vercel project.
+Step 9.1, the first deployment (the end of Phase 3). Status: **DONE (awaiting my review)** on the branch `chore-first-deployment`. The tool is live at https://lila-player-journeys-psi.vercel.app. Not pushed yet: the push and the pull request wait for the user's yes.
 
 Phase 3 itself is merged: the user reviewed pull request [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) and merged it on 23 Nov. All three CI checks passed on the pull request, and the checks pass on `main` locally.
 
@@ -16,13 +16,13 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 |---|---|---|---|
 | 1 | Data discovery and repo setup | APPROVED | `bc63f0e` |
 | 2 | Pipeline | APPROVED | `ccc2369` |
-| 3 | App shell and map canvas (ends with the first deployment, step 9.1) | APPROVED (merged); step 9.1 open | pull request [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) |
+| 3 | App shell and map canvas (ends with the first deployment, step 9.1) | APPROVED (merged and hosted) | pull request [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) |
 | 4 | Journeys, humans versus bots, markers | NOT STARTED | |
 | 5 | Filters and URL state | NOT STARTED | |
 | 6 | Timeline and playback | NOT STARTED | |
 | 7 | Heatmaps | NOT STARTED | |
 | 8 | Polish | NOT STARTED | |
-| 9 | Deployment (9.1 after Phase 3, 9.2 on the last day) | 9.1 IN PROGRESS | branch `chore-first-deployment` |
+| 9 | Deployment (9.1 after Phase 3, 9.2 on the last day) | 9.1 DONE (awaiting my review); 9.2 on the last day | branch `chore-first-deployment` |
 | 10 | Insights and docs | NOT STARTED | |
 | 11 | Final QA | NOT STARTED | |
 
@@ -33,18 +33,17 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 Step 9.1 is described in PLAN.md, "Phase 9". The task lists of Phases 2 and 3 are in the history of this file (`git log -p docs/PROGRESS.md`).
 
 - [x] 9.1.0 Pull request #1 merged by the user; `main` pulled (`884e78e`). `main` holds exactly the reviewed branch: the same tree as the branch's last commit `b972d7d`. On `main`: `npm run check` (196 tests), `npm run build` and `make test` (237 tests) pass
-- [ ] 9.1.1 The Vercel project. First planned as the user's step in the browser; since 23 Nov, 19:59, created by me through Vercel's connector at the user's request, once the user has approved the connector for their Vercel team. The settings stay the same: import the GitHub repo, root directory `web`, everything else as Vercel detects it for Vite (build `npm run build`, output `dist`), no environment variables. Production follows `main`. State on 23 Nov, 19:56: the user has imported the repo on Vercel's "New Project" page in their own browser, under their personal Vercel account, and has not deployed yet. Vercel's first guess for the preset came from the repo root ("services"), so the form still needs the root directory `web` and the Vite preset before Deploy
-- [ ] 9.1.2 Check the hosted URL: the three maps load, the data files are served, no console errors (the open acceptance line of Phase 3)
-- [ ] 9.1.3 The URL at the top of the README and, with the user's yes, in the repo's About field; statuses in PLAN.md and BRIEF.md
-- [ ] 9.1.4 Ask once to push this branch and open its pull request; stop
+- [x] 9.1.1 The Vercel project exists and production follows `main`. The user created it on 23 Nov in their own browser, under their personal Vercel account: Vercel offered the whole repo as a multi-service project, and the user imported the `web` folder as a single project with the Vite preset. Vercel's connector could not be used for this (it has no grant for the user's team). Live at https://lila-player-journeys-psi.vercel.app
+- [x] 9.1.2 Hosted site checked at 20:34 as an outside visitor (the preview pane is not signed in to Vercel), at 1280 x 800: all three maps are drawn, the coordinates and the scale bar show, wheel zoom and Fit work. 10 requests, all to the site's own address, none failed. The manifest (796 matches, 88,617 rows), the three minimaps and the three journey bundles answer 200 with the right content type. The console is empty. This closes the last open acceptance line of Phase 3
+- [x] 9.1.3 The URL is at the top of the README and in PLAN.md (Phase 9) and BRIEF.md. The repo's About field gets it with the user's yes
+- [ ] 9.1.4 On the user's yes: push this branch and open its pull request; set the About field; stop
 
 ## Exactly where I stopped
 
-- Branch `chore-first-deployment`, cut from `main` at `884e78e`; local only, one docs commit (this file). `main` equals `origin/main`.
-- Waiting for the user: the Vercel project (9.1.1). The import form is open in the user's own browser; the settings it needs were given in the chat (root directory `web`, preset Vite, the rest as detected, then Deploy). The preview pane is not signed in to Vercel and does not need to be: the hosted site is public.
-- Change at 19:59: the user connected Vercel's connector to this session and asked me to create the project with it. Vercel refused the first call (403): the connector has no grant for the user's team yet. A single-use consent link was given in the chat; it is valid for 10 minutes and a new one can be made. After the consent: create the project from the GitHub repo with root directory `web`, check that the preset is Vite and the output `dist` (with the preset "Other" Vercel would serve `web/public/` instead), deploy `main`, then 9.1.2. Nothing paid, no environment variables, no other setting.
-- State at 20:19: the connector could not be used. Vercel refused it for the user's team three times (403, "Not authorized ... under scope"), also after the user had approved two consent links. The connector is signed in as the right Vercel account, and Vercel lists no team for it: the team grant is missing, and Vercel's message says a consent link of this kind does not add it. The grant is given where the connector is authorised (the team has to be chosen on Vercel's consent screen when connecting), which is the user's step. Recommended instead: the user presses Deploy on the import page with root directory `web` and preset Vite; I continue from the live URL.
-- **NEXT:** when the user says the site is live: get its URL (from the user, or from GitHub's list of deployments), open it in the preview pane and check 9.1.2; then 9.1.3 on this branch, the checks, and ask to push and open the pull request. Phase 4 starts only on the user's go, on a new branch cut from the updated `main`.
+- Branch `chore-first-deployment`, cut from `main` at `884e78e`; local only. It holds docs commits and the README line with the URL. `main` equals `origin/main`.
+- The tool is live at https://lila-player-journeys-psi.vercel.app and checked (9.1.2).
+- Waiting for the user's yes to push this branch and open its pull request.
+- **NEXT:** on yes: `git push -u origin chore-first-deployment`, `gh pr create` into `main` (short description, no attribution line), `gh repo edit --homepage` with the URL, record the pull request here. After the merge Vercel deploys `main` again: look at the live site once more. Phase 4 starts only on the user's go, on a new branch cut from the updated `main`.
 
 ## Decisions and assumptions made
 

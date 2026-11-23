@@ -1,10 +1,12 @@
 # LILA BLACK Player Journeys
 
+**Live tool:** https://lila-player-journeys-psi.vercel.app
+
 [![CI](https://github.com/YesudasZ/lila-player-journeys/actions/workflows/ci.yml/badge.svg)](https://github.com/YesudasZ/lila-player-journeys/actions/workflows/ci.yml)
 
 A browser tool for Level Designers to see how players move, fight, loot and die on LILA BLACK's three maps. Built for the LILA Games Product Engineer written test.
 
-> **Work in progress.** The raw telemetry has been measured, cleaned and built into the files the app loads. The app shows the three maps with pan and zoom, world coordinates under the cursor and a scale bar. Journeys, markers, filters, playback and heatmaps come next; it is not hosted yet.
+> **Work in progress.** The raw telemetry has been measured, cleaned and built into the files the app loads. The app shows the three maps with pan and zoom, world coordinates under the cursor and a scale bar. Journeys, markers, filters, playback and heatmaps come next. The live tool shows what has been reviewed and merged so far.
 
 | Read this | To learn |
 |---|---|
