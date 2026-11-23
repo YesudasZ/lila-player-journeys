@@ -439,6 +439,16 @@ What held, as the reviewers measured it: the tabs, the match list and the legend
 | "Clear filters" took the keyboard focus with it | The focus goes to the filters, or from the note to the map | Both buttons remove themselves when pressed |
 | A tab read "Ambrose Valley566", the last day "14 Febpartial" | The tab is named "Ambrose Valley, 566 matches"; a real space before "partial" | A margin is not a space for a screen reader |
 | The empty note was a status element that appeared with its button inside | The sentence sits in a status element that is always on the page; the button is outside it | Such a region is announced unreliably |
-| No test for the address sync or for what happens when a link's journeys arrive | Both are tested (345 tests) | 6 of a reviewer's 12 one-line faults had slipped through there |
+| No test for the address sync or for what happens when a link's journeys arrive | Both are tested | 6 of a reviewer's 12 one-line faults had slipped through there |
+
+After the fixes I checked them once more:
+
+- Of eight one-line faults put into the fixed lines, the tests noticed six. Two tests were added: a view at fit is no view, and the journeys of a map that is not open leave the focus alone, also when they arrive before the open map's own. Both faults are noticed now; the app has 347 tests.
+- Looking at the fixes in the preview showed two faults in the first row above, which made the list follow the fate filter. Both are fixed:
+
+| Was | Now | Why |
+|---|---|---|
+| With no match left, the list said "No match id contains “”." | "No match on Lockdown passes the filters."; the search box is blamed only when there was something to search | Before the list followed the fate filter, only a search could empty it |
+| The button above the list read "All 566 matches" | "All matches (566)" | With one match left it read "All 1 matches" |
 
 Left as it is: a reload within 300 ms of a change loses that change (the price of not rewriting the address on every frame); the wording of the note follows the fate's own text ("has the fate “killed by player”") rather than the plan's first sentence, which PLAN.md now quotes as built.
