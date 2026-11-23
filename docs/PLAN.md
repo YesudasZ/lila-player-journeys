@@ -18,7 +18,7 @@ Assumed deadline: **Thu 26 Nov 2026**, five days after the assignment arrived on
 | Wed 25 Nov | 7 Heatmaps · 8 Polish · draft INSIGHTS.md · independent review of the hosted tool | 3.5 |
 | Thu 26 Nov | 10 Walkthrough and final docs · 11 Final QA · 9.2 final deployment check · submit | 2.5 |
 
-The hosted link exists from Monday, so every later phase is checked on the real URL. Thursday holds only the walkthrough, fixes and submission.
+The hosted link exists from Monday. Every later phase is checked on the preview link of its pull request before it is merged, and on the real URL after. Thursday holds only the walkthrough, fixes and submission.
 
 ## Scope: core first, then in this order
 
@@ -83,7 +83,7 @@ Storm deaths are markers only: 39 points, 5 on Grand Rift, are not a heatmap.
 **Acceptance**
 - From the integer codes of every point of `projection.json`, `uvToPixel` gives the fixture's pixel to within 0.5 px, including on the non-square 2048×2046 image (the shipped Grand Rift minimap); pixel to world and back returns the same point to within 0.01 world units.
 - Each minimap is drawn at the aspect ratio recorded in the manifest (unit test on the layout function).
-- `npm run check` green, CI green, no console errors on the hosted URL.
+- `npm run check` green and CI green on the pull request; after the merge and step 9.1, no console errors on the hosted URL.
 
 **Verify locally:** `cd web && npm run check && npm run dev`; hover over a road and read the coordinates.
 
@@ -166,7 +166,7 @@ Storm deaths are markers only: 39 points, 5 on Grand Rift, are not a heatmap.
 
 ## Phase 9: Deployment (0.5 h, in two steps)
 
-- **9.1, at the end of Phase 3.** You create the Vercel project from the GitHub repo with root directory `web` (one-time, in the browser). The URL goes at the top of the README and into the repo's About field. From here on every push deploys.
+- **9.1, right after the Phase 3 pull request is merged** (before that, `main` has no `web/` folder to build). You create the Vercel project from the GitHub repo with root directory `web` (one-time, in the browser). Production follows `main`, so only merged phases are live; every later pull request gets its own preview link. The URL goes into the repo's About field and, through a one-line pull request, to the top of the README.
 - **9.2, on Thursday.** The site and three deep links open in a private window; on a phone the page loads and shows the desktop notice.
 
 ## Phase 10: Insights and docs (2 h, spread over Wednesday and Thursday)
@@ -245,3 +245,4 @@ Three independent reviewers checked Phase 2 (recomputation from the raw files, m
 | A match with files in two day folders stops the build | It is filed under the later folder | A match can end around midnight. After cleaning there is none in this data |
 | CI runs `make test` | CI runs pytest directly | Same tests; no virtual environment needed on the runner |
 | URL state without a journey | `journey` joins the URL state | Focusing a journey is a view worth sharing |
+| Every commit pushed to `main` | From Phase 3: one branch and one pull request per phase, merged by you after review; Vercel production follows `main` | Your decision on 23 Nov. Once the site is hosted, `main` is what the reviewers see, so it should hold reviewed work only |

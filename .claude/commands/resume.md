@@ -5,11 +5,11 @@ description: Pick this project up from docs/PROGRESS.md and report where it stan
 Resume this project from its recorded state. Do not start any new work inside this command.
 
 1. Read `docs/PROGRESS.md`, `docs/PLAN.md` and `CLAUDE.md`.
-2. Run `git status` and `git log --oneline -10`.
+2. Run `git status` and `git log --oneline -10`. Note the branch: from Phase 3 on a phase lives on its own branch until its pull request is merged (CLAUDE.md, "Git flow").
 3. Check the "Exactly where I stopped" section of `docs/PROGRESS.md` against the working tree and the last commits. Are the files it names in the state it describes? Is anything uncommitted? Does the newest commit match the last ticked task?
 4. If `docs/PROGRESS.md` and the code disagree, trust the code, tell me what differs, and correct `docs/PROGRESS.md`.
 5. Summarise the state in exactly 5 lines:
-   - current phase and its status
+   - current phase, its status, its branch and its pull request if one is open
    - the last thing completed, with its commit hash
    - anything uncommitted or still in flight
    - the next concrete action

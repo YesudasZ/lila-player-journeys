@@ -7,7 +7,7 @@ Take-home assignment for LILA Games (Product Engineer). A hosted browser tool th
 All project state lives in files and git, never only in a conversation: a session can be cut off at any moment. At the start of every session, before anything else:
 
 1. Read `docs/PROGRESS.md` (imported below) and `docs/PLAN.md`.
-2. Run `git status` and `git log --oneline -10`.
+2. Run `git status` and `git log --oneline -10`. `git status` names the branch: a phase in progress lives on its own branch (see "Git flow").
 3. Tell the user in 5 lines where the project stands and what the next action is. Then wait for "go".
 
 Do not redo finished work. If PROGRESS.md and the code disagree, trust the code, report the mismatch and fix PROGRESS.md. The `/resume` command (`.claude/commands/resume.md`) runs this protocol on demand.
@@ -49,7 +49,7 @@ Run pipeline modules as `.venv/bin/python -m pipeline.<module>` from the repo ro
 
 ## Working rules
 
-1. One phase at a time. At the end of a phase: run the checks, update `docs/PLAN.md` and `docs/PROGRESS.md`, commit, summarise how to verify locally, then **stop and wait**. Never start the next phase unasked.
+1. One phase at a time. At the end of a phase: run the checks, update `docs/PLAN.md` and `docs/PROGRESS.md`, commit, ask to push the phase branch and open its pull request, summarise how to verify locally, then **stop and wait**. Never start the next phase unasked.
 2. Never claim something works unless you ran it and saw the output. Show the key evidence.
 3. The raw files are the source of truth. Where they disagree with the dataset README, trust the measurement, record it in `docs/DATA_NOTES.md` and say so.
 4. Document every assumption. Do not get blocked: make a reasonable assumption and flag it.
@@ -62,8 +62,20 @@ Run pipeline modules as `.venv/bin/python -m pipeline.<module>` from the repo ro
 11. Commit early and often with clear messages, for example `phase-3: add MapCanvas zoom/pan (WIP)`. Put `WIP:` in the message when a step is unfinished, and never leave uncommitted work for long. Local commits need no permission; ask before `git push`.
 12. Never leave the working tree broken without a note under "Known issues" in `docs/PROGRESS.md`.
 13. When the user says "I'm about to hit my limit" or "checkpoint": finish or safely stop the current edit, update `docs/PROGRESS.md`, commit, and print a 3-line status. Do nothing else.
-14. At each phase end: set the status to "DONE (awaiting my review)", record the commit hash, run the checks, then stop.
+14. At each phase end: set the status to "DONE (awaiting my review)", record the commit hash and, once it exists, the pull request, run the checks, then stop.
 15. Do not repeat research, profiling or file reads whose results are already recorded in `docs/DATA_NOTES.md`, `docs/PLAN.md` or `docs/PROGRESS.md`. Use the recorded results.
+
+## Git flow (user's decision, 2026-11-23; from Phase 3 on)
+
+Phases 1 and 2 were committed straight to `main`. From Phase 3 on:
+
+- `main` holds reviewed phases only. Once Vercel is connected, `main` is what is live.
+- Each phase is done on its own branch, cut from an up-to-date `main` and named `phase-N-<short-name>`, for example `phase-3-app-shell`. A change outside a phase gets a branch of its own (`chore-...`, `fix-...`).
+- Commits on the branch follow the conventions below and need no permission. Every `git push` still needs a yes.
+- At the end of the phase, ask once, then push the branch and open one pull request into `main` (`gh pr create`). Its description says what the phase delivers, the evidence for each acceptance criterion and how to verify. CI runs on the pull request; once Vercel is connected it adds a preview link, and the phase is checked there.
+- Then stop. The user reviews and merges on GitHub with "Rebase and merge", which keeps the history linear. Never merge a pull request and never turn on auto-merge. Changes asked for in the review go onto the same branch.
+- After the merge: switch to `main`, `git pull --ff-only`, and cut the next branch only on the user's go. A merge by rebase gives the commits new hashes, so refer to a merged phase by its pull request, not by a hash from the branch. Delete a merged branch only on the user's word.
+- `docs/PROGRESS.md` travels with the branch: it names the branch and, once it exists, the pull request.
 
 ## Data facts (evidence, row by row: `docs/DATA_NOTES.md`; independent check: `docs/profile/crosscheck.md`)
 
@@ -90,7 +102,7 @@ Measured unless marked as an assumption (A1 to A8 in DATA_NOTES.md).
 - **TypeScript:** `strict`, no `any`, pure functions in `web/src/lib/` with Vitest tests, small components, state in Zustand, the playback clock outside React.
 - **Styling:** Tailwind v4 with the tokens below only; no ad-hoc hex values in components.
 - **Docs:** short, tables where they help, real numbers only, each number traceable to `docs/profile/`.
-- **Commits:** small and working; subject starts with `phase-N:` (or `chore:`, `docs:`, `fix:`) and says what changed; the body says why when it is not obvious. No `Co-Authored-By` line or any other attribution trailer (user's decision, 2026-11-22).
+- **Commits:** small and working; subject starts with `phase-N:` (or `chore:`, `docs:`, `fix:`) and says what changed; the body says why when it is not obvious. No `Co-Authored-By` line or any other attribution trailer (user's decision, 2026-11-22). The same goes for pull request descriptions.
 
 ## Design tokens ("LILA Night")
 
@@ -117,4 +129,4 @@ Every marker gets a dark outline. Fonts: Space Grotesk (headings), Inter (UI), J
 - Acceptance criteria in `docs/PLAN.md` met and shown with evidence (command output, screenshots).
 - `make test` green; from Phase 3 also `npm run check` (tsc + eslint + vitest) in `web/`.
 - No console errors in the app; no dead code; docs updated.
-- Committed; `docs/PROGRESS.md` shows "DONE (awaiting my review)" with the commit hash; summary written; stopped for review.
+- Committed on the phase branch; `docs/PROGRESS.md` shows "DONE (awaiting my review)" with the commit hash; pushed and a pull request opened once the user has agreed; summary written; stopped for review.

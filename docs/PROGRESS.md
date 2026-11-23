@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-23 13:37 IST
+Last updated: 2026-11-23 14:03 IST
 
 ## Current phase
 
@@ -10,7 +10,7 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 
 ## Phase checklist
 
-| # | Phase | Status | Commit |
+| # | Phase | Status | Commit or pull request |
 |---|---|---|---|
 | 1 | Data discovery and repo setup | APPROVED | `bc63f0e` |
 | 2 | Pipeline | DONE (awaiting my review) | `ccc2369` |
@@ -54,11 +54,12 @@ Phase 2 deliverables and acceptance numbers are in PLAN.md, "Phase 2".
 
 ## Exactly where I stopped
 
-- Phase 2 is done and waits for the user's review. Last code commit: `ccc2369`. The working tree is clean.
-- Pushed on the user's go at 2026-11-23 13:37 IST, up to and including this commit. CI ("green on `main`" is a Phase 2 acceptance point) had passed on `2f0d706`; its run on this push has to be looked at once: https://github.com/YesudasZ/lila-player-journeys/actions. Record the result here with the next commit.
-- For the review: PLAN.md's last section (lines the review changed after the approval), `docs/DATA_FORMAT.md` (the data contract), `docs/profile/crosscheck.md` section 6 (how the pipeline was checked), and open questions 5 and 6 below.
+- Phase 2 is done and waits for the user's review. Last code commit: `ccc2369`. Branch: `main`. The working tree is clean.
+- Pushed up to `0d2fc98` on the user's go (2026-11-23 13:37 IST). CI run #2 on that commit passed on Python 3.12 and 3.14, so every Phase 2 acceptance point is met. The user ran `make test` (229 passed) and `make data` (counts agree) on this machine.
+- Decided by the user on 23 Nov: from Phase 3 on, one branch and one pull request per phase (CLAUDE.md, "Git flow"). This commit, which records that, is the last one made straight on `main`; it was pushed on the user's go at 2026-11-23 14:03 IST. Its CI run has to be looked at once; record the result with the next commit.
+- Still open before Phase 3: the user's review of the changed plan lines (open question 6) and the answer on ruff and mypy (open question 5).
 - Phase 3 has not been started. Do not start it without the user's go.
-- **NEXT:** wait for the user's review of Phase 2 (the push was approved; the review of the changed plan lines and open questions 5 and 6 is still open). On "go": Phase 3 (app shell, map canvas, first deployment).
+- **NEXT:** on the user's go: check that `main` equals `origin/main` (it did after this push), cut `phase-3-app-shell` from it, and start Phase 3 there (app shell, map canvas; first deployment right after its pull request is merged).
 
 ## Decisions and assumptions made
 
@@ -75,6 +76,9 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 - No death row means "no death recorded" [18, A3]. Storm deaths are markers, not a heatmap [19].
 - The README's coordinate transform and constants are used unchanged, with the real image sizes [20, 21, A8]. Elevation is kept in the app's data.
 - Commit messages carry no `Co-Authored-By` line (user's choice; the rule is in `CLAUDE.md`). Earlier commit messages were rewritten to remove it.
+
+2026-11-23, git flow (user's choice "Yes, per phase"):
+- From Phase 3 on, each phase is done on its own branch and reaches `main` through one pull request that the user merges after review ("Rebase and merge"). `main` holds reviewed work only; once Vercel is connected, `main` is what is live and each pull request gets a preview link. Pull request descriptions carry no attribution line. Step 9.1 (creating the Vercel project) moves to right after the Phase 3 pull request is merged.
 
 2026-11-23, from the Phase 2 review (each is described in PLAN.md's last section or in DATA_FORMAT.md, and waits for the user's review):
 - Every row is a point of its owner's path, not only the movement rows; a journey's path ends at its death row.
@@ -113,6 +117,7 @@ Not available yet: dev server and `npm run check` (Phase 3).
 ## Known issues / TODO later
 
 - Commits stay local until the user approves each push.
+- CI prints a warning, not a failure: `actions/checkout@v4` and `actions/setup-python@v5` target a deprecated Node version. Look up the current versions and update them with the next change to the workflow (Phase 3 adds `npm run check` to it).
 - GitHub's "Contributors" box still showed two contributors on 2026-11-23 10:45 IST, about 11 hours after the rewrite was pushed; GitHub's API lists one. The user chose to wait. Recheck before submission (also a Phase 11 check). Fallbacks: recreate the repo, or GitHub Support.
 - `ARCHITECTURE.md` is a first draft of about 1,000 words. It has to fit one printed page by Phase 10: trim it then.
 - The README's map constants may be 1.5 to 2% too large in x on two maps (`docs/profile/crosscheck.md`, section 4). Kept as documented, by the user's decision.
