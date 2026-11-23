@@ -1,12 +1,12 @@
 # Progress Log
 
-Last updated: 2026-11-23 23:52 IST
+Last updated: 2026-11-24 00:00 IST
 
 ## Current phase
 
-Phase 5, Filters and URL state. Status: **DONE (awaiting my review)** on the branch `phase-5-filters`, pull request [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4), last code commit `d44647d`. Pushed; it waits for the user's review and merge.
+Phase 6, Timeline and playback. Status: **IN PROGRESS** on the branch `phase-6-timeline` (the plan is not approved yet; no pull request yet).
 
-Phases 1 to 4 and step 9.1 are merged: pull requests [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) (Phase 3), [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) (step 9.1) and [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3) (Phase 4) were reviewed and merged by the user on 23 Nov. The tool is live at https://lila-player-journeys-psi.vercel.app and shows Phase 4; production on Vercel follows `main`.
+Phases 1 to 5 and step 9.1 are merged: pull requests [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) (Phase 3), [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) (step 9.1), [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3) (Phase 4) and [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4) (Phase 5) were reviewed and merged by the user, the last one on 23 Nov, 23:54 IST. The tool is live at https://lila-player-journeys-psi.vercel.app and shows Phase 5; production on Vercel follows `main`.
 
 Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 
@@ -18,8 +18,8 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 | 2 | Pipeline | APPROVED | `ccc2369` |
 | 3 | App shell and map canvas (ends with the first deployment, step 9.1) | APPROVED (merged and hosted) | pull request [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) |
 | 4 | Journeys, humans versus bots, markers | APPROVED (merged) | pull request [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3) |
-| 5 | Filters and URL state | DONE (awaiting my review) | pull request [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4), branch `phase-5-filters`, `d44647d` |
-| 6 | Timeline and playback | NOT STARTED | |
+| 5 | Filters and URL state | APPROVED (merged) | pull request [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4) |
+| 6 | Timeline and playback | IN PROGRESS | branch `phase-6-timeline` |
 | 7 | Heatmaps | NOT STARTED | |
 | 8 | Polish | NOT STARTED | |
 | 9 | Deployment (9.1 after Phase 3, 9.2 on the last day) | 9.1 APPROVED (merged); 9.2 on the last day | pull request [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) |
@@ -30,33 +30,16 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 
 ## Current phase task list
 
-Phase 5 deliverables and acceptance criteria are in PLAN.md, "Phase 5". The task lists of Phases 2 to 4 and of step 9.1 are in the history of this file (`git log -p docs/PROGRESS.md`).
+Phase 6 deliverables and acceptance criteria are in PLAN.md, "Phase 6". The task lists of Phases 2 to 5 and of step 9.1 are in the history of this file (`git log -p docs/PROGRESS.md`).
 
-- [x] 5.0 The user's go for Phase 5, in this session (23 Nov). Branch `phase-5-filters` cut from `main` at `fb2aa02`. This file corrected: Phase 4 is merged as pull request #3; the live site shows it (checked after the merge: legend and counts as on the branch, no failed request, empty console)
-- [x] 5.1 Plan approved by the user in plan mode (23 Nov, 23:12) and recorded in PLAN.md, "Phase 5". Approved with it: no `mode` in the URL (a link with a match shows that match); filters always hold (a filter that excludes the open match closes it); the fate filter works on journeys of humans and bots; the URL is rewritten in place, 300 ms after the last change; numbers in a link are rounded; no new dependency; one review by two agents held to 40 tool calls each
-- [x] 5.2 lib: `link.ts` (encode, decode, check against the manifest), `filters.ts` (matches on the chosen days, counts for the tabs, wording of the empty note), the draw list takes allowed matches and fates. 318 tests; 11 of 11 one-line faults in the new code are noticed
-- [x] 5.3 Store: `days`, `fates`, `toggleDay`, `toggleFate`, `clearFilters`; `loadManifest(link)` opens the view a link asks for and keeps the link for a retry; a filter that rules the open match out closes it; a focus from a link is checked when the journeys arrive. `shown.ts`: the draw list follows the filters, and `selectLink` gives the view as a link. 326 tests
-- [x] 5.4 `state/linkSync.ts` (the address follows the view, rewritten in place 300 ms after the last change; `currentAddress` for the copy button) and the components `Filters`, `CopyLink`, `EmptyNote`; counts on `MapTabs`; the day filter in `MatchList`. `npm run check` (326 tests) and the build pass; not yet looked at in the preview
-- [x] 5.5 Checked in the preview at 1280 x 800 (23:20), no console error:
-  - Day chip "14 Feb": the tabs read 24, 8 and 5, the list holds 24 matches, the legend "24 matches, 44 journeys", the address `?days=February_14`; with the fate "killed by storm" as well: "1 match, 1 journey"
-  - Lockdown with the fate "killed by player": the note "No journey on Lockdown has the fate “killed by player”." with "Clear filters", which brings back 171 matches and 295 journeys
-  - A link with a match, a focused journey, loot switched on, a view and a day, given in another order, opens exactly that view and is rewritten in the canonical order; a link with an unknown map, match, day and a broken view keeps only its fate
-  - "Copy link": the preview pane refuses clipboard access, so only the refusal message could be seen there ("Copy the address from the address bar"); the address it would copy equals the address bar's
-- [x] 5.6 Independent review by two agents, each held to 40 tool calls (51 used together). No blocker; 6 findings to fix and 7 small ones, several raised by both. Fixed in `ac23e1b`; what changed and what was left is PLAN.md's last section. Raw result: `.local/phase5-review-result.raw`
-- [x] 5.7 PLAN.md, BRIEF.md and the README describe Phase 5 as built; phase-end checks pass (23:35): `npm run check` (345 tests), `npm run build`, `make test` (237 tests)
-- [x] 5.8 The review's fixes checked once more (23 Nov, 23:46):
-  - Of eight one-line faults put into the fixed lines the tests noticed six. Two tests added in `53a0d7d` (a view at fit is no view; the journeys of a map that is not open leave the focus alone, also when they arrive first); both faults are noticed now
-  - In the preview at 1280 x 800, no console message: with the fate "killed by storm" the list holds 17 matches on Ambrose Valley, as the manifest has, and the legend reads "17 matches, 17 journeys"; a link to a match that the fate rules out (`a476eb57`) opens all matches; the tabs are named "Ambrose Valley, 566 matches"; "Clear filters" leaves the keyboard focus on "Days (UTC)", and from the note over the map on the map; a switch turned off and on leaves the address bare; `view=-1e9,1e12,9999` is dropped
-  - Two faults of the list's fix were seen there and fixed in `d44647d`: an empty list said "No match id contains “”.", and one match left read "All 1 matches". Now "No match on Lockdown passes the filters." and "All matches (1)"
-  - Checks at 23:46: `npm run check` (347 tests), `npm run build`, `make test` (237 tests)
-- [x] 5.9 On the user's yes (23 Nov, 23:52): the branch is pushed and pull request [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4) is open. Its description gives the evidence for each acceptance criterion, what differs from the plan and what was not verified. CI runs on the pull request and is read there
+- [x] 6.0 The user's go for Phase 6, in this session (24 Nov, 00:00). Branch `phase-6-timeline` cut from `main` at `89dfde3`. This file corrected: Phase 5 is merged as pull request #4; the live site shows it (checked after the merge: day and fate filters, counts on the tabs, the view in the address, "All matches (566)" and "566 matches, 836 journeys", every request answered, empty console). Not seen there either: the clipboard write of "Copy link", which the preview pane refuses
+- [ ] 6.1 Plan Phase 6 in plan mode; on the user's approval, record it in PLAN.md
 
 ## Exactly where I stopped
 
-- Branch `phase-5-filters`, cut from `main` at `fb2aa02`, is pushed; pull request [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4) into `main` is open. `main` equals `origin/main`.
-- Everything of Phase 5 is committed and pushed. At 23:46: `npm run check` (347 tests), `npm run build` and `make test` (237 tests) pass. The review's fixes were looked at in the preview (step 5.8).
-- Waiting for the user's review and merge of pull request #4. "Copy link" still needs one click on the pull request's Vercel preview: the preview pane refuses clipboard access, so only its refusal message was seen.
-- **NEXT:** changes asked for in the review go onto this branch. After the user's merge and go: `git switch main`, `git pull --ff-only`, look at the live site, then Phase 6 on a new branch (a fresh session keeps the usage low; the user decides).
+- Branch `phase-6-timeline`, cut from `main` at `89dfde3`; local only, nothing pushed. `main` equals `origin/main`.
+- Phase 6 has no code yet. Its plan is being written in plan mode and waits for the user's approval.
+- **NEXT:** on approval: record the plan in PLAN.md ("Phase 6") and in the task list above, then build in small commits.
 
 ## Decisions and assumptions made
 
@@ -152,6 +135,11 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 2026-11-23, from looking at the review's fixes in the preview:
 - An empty match list says why: the filters left no match on the map, or no id contains what was typed. The button above the list reads "All matches (566)", so that a single match left is not "All 1 matches".
 - The note over the map is part of the map view and appears once the minimap is there; until then the match list and the legend say that nothing is left. In the hidden preview pane Lockdown's image took more than 4 s, so a check of the note has to wait until "Loading Lockdown…" is gone.
+
+2026-11-24, after Phase 5:
+- Pull request #4 was merged with a merge commit, like #1 to #3; `main` is at `89dfde3`. Open question 6 stands.
+- The user chose again to do the next phase in the same session ("Do this task here"), with the 5-hour window at 66% and three hours before its reset.
+- The merged branches `phase-3-app-shell`, `chore-first-deployment`, `phase-4-journeys` and `phase-5-filters` still exist locally and on GitHub. They are deleted only on the user's word.
 
 ## Open questions for the user
 
