@@ -133,7 +133,7 @@ def test_hidden_folders_and_folders_inside_a_day_folder_are_not_read_as_data(tmp
 
 def test_what_the_loader_passes_over_is_listed_unless_it_is_hidden_the_minimaps_or_the_readme(tmp_path):
     write_files(tmp_path, rows_of("February_10", HUMAN, MATCH, [(0, "Position")]))
-    for folder in ("minimaps", ".git", "February_10/one_level_too_deep"):
+    for folder in ("minimaps", ".git", "February_10/one_level_too_deep", "February_10/.cache"):
         (tmp_path / folder).mkdir()
     for name in ("README.md", ".DS_Store", f"1440_{MATCH}", "February_10/.hidden", "minimaps/Lockdown_Minimap.jpg"):
         (tmp_path / name).write_bytes(b"not looked at")

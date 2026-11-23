@@ -169,6 +169,14 @@ def test_days_are_listed_by_date_not_by_folder_name(tmp_path):
     assert list(report["matches_by_day"].items()) == [("February_9", 1), ("February_10", 1)]
 
 
+def test_file_belongs_to_its_folder_by_its_last_row_which_may_be_from_the_day_before(tmp_path):
+    to_midnight = -45_561  # seconds from FIRST_TS back to 2026-02-10 00:00:00 UTC
+    across_midnight = [(to_midnight - 10, "Position", 10.0, -20.0), (to_midnight + 10, "Position", 15.0, -20.0)]  # ends on the 10th
+    raw = make_raw(tmp_path / "player_data", rows_of("February_11", HUMAN, MATCH, across_midnight))
+    build(raw, tmp_path / "out", tmp_path / "fixtures")
+    assert [day["id"] for day in read(tmp_path / "out" / "manifest.json")["days"]] == ["February_11"]
+
+
 def test_february_29_is_a_day_folder(tmp_path):
     leap_day = 64_668_039  # seconds from FIRST_TS to 2028-02-29 00:00:00 UTC
     walk = [(leap_day, "Position", 10.0, -20.0), (leap_day + 5, "Position", 15.0, -20.0)]
@@ -455,6 +463,42 @@ def test_counts_are_reconciled_with_the_profiler_metric_of_the_same_meaning(buil
     assert differences_from_profile(report, profile) == ["cleaning.rows_after_cleaning: profiler 24, build 23"]
 
 
+def test_each_count_is_reconciled_with_the_profiler_metric_that_measures_it():
+    report = {
+        "rows_in": 1,
+        "removed": {
+            "spare_copy_of_journey": 2,
+            "second_half_of_file_written_twice": 3,
+            "kill_mirroring_killed": 4,
+            "movement_after_death": 5,
+        },
+        "rows_out": 6,
+        "journeys": {"total": 7, "human": 8, "anonymous": 9, "bot": 10},
+        "matches": 11,
+        "match_span_seconds": {"median": 12.5, "max": 13},
+        "matches_by_day": {"February_10": 14},
+        "rows_out_by_event": {event: 100 + code for event, code in CODE.items()},
+        "events_of_human_journeys": {event: 200 + code for event, code in CODE.items()},
+        "events_of_bot_journeys": {event: 300 + code for event, code in CODE.items()},
+    }
+    counts = counts_to_reconcile(report)
+    cleaning = {key: count for (topic, key), count in counts.items() if topic == "cleaning"}
+    assert counts["files_schema", "rows_total"] == 1
+    assert counts["actors_events", "files_numeric_with_Position"] == 9
+    assert counts["matches_quality", "distinct_matches"] == 11
+    assert [cleaning[f"rows_removed_{rule}"] for rule in ("spare_copy_of_journey", "second_half_of_file_written_twice")] == [2, 3]
+    assert [cleaning[f"rows_removed_{rule}"] for rule in ("Kill_mirroring_Killed", "movement_after_death")] == [4, 5]
+    assert [cleaning[f"{key}_after_cleaning"] for key in ("rows", "journeys")] == [6, 7]
+    assert [cleaning[f"journeys_after_cleaning_{movement}"] for movement in ("Position", "BotPosition")] == [8, 10]
+    assert [cleaning[f"match_span_{which}_after_cleaning"] for which in ("median", "max")] == [12.5, 13]
+    assert cleaning["matches_after_cleaning_in_February_10"] == 14
+    assert [cleaning[f"rows_after_cleaning_{event}"] for event in EVENTS] == [100, 101, 102, 103, 104, 105, 106, 107]
+    per_actor = ("BotKill", "BotKilled", "Killed", "KilledByStorm", "Loot")
+    assert [cleaning[f"rows_after_cleaning_human_{event}"] for event in per_actor] == [204, 205, 203, 206, 207]
+    assert [cleaning[f"rows_after_cleaning_bot_{event}"] for event in per_actor] == [304, 305, 303, 306, 307]
+    assert len(counts) == 3 + 10 + 1 + 8 + 10
+
+
 def run_main(monkeypatch, tmp_path, raw, profile):
     folders = ["--raw", str(raw), "--out", str(tmp_path / "out"), "--fixtures", str(tmp_path / "fixtures")]
     monkeypatch.setattr(sys, "argv", ["build_data", *folders, "--profile", str(profile)])
@@ -481,6 +525,16 @@ def test_main_reports_a_missing_data_folder_without_a_traceback(tmp_path, monkey
     with pytest.raises(SystemExit) as stopped:
         run_main(monkeypatch, tmp_path, tmp_path / "nowhere", profile_file(tmp_path))
     assert str(stopped.value.code).startswith("build failed, nothing was written: No telemetry files found")
+
+
+def test_main_cuts_every_full_id_out_of_the_message_it_prints(tmp_path, monkeypatch):
+    def failing(*folders):
+        raise ValueError(f"something is wrong with {HUMAN}_{MATCH}")
+
+    monkeypatch.setattr(build_data, "build", failing)
+    with pytest.raises(SystemExit) as stopped:
+        run_main(monkeypatch, tmp_path, tmp_path, tmp_path)
+    assert str(stopped.value.code) == "build failed, nothing was written: something is wrong with 1a2b3c4d_aaaaaaaa.nakama-0"
 
 
 def test_build_refuses_to_write_a_full_id(tmp_path, monkeypatch):
@@ -544,6 +598,11 @@ def two_rows_off_the_map():
     return rows_of("February_10", OTHER_HUMAN, MATCH, [(0, "Position", 9999.0, 0.0), (5, "Position", 8888.0, 0.0)])
 
 
+def two_files_filed_two_days_late():
+    human = rows_of("February_12", OTHER_HUMAN, OTHER_MATCH, [(0, "Position")])
+    return frame(human, rows_of("February_12", "1444", OTHER_MATCH, [(5, "BotPosition")]))
+
+
 def same_date_in_two_folders():
     on_the_9th = on_day(9, OTHER_HUMAN, OTHER_MATCH, [(0, "Position")])
     return frame(on_the_9th, on_the_9th.assign(day="February_09", file=f"February_09/{OTHER_HUMAN}_{OTHER_MATCH}"))
@@ -597,6 +656,7 @@ def two_ids_in_one_file():
             "e.g. February_9/9f8e7d6c_bbbbbbbb.nakama-0 \\(last row 2026-02-10\\)",
         ),
         (same_date_in_two_folders(), "several day folders stand for one date: {'February_09': '2026-02-09', 'February_9': '2026-02-09',"),
+        (two_files_filed_two_days_late(), "2 files hold rows that are not from their day folder's .* e.g. February_12/1444_bbbbbbbb"),
         (rows_of("unsorted", OTHER_HUMAN, OTHER_MATCH, [(0, "Position")]), "not day folders such as February_10: \\['unsorted'\\]"),
         (in_milliseconds(), "which is not Unix seconds"),
         (
@@ -658,6 +718,7 @@ def test_main_reports_a_file_it_may_not_open_without_a_traceback_and_without_its
     [
         ("not json at all", "profile_report.json is not a profile report: Expecting value"),
         ("[1, 2]", "profile_report.json is not a profile report: it has no metrics"),
+        ('{"readme_check": []}', "profile_report.json is not a profile report: it has no metrics"),
     ],
 )
 def test_main_names_a_profile_file_that_is_not_a_profile_report(tmp_path, monkeypatch, content, message):
