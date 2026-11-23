@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { countLabel, counted, dayLabel } from "../lib/labels.ts";
 import { matchesWithFates, onChosenDays } from "../lib/filters.ts";
 import type { Manifest, MapEntry } from "../lib/manifest.ts";
-import { findMatches, journeysIn, matchesOfMap } from "../lib/matches.ts";
+import { findMatches, journeysIn, matchesOfMap, noMatchNote } from "../lib/matches.ts";
 import { selectMatchId } from "../state/shown.ts";
 import { useAppStore } from "../state/store.ts";
 import { moveInList } from "./listKeys.ts";
@@ -14,7 +14,8 @@ const ROW =
 /**
  * The matches of the open map that the filters leave, busiest first. "All matches" shows them together; choosing one opens
  * it alone, and choosing it again goes back. The box narrows the list to the ids that contain what
- * was typed. The list is one stop for the Tab key; the arrow keys move inside it.
+ * was typed. The list is one stop for the Tab key; the arrow keys move inside it. An empty list says
+ * why, in a status element that is always on the page, so that it is announced when it gets its text.
  */
 export function MatchList({ manifest, map }: { manifest: Manifest; map: MapEntry }) {
   const matchId = useAppStore(selectMatchId);
@@ -45,7 +46,7 @@ export function MatchList({ manifest, map }: { manifest: Manifest; map: MapEntry
           }}
           className={`${ROW} mt-2 -mx-2 w-[calc(100%+1rem)] text-[13px]`}
         >
-          All {countLabel(matches.length)} matches
+          All matches ({countLabel(matches.length)})
         </button>
         <input
           type="search"
@@ -59,11 +60,10 @@ export function MatchList({ manifest, map }: { manifest: Manifest; map: MapEntry
           className="mt-2 h-8 w-full rounded-md border border-border bg-surface-2 px-2.5 font-mono text-xs text-text placeholder:font-sans placeholder:text-text-muted focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-accent"
         />
       </div>
-      {found.length === 0 ? (
-        <p role="status" className="px-4 py-2 text-xs text-text-muted">
-          No match id contains “{typed.trim()}”.
-        </p>
-      ) : (
+      <p role="status" className={found.length === 0 ? "px-4 py-2 text-xs text-text-muted" : "sr-only"}>
+        {found.length === 0 && noMatchNote(map.name, matches.length, typed)}
+      </p>
+      {found.length > 0 && (
         <ul onKeyDown={moveInList} className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
           {found.map((match) => (
             <li key={match.id}>

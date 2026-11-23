@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { manifest } from "../testing/committed.ts";
 import { LAYER_LABELS, clock, countLabel, counted, dayLabel, fateLabel, markerTitle, whoLabel } from "./labels.ts";
-import { findMatches, journeysIn, matchesOfMap } from "./matches.ts";
+import { findMatches, journeysIn, matchesOfMap, noMatchNote } from "./matches.ts";
 import { LAYER_KEYS, MARKER_KINDS } from "./drawList.ts";
 import { MARKER_SHAPES, shapePath } from "./markerShapes.ts";
 
@@ -98,6 +98,12 @@ describe("the match list of a map", () => {
     expect(some.every((match) => match.id.includes("a47"))).toBe(true);
     expect(findMatches(matches, "")).toHaveLength(566);
     expect(findMatches(matches, "no such id")).toEqual([]);
+  });
+
+  it("says why it is empty: the filters left nothing to search, or nothing left has the typed id", () => {
+    expect(noMatchNote("Lockdown", 0, "")).toBe("No match on Lockdown passes the filters.");
+    expect(noMatchNote("Lockdown", 0, "fbbc")).toBe("No match on Lockdown passes the filters.");
+    expect(noMatchNote("Lockdown", 171, " zz ")).toBe("No match id contains “zz”.");
   });
 });
 

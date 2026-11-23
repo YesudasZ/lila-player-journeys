@@ -16,3 +16,11 @@ export function findMatches(matches: readonly MatchEntry[], typed: string): Matc
   const wanted = typed.trim().toLowerCase();
   return wanted === "" ? [...matches] : matches.filter((match) => match.id.toLowerCase().includes(wanted));
 }
+
+/**
+ * Why the match list is empty. The filters left no match of the map, so there was nothing to search;
+ * or `left` matches are there and none has an id that contains what was typed.
+ */
+export function noMatchNote(mapName: string, left: number, typed: string): string {
+  return left === 0 ? `No match on ${mapName} passes the filters.` : `No match id contains “${typed.trim()}”.`;
+}
