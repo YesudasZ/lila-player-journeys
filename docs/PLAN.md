@@ -69,20 +69,72 @@ Storm deaths are markers only: 39 points, 5 on Grand Rift, are not a heatmap.
 
 ## Phase 3: App shell and map canvas (1.5 h)
 
-**Goal:** the three minimaps on a pan and zoom canvas, hosted.
+**Goal:** the three minimaps on a pan and zoom canvas, hosted. The detailed plan below was approved on 23 Nov 2026; it is built on the branch `phase-3-app-shell`.
 
 **Deliverables**
-- Vite + React + TypeScript (strict) + Tailwind v4 + Zustand + ESLint + Vitest in `web/`. Versions confirmed with `npm view` first; nothing installed without asking.
-- Theme tokens from CLAUDE.md. Only what works ships: top bar with map tabs, and the canvas. The sidebar arrives in Phase 5 and the timeline in Phase 6.
-- `MapCanvas`: device-pixel-ratio aware, fit to screen, wheel zoom, drag pan, double-click reset.
+- Vite + React + TypeScript (strict) + Tailwind v4 + Zustand + ESLint + Vitest in `web/`, with the exact versions of the table below. Nothing else is installed without asking.
+- Theme tokens from CLAUDE.md. Only what works ships: top bar with map tabs, and the map. The sidebar arrives in Phase 5 and the timeline in Phase 6.
+- The map: device-pixel-ratio aware, the artwork fitted to the window, wheel zoom at the cursor, drag pan, double-click zoom in, Fit button.
 - `web/src/lib/projection.ts`: `uvToPixel` and its inverse, the only projection code in the app.
 - Should 4: world coordinates under the cursor, and a scale bar.
-- `npm run check` = tsc + eslint + vitest, added to CI.
+- Pipeline: the box of the artwork inside each minimap (`minimap.artwork` in the manifest), found with the flood fill the mapping proof already uses.
+- `npm run check` = tsc + eslint + vitest, added to CI as a second job together with `npm run build`.
 - **Step 9.1, first deployment** (see Phase 9).
+
+**Packages** (read from npm on 23 Nov, all pinned exactly)
+
+| Runs in the browser | Version | Development only | Version |
+|---|---|---|---|
+| react, react-dom | 19.3.1 | vite | 8.3.8 |
+| zustand | 5.1.0 | @vitejs/plugin-react | 6.3.0 |
+| @fontsource-variable/inter | 5.3.0 | typescript | 6.0.3 |
+| @fontsource-variable/space-grotesk | 5.3.0 | tailwindcss, @tailwindcss/vite | 4.3.5 |
+| @fontsource-variable/jetbrains-mono | 5.3.0 | vitest | 5.1.1 |
+| | | eslint, @eslint/js | 10.15.0, 10.0.1 |
+| | | typescript-eslint | 8.73.0 |
+| | | eslint-plugin-react-hooks, eslint-plugin-react-refresh | 7.1.1, 0.5.8 |
+| | | globals | 17.14.0 |
+| | | @types/react, @types/react-dom, @types/node | 19.3.0, 19.3.0, 22.20.5 |
+
+TypeScript is 6.0.3, not the newest 7.0.2: typescript-eslint 8.73 accepts TypeScript below 6.1 only (your choice on 23 Nov: ESLint with TypeScript 6.0). Fonts are bundled, so the page makes no third-party request.
+
+**Files**
+
+```
+web/src/lib/         projection.ts, view.ts, scaleBar.ts, manifest.ts: pure functions, each with a Vitest file beside it
+web/src/state/       store.ts: manifest load state, selected map, one view per map (Zustand)
+web/src/data/        fetch of the manifest, loading of a minimap image
+web/src/components/  TopBar, MapTabs, MapView with useCanvasLayer, MapReadout, ZoomControls, StatusMessage
+```
+
+**The screen**
+
+- Page grid, fixed now so later phases slot in without moving the map: columns `320px | 1fr`, rows `48px | 1fr | auto`. In Phase 3 the map cell spans both columns. The sidebar (Phase 5) takes column 1 and the timeline (Phase 6) row 3; both are grid tracks, never overlays.
+- Top bar, 48 px, on `surface` with a `border` line below. Brand cell 320 px wide: "LILA BLACK" (Space Grotesk 600, 15 px, letter-spacing 0.08em) and "Player Journeys" (Inter 13 px, `text-muted`). The tabs start at x = 320.
+- Tabs: the three map names from the manifest, Inter 500 14 px. Rest: label `text-muted`. Hover: label `text` on a `surface-2` pill. Selected: label `text` and a 2 px `accent` line. Focus: 2 px `accent` outline. Left and Right move and wrap, Home and End jump; selection follows focus. No match count yet: it arrives with the match list in Phase 5.
+- Map cell on `bg`. The image is drawn with the `lighten` blend, so its pure black surround becomes exactly `bg` and no square edge shows. Cursor: crosshair, and a closed hand while dragging. The focus ring is drawn inside the cell: 2 px `accent` with 2 px `bg` inside it.
+- Bottom left, 16 px in: a fixed panel (216 by 54, `surface`, `border`, radius 6, JetBrains Mono 12 px) that the pointer passes through. Row 1: `x  123  z  −57` in whole world units, `—` when the pointer is off the image. Row 2: the scale bar and its label, for example `100 units`. The bar is the largest of 1, 2 or 5 times a power of ten that is at most 120 px long.
+- Bottom right, 16 px in: zoom in over zoom out, then `Fit`; each 32 by 32. Tooltips: `Zoom in (+)`, `Zoom out (−)`, `Fit map to window (0)`. At a zoom limit the button is marked unavailable but stays focusable.
+- Centre of the cell: loading and error states. `Loading maps…`, `Loading Grand Rift…` (shown only after 250 ms). `The maps did not load` or `Grand Rift did not load`, then `Check your connection and try again.` and a `Try again` button. No spinner, no skeleton, no toast.
+- Page title: `Ambrose Valley · LILA BLACK Player Journeys`.
+
+Contrast of the tokens used (WCAG): `text` 16.25 and `text-muted` 6.73 on `surface`; `text-muted` 7.16 on `bg`; `accent` 4.60 on `surface` and 4.90 on `bg`. `border` is 1.4 on `bg`: decoration only, no control depends on it.
+
+**How the map view works**
+
+- A view is the image point at the centre of the viewport plus a zoom relative to "fit" (1 = the artwork fits with 24 px free on every side). It does not depend on the window size: a resize keeps the framing, and Phase 5 can put the view into the URL.
+- Wheel: zoom by `exp(-deltaY * 0.0015)` about the pointer, `0.01` for a trackpad pinch (wheel with ctrl). The listener is native and not passive, so the page neither scrolls nor zooms. Double-click: zoom in by 2 about the pointer. Buttons and `+` `-`: by 1.5 about the centre. Arrows: 64 px. `0` and Fit: back to fit. Keys act only without Ctrl, Cmd or Alt. A drag starts after 3 px.
+- Zoom runs from fit to 4 screen pixels per image pixel. The centre of the viewport is kept inside the artwork box, so the map cannot be lost.
+- The canvas is sized in device pixels and resized when the window moves to another screen. Layers are stacked canvases sharing one view; Phase 3 has one, the minimap.
+- Pan and zoom cause no React render: the canvas listens to the store, and the coordinates are written straight into the page.
+- Loading order: the manifest, the image of the open map (decoded before its first draw), then the other two. Each map remembers its view.
+- Accessibility: `header` with the `h1` and the tab list; `main` with one tab panel; the map is focusable, named after its map, with its keys described; the coordinates are not announced; loading is a status, an error an alert.
 
 **Acceptance**
 - From the integer codes of every point of `projection.json`, `uvToPixel` gives the fixture's pixel to within 0.5 px, including on the non-square 2048×2046 image (the shipped Grand Rift minimap); pixel to world and back returns the same point to within 0.01 world units.
-- Each minimap is drawn at the aspect ratio recorded in the manifest (unit test on the layout function).
+- Each minimap is drawn at the aspect ratio recorded in the manifest, and the artwork box is centred in the viewport (unit tests on the fit function, on a wide, a tall and a square viewport).
+- Zooming keeps the point under the cursor in place; the viewport centre never leaves the artwork box (unit tests).
+- The three artwork boxes are pinned in `pipeline/tests/test_committed_data.py`; `make overlay` leaves the proof images unchanged.
 - `npm run check` green and CI green on the pull request; after the merge and step 9.1, no console errors on the hosted URL.
 
 **Verify locally:** `cd web && npm run check && npm run dev`; hover over a road and read the coordinates.
@@ -112,7 +164,7 @@ Storm deaths are markers only: 39 points, 5 on Grand Rift, are not a heatmap.
 
 **Deliverables**
 - Sidebar: day chips (multi-select, labelled as UTC days, "partial" on 14 Feb), match list sorted busiest first with a "has bots" flag, single-match or all-matches mode, toggles for humans, bots and each event type. Should 3: fate filter.
-- "N matches, M journeys" on every aggregated view.
+- "N matches, M journeys" on every aggregated view. Each map tab gains the number of matches the day filter leaves.
 - State in a Zustand store synced with the URL: `map`, `days`, `match`, `journey` (the focused journey's id), `mode`, `show`, `fate`, and the viewport. Phase 6 adds `t`, Phase 7 adds `heat`. A "copy link" button. Designed empty states.
 - First visit lands on Ambrose Valley, all matches, traffic heatmap (from Phase 7).
 
@@ -245,4 +297,6 @@ Three independent reviewers checked Phase 2 (recomputation from the raw files, m
 | A match with files in two day folders stops the build | It is filed under the later folder | A match can end around midnight. After cleaning there is none in this data |
 | CI runs `make test` | CI runs pytest directly | Same tests; no virtual environment needed on the runner |
 | URL state without a journey | `journey` joins the URL state | Focusing a journey is a view worth sharing |
+| Phase 3: double-click resets the view | Double-click zooms in at the pointer; the Fit button and `0` reset | Approved with the Phase 3 plan on 23 Nov. It is what web maps do, an accidental double-click should not lose the place, and Phase 4 puts click-to-focus on the same surface |
+| Phase 3: the map is fitted to the screen | The artwork inside the image is fitted; the pipeline writes its box into the manifest | Approved with the Phase 3 plan. The artwork fills only part of each image: fitting it draws the maps 10%, 46% and 16% larger |
 | Every commit pushed to `main` | From Phase 3: one branch and one pull request per phase, merged by you after review; Vercel production follows `main` | Your decision on 23 Nov. Once the site is hosted, `main` is what the reviewers see, so it should hold reviewed work only |
