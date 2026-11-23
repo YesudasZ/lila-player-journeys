@@ -96,6 +96,16 @@ describe("the clock of playback", () => {
     expect(clock().time).toBeCloseTo(6.5, 10);
   });
 
+  it("runs one clock, however often Play is asked for", async () => {
+    await open("?match=fbbc5d02");
+    play();
+    play();
+    expect(frames.length).toBe(1);
+    frame(16);
+    frame(100);
+    expect(clock().time).toBeCloseTo(1, 10); // 100 ms at 10x, counted once
+  });
+
   it("counts at most 100 ms for a frame that comes late", async () => {
     await open("?match=fbbc5d02");
     play();
@@ -139,6 +149,8 @@ describe("the clock of playback", () => {
     play();
     frame(16);
     frame(50);
+    listeners.get("visibilitychange")?.(); // something else changed while the tab is still shown: nothing to stop for
+    expect(clock().playing).toBe(true);
     page.hidden = true;
     listeners.get("visibilitychange")?.();
     expect([clock().playing, clock().time, frames.length]).toEqual([false, 0.5, 0]);

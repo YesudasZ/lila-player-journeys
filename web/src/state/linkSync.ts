@@ -41,7 +41,7 @@ export function startLinkSync(): () => void {
   };
   const stopApp = useAppStore.subscribe(later);
   const stopClock = playback.subscribe((state) => {
-    if (!state.playing) later();
+    if (!state.playing) later(); // while it plays, nothing would be written: no need to ask sixty times a second
   });
   return () => {
     stopApp();
