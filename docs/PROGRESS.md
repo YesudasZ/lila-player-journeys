@@ -1,12 +1,12 @@
 # Progress Log
 
-Last updated: 2026-11-23 20:37 IST
+Last updated: 2026-11-23 22:02 IST
 
 ## Current phase
 
-Step 9.1, the first deployment (the end of Phase 3). Status: **DONE (awaiting my review)** in pull request [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2), from the branch `chore-first-deployment`. The tool is live at https://lila-player-journeys-psi.vercel.app.
+Phase 4, Journeys, humans versus bots, markers. Status: **IN PROGRESS** on the branch `phase-4-journeys` (planning; no pull request yet).
 
-Phase 3 itself is merged: the user reviewed pull request [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) and merged it on 23 Nov. All three CI checks passed on the pull request, and the checks pass on `main` locally.
+Phases 1 to 3 and step 9.1 are merged: pull requests [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) (Phase 3) and [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) (step 9.1) were reviewed and merged by the user on 23 Nov. The tool is live at https://lila-player-journeys-psi.vercel.app; production on Vercel follows `main`.
 
 Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 
@@ -17,12 +17,12 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 | 1 | Data discovery and repo setup | APPROVED | `bc63f0e` |
 | 2 | Pipeline | APPROVED | `ccc2369` |
 | 3 | App shell and map canvas (ends with the first deployment, step 9.1) | APPROVED (merged and hosted) | pull request [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) |
-| 4 | Journeys, humans versus bots, markers | NOT STARTED | |
+| 4 | Journeys, humans versus bots, markers | IN PROGRESS | branch `phase-4-journeys` |
 | 5 | Filters and URL state | NOT STARTED | |
 | 6 | Timeline and playback | NOT STARTED | |
 | 7 | Heatmaps | NOT STARTED | |
 | 8 | Polish | NOT STARTED | |
-| 9 | Deployment (9.1 after Phase 3, 9.2 on the last day) | 9.1 DONE (awaiting my review); 9.2 on the last day | pull request [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) |
+| 9 | Deployment (9.1 after Phase 3, 9.2 on the last day) | 9.1 APPROVED (merged); 9.2 on the last day | pull request [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) |
 | 10 | Insights and docs | NOT STARTED | |
 | 11 | Final QA | NOT STARTED | |
 
@@ -30,20 +30,16 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 
 ## Current phase task list
 
-Step 9.1 is described in PLAN.md, "Phase 9". The task lists of Phases 2 and 3 are in the history of this file (`git log -p docs/PROGRESS.md`).
+Phase 4 deliverables and acceptance criteria are in PLAN.md, "Phase 4". The task lists of Phases 2 and 3 and of step 9.1 are in the history of this file (`git log -p docs/PROGRESS.md`).
 
-- [x] 9.1.0 Pull request #1 merged by the user; `main` pulled (`884e78e`). `main` holds exactly the reviewed branch: the same tree as the branch's last commit `b972d7d`. On `main`: `npm run check` (196 tests), `npm run build` and `make test` (237 tests) pass
-- [x] 9.1.1 The Vercel project exists and production follows `main`. The user created it on 23 Nov in their own browser, under their personal Vercel account: Vercel offered the whole repo as a multi-service project, and the user imported the `web` folder as a single project with the Vite preset. Vercel's connector could not be used for this (it has no grant for the user's team). Live at https://lila-player-journeys-psi.vercel.app
-- [x] 9.1.2 Hosted site checked at 20:34 as an outside visitor (the preview pane is not signed in to Vercel), at 1280 x 800: all three maps are drawn, the coordinates and the scale bar show, wheel zoom and Fit work. 10 requests, all to the site's own address, none failed. The manifest (796 matches, 88,617 rows), the three minimaps and the three journey bundles answer 200 with the right content type. The console is empty. This closes the last open acceptance line of Phase 3
-- [x] 9.1.3 The URL is at the top of the README and in PLAN.md (Phase 9) and BRIEF.md. The repo's About website is set to it
-- [x] 9.1.4 Pushed and pull request #2 opened with the user's yes (23 Nov, 20:37); recorded here
+- [x] 4.0 The user's go for Phase 4, in this session (23 Nov). Branch `phase-4-journeys` cut from `main` at `83d973c`. This file corrected: step 9.1 is merged as pull request #2
+- [ ] 4.1 Plan Phase 4 in plan mode and get the plan approved. The steps after this one come from the approved plan
 
 ## Exactly where I stopped
 
-- Branch `chore-first-deployment`, cut from `main` at `884e78e`, is pushed; pull request #2 into `main` is open. It changes docs only. `main` equals `origin/main`.
-- The tool is live at https://lila-player-journeys-psi.vercel.app and checked (9.1.2).
-- Waiting for the user's review of pull request #2. The user merges it on GitHub; "Rebase and merge" keeps `main` a straight line (open question 6).
-- **NEXT:** nothing until the user has merged. After the merge and the user's go: `git switch main`, `git pull --ff-only`, look at the live site once more (Vercel deploys `main` again), then Phase 4 on a new branch cut from the updated `main`. Start Phase 4 in a fresh session with the resume protocol: this conversation is long, and a long conversation spends the usage window faster.
+- Branch `phase-4-journeys`, cut from `main` at `83d973c`; local only. `main` equals `origin/main`.
+- Nothing of Phase 4 is built yet.
+- **NEXT:** 4.1: read `docs/DATA_FORMAT.md` and PLAN.md's Phase 4, write the plan in plan mode and get the user's approval. Then build as the plan says, with small commits.
 
 ## Decisions and assumptions made
 
@@ -102,6 +98,10 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 - The branch for step 9.1 was cut right after the merge without a separate go, so that this file can record the merge without a commit on `main` (assumption, told to the user).
 - The merged branch `phase-3-app-shell` still exists locally and on GitHub. It is deleted only on the user's word.
 
+2026-11-23, after step 9.1:
+- Pull request #2 was merged with a merge commit as well; `main` is at `83d973c`. Open question 6 stands.
+- The user chose to do Phase 4 in the same session rather than in a fresh one ("Do this task here").
+
 ## Open questions for the user
 
 1. Should `docs/PROGRESS.md`, `CLAUDE.md` and `.claude/` stay in the repo at submission? They show how the work was run with Claude Code, which the brief allows; they are also working notes in a public repo.
@@ -131,7 +131,7 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 - CI: all three checks passed on pull request #1, the app job and the `@v7` actions included. The run on `main` after the merge has not been read.
 - Screenshots for pull requests and for the walkthrough: the preview pane's screenshots are not files the repo can hold. Phase 10 needs a way to write them (Playwright, a development dependency: ask first).
 - The preview pane of this session reads `~/YesudasZ/.claude/launch.json`, where the entry `lila-web` (port 5183) was added. `.claude/launch.json` in this repo (entry `web`, port 5173) is for sessions started in this folder. Vite reloads the page when a file under `web/public/` changes, so a failure test that moves a data file away cannot show the retry working; set the failure in the app's own store instead.
-- Usage: the 5-hour limit was reached on 23 Nov shortly before 17:00 IST while three planning agents ran next to a long conversation, and the two-agent review of Phase 3 took about 40% of a window. Keep agent use low, and prefer a fresh session per phase, started with the resume protocol.
+- Usage: the 5-hour limit was reached on 23 Nov shortly before 17:00 IST while three planning agents ran next to a long conversation, and the two-agent review of Phase 3 took about 40% of a window. Keep agent use low, and prefer a fresh session per phase, started with the resume protocol. The limit was reached again at 22:00 IST the same day, at the very end of step 9.1, in a conversation that had grown long; nothing was lost.
 - One of the reviewers' one-line faults is still not noticed by a test: removing the guard in `scaleBar` for `Math.log10` landing just under a whole number. No input reaches it in this JavaScript engine.
 - GitHub's "Contributors" box still showed two contributors on 2026-11-23 10:45 IST, about 11 hours after the rewrite was pushed; GitHub's API lists one. The user chose to wait. Recheck before submission (also a Phase 11 check). Fallbacks: recreate the repo, or GitHub Support.
 - `ARCHITECTURE.md` is a first draft of about 1,000 words. It has to fit one printed page by Phase 10: trim it then.
