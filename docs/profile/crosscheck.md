@@ -17,7 +17,7 @@ Five agents each received the definitions of one topic's metrics, without the va
 | coordinates | pyarrow | 43 | 0 |
 | **Total** | | **175** | **0** |
 
-The profiler has since grown to 231 metrics. The 56 newer ones were not part of this run. The cleaning counts among them (88, 190, 173 + 33, 1,227, 1,175) were measured independently by the cleaning skeptic below and agree.
+The profiler has since grown to 235 metrics. The 60 newer ones were not part of this run. The cleaning counts among them (88, 190, 173 + 33, 1,227, 1,175) were measured independently by the cleaning skeptic below and agree.
 
 Earlier, a plan reviewer decoded all 1,243 files with its own Parquet reader written against the standard library, a third implementation, and reported the same headline numbers (782 / 444 / 17 files by id kind and movement event, 1,505 and 1,420 duplicate rows, 88,826 rows after the first two cleaning rules).
 
@@ -61,3 +61,18 @@ Three more agents reviewed the Phase 1 documents with no access to the reasoning
 | Brief | `BRIEF.md` against the 6-page PDF | 2 should-fix, 5 nits; no requirement missing; no hidden or AI-directed text in the PDF | Applied |
 | Evidence | every number in `DATA_NOTES.md`, `CLAUDE.md`, `PLAN.md` against the profile report | 11 should-fix, 4 nits: statements without a source, claims wider than their number, two outright errors | Applied; missing numbers added to the profiler |
 | Plan | `PLAN.md` as a studio reviewer would read it | 6 blockers, 22 should-fix, 6 nits: acceptance criteria that could not be checked, hosting and all documents left to the last two days | Applied in the revised plan |
+
+## 6. Phase 2: the pipeline, checked twice
+
+On 23 Nov 2026 three agents reviewed the finished pipeline. After the fixes two more checked the fixes on a frozen copy of the code. Their scripts are not in this repo; what they found is now held by the tests in `pipeline/tests/`.
+
+| Check | What was done | Result |
+|---|---|---|
+| Recomputation, before the fixes | All 1,242 journeys and 796 match entries recomputed from the raw files with pyarrow and plain Python, without the pipeline's code | No difference. 14 findings on unexpected input and on definitions |
+| Mutation testing, first run | 117 single changes to the code, run against the 78 tests of the time | 44 survived: gaps in the tests |
+| Reading as the app's developer | The data files checked against what Phases 3 to 7 need; the code read as a strict reviewer | 26 findings, among them: bots' kills counted nowhere, no id per journey, files written before the checks ran |
+| Recomputation, after the fixes | The same, with the new fields: 11 fields of 1,242 journeys (88,617 rows) and 15 fields of 796 match entries | No difference. A control with 9 damaged values was reported 9 of 9 |
+| Attack | 129 builds on small odd inputs: the 38 that used to fail or pass wrongly, and 91 new ones (a file written four times, folders named differently, ids in capitals) | 3 should-fix and 8 nits, fixed |
+| Mutation testing, second run | 347 single changes, run against the 149 tests of the time | 61 gaps and 10 changes that no input can tell apart; 31 tests added |
+
+The decisions that changed are listed in the last section of [PLAN.md](../PLAN.md); the data files are described in [DATA_FORMAT.md](../DATA_FORMAT.md).

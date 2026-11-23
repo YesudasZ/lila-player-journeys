@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-23 11:45 IST
+Last updated: 2026-11-23 13:12 IST
 
 ## Current phase
 
@@ -45,17 +45,20 @@ Phase 2 deliverables and acceptance numbers are in PLAN.md, "Phase 2".
   - [x] c. The build writes nothing until the leak, size and profile checks have passed. `pipeline/tests/test_committed_data.py` reads the committed files and holds the accepted numbers as literals, so the check no longer depends on the profiler alone. The profiler gained 4 metrics on the span after cleaning (380 median, 887 max, 162 matches shorter by at most 5 s)
   - [x] d. Tests for every gap the mutation run found (storm deaths, positions in rules 1 to 3, rule order, manifest and report fields, raw-data checks, the full-id and size guards, minimap downscaling, fixture points): 149 tests in all. A second mutation run in 2.9f has to confirm them
   - [x] e. Documents brought in line: CLAUDE.md (layout, commands, data facts, loot default), README, ARCHITECTURE.md, DATA_NOTES.md (span after cleaning, path points, fate names, what the build now checks), PLAN.md (changed lines listed in its last section, for the user's review), BRIEF.md. Makefile creates `.venv` on first use, checks the Python version and has `make help`. CI token limited to read. No line over 140 characters outside the profiler; the overlay script uses the shared event groups (`make overlay` output unchanged)
-  - [ ] f. Running since about 11:40 IST as background workflow `phase2-fixes-verify` (3 agents): the profiler is being restructured (its output must stay byte-identical); two agents re-check the fixes on a frozen copy of commit `36ce717` (recomputation from the raw files with attack inputs, and a second mutation run). Results not in yet
+  - [x] f. Workflow `phase2-fixes-verify` reported at 13:01 IST (result in `.local/phase2-fixes-verify-result.raw`):
+    - The profiler is now `pipeline/profile/` (14 modules, longest function 40 lines) behind the unchanged command `pipeline/profile_data.py`; `make profile` output is byte-identical; 15 tests. Commit `fa27d45`
+    - Recomputation without the pipeline's code: 0 differences on 11 fields of 1,242 journeys and 15 fields of 796 matches. 129 builds on odd inputs: 3 should-fix and 8 nits, all fixed (a bot file under an account id, unreadable-file and profile-file messages, stray entries in the data folder, files filed under the wrong day, two wrong sentences in DATA_FORMAT.md)
+    - Second mutation run: 347 mutants against 149 tests, 61 gaps, 10 equivalent. Its 31 proposed tests are in, adapted. A test holds the 140-character line limit. 224 tests. Commit `2e28c2d`
+  - [ ] g. Final mutation run: the same 347 mutants against the finished code, started 13:09 IST in the background (`scratchpad/verify2/mutation/rerun_final.py`, see `.local/session-pointers.md`); result not in yet
 - [ ] 2.10 Phase-end checks; status to "DONE (awaiting my review)"; stop
 
 ## Exactly where I stopped
 
-- Last completed: 2.9a to 2.9e, committed. `make test` passes (149 tests); `make data`, `make profile` and `make overlay` pass and leave the committed files unchanged.
-- In flight: 2.9f, the background workflow `phase2-fixes-verify`. One of its agents edits `pipeline/profile_data.py` (and may add `pipeline/profile/` and `pipeline/tests/test_profile_data.py`) in this working tree: uncommitted changes to those files are its work in progress. Do not edit those files until it reports. `.local/session-pointers.md` says where its result will be.
-- When it reports: check that `make profile` leaves `docs/profile/` unchanged, read its diff, run `make test`, commit as `phase-2: profiler split into small modules`. Save the result to `.local/phase2-fixes-verify-result.raw`, reproduce each finding of the two checking agents, fix what holds.
-- Then add a test that no tracked Python file has a line over 140 characters (it would fail today on the profiler).
+- Last completed: 2.9a to 2.9f, committed (last code commit `2e28c2d`). `make test` (224 tests), `make data`, `make profile` and `make overlay` pass and leave the committed files unchanged.
+- In flight: 2.9g, a last mutation run on the finished code. It only reads the project. If its result is lost, re-run it or skip it: the second run already showed its proposed tests kill every non-equivalent mutant.
+- Then 2.10: add the final run's numbers to `docs/profile/crosscheck.md` section 6, set Phase 2 to "DONE (awaiting my review)", commit, ask before pushing (CI on the new commits is part of the acceptance), stop.
 - Nothing is pushed since `2f0d706`. Ask before pushing.
-- **NEXT:** finish 2.9f as above, then 2.10.
+- **NEXT:** read the final mutation result, then 2.10.
 
 ## Decisions and assumptions made
 
@@ -100,7 +103,7 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 |---|---|---|
 | `unzip _inbox/player_data.zip -d data/raw` | restores the raw data | 2026-11-22 |
 | `make setup` | creates `.venv`, installs pinned dependencies | 2026-11-22, in a fresh clone |
-| `make test` | 149 unit tests, no raw data needed | 2026-11-23 11:36 |
+| `make test` | 224 tests, no raw data needed; creates `.venv` on first use | 2026-11-23 11:36 |
 | `make profile` | measures the raw data → `docs/profile/` (235 metrics) | 2026-11-23 11:36 |
 | `make data` | builds `web/public/data/` and the projection fixtures; writes nothing unless every check passes, the profile report included; 3 s | 2026-11-23 11:36 |
 | `make overlay` | proof images → `docs/img/`, about 30 s | 2026-11-22 23:33 |
