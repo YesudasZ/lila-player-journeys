@@ -39,11 +39,15 @@ describe("keys on the map", () => {
     expect(press("0")).toEqual({ kind: "fit" });
   });
 
-  it.each(["Enter", " ", "Tab", "Escape", "a", "1", "Home"])("leaves %j to whatever has the focus", (key) => {
+  it("Esc clears the focus on a journey", () => {
+    expect(press("Escape")).toEqual({ kind: "clear" });
+  });
+
+  it.each(["Enter", " ", "Tab", "a", "1", "Home"])("leaves %j to whatever has the focus", (key) => {
     expect(press(key)).toBeNull();
   });
 
   it.each(["ctrlKey", "metaKey", "altKey"] as const)("leaves a key held with %s to the browser", (modifier) => {
-    for (const key of ["+", "-", "0", "ArrowLeft"]) expect(press(key, { [modifier]: true })).toBeNull();
+    for (const key of ["+", "-", "0", "ArrowLeft", "Escape"]) expect(press(key, { [modifier]: true })).toBeNull();
   });
 });

@@ -1,5 +1,20 @@
 /** Journeys, fates, times and counts as the words and numbers a person reads. Pure. */
+import type { LayerKey, MarkerKind } from "./drawList.ts";
 import type { Journey } from "./journeys.ts";
+
+/** The legend's name of each thing that is drawn. */
+export const LAYER_LABELS: Record<LayerKey, string> = { humans: "Humans", bots: "Bots", kill: "Kills", death: "Deaths", storm_death: "Storm deaths", loot: "Loot" };
+
+const EVENT_NAMES: Record<MarkerKind, string> = { kill: "Kill", death: "Death", storm_death: "Storm death", loot: "Loot" };
+
+/**
+ * What a marker stands for: "Kill", "Loot × 3", "Death: killed by bot". A death in combat says how,
+ * from the fate of its journey.
+ */
+export function markerTitle(kind: MarkerKind, count: number, fate: string): string {
+  const name = kind === "death" ? `${EVENT_NAMES.death}: ${fateLabel(fate)}` : EVENT_NAMES[kind];
+  return count > 1 ? `${name} × ${count}` : name;
+}
 
 /** Who a journey belongs to. A bot's number is not an identity: other matches reuse it. */
 export function whoLabel({ actor, player }: Pick<Journey, "actor" | "player">): string {

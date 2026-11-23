@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-import type { MapEntry } from "../lib/manifest.ts";
+import type { Manifest, MapEntry } from "../lib/manifest.ts";
 import { useAppStore } from "../state/store.ts";
 import { focusMapIfFocusWasLost } from "./focusMap.ts";
 import { MAP_PANEL_ID, tabId } from "./tabIds.ts";
@@ -8,7 +8,7 @@ import { MapView } from "./MapView.tsx";
 import { Centred, LoadError, LoadingLine } from "./StatusMessage.tsx";
 
 /** The panel of the open tab: the map once its minimap is there, a status line until then. */
-export function MapPanel({ map }: { map: MapEntry }) {
+export function MapPanel({ map, manifest }: { map: MapEntry; manifest: Manifest }) {
   const minimap = useAppStore((state) => state.minimaps[map.id]);
   const loadMinimap = useAppStore((state) => state.loadMinimap);
 
@@ -20,7 +20,7 @@ export function MapPanel({ map }: { map: MapEntry }) {
   return (
     <div role="tabpanel" id={MAP_PANEL_ID} aria-labelledby={tabId(map.id)} className="h-full">
       {minimap?.status === "ready" ? (
-        <MapView key={map.id} map={map} image={minimap.value} />
+        <MapView key={map.id} map={map} image={minimap.value} manifest={manifest} />
       ) : (
         <Centred>
           {minimap?.status === "error" ? (

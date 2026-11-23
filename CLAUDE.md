@@ -28,7 +28,7 @@ pipeline/     offline data code: dataset.py (loader), clean.py (the four rules),
               verify_overlay.py (mapping proof), tests/
 analysis/     statistics behind INSIGHTS.md (Phase 10)
 web/          the app: src/lib/ (pure functions with their Vitest files), src/state/ (Zustand), src/data/ (loading), src/testing/ (the committed manifest for tests), src/components/
-              (React frame; mapSurface.ts is the plain DOM code that draws and handles input); public/data/ is written by `make data` and committed
+              (React frame; mapSurface.ts is the plain DOM code that handles input and holds the layers of layers/, which draw); public/data/ is written by `make data` and committed
 docs/         PROGRESS.md (status, single source of truth), BRIEF.md, DATA_NOTES.md, DATA_FORMAT.md (the files the app loads), PLAN.md, profile/ (measurements), img/ (mapping proof)
 .claude/      settings.json (permission rules), commands/resume.md
 data/raw/     unzipped player_data (git-ignored)
@@ -122,7 +122,7 @@ Measured unless marked as an assumption (A1 to A8 in DATA_NOTES.md).
 | kill | `#F0E442` | triangle |
 | death | `#D55E00` | cross |
 | storm death | `#CC79A7` | diamond |
-| loot | `#009E73` | small square; on in single-match view, off in all-matches view |
+| loot | `#009E73` | small ring (a square could not be told from a bot's square head in greyscale); on in single-match view, off in all-matches view |
 
 Every marker gets a dark outline. Fonts: Space Grotesk (headings), Inter (UI), JetBrains Mono (numbers).
 

@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-23 22:18 IST
+Last updated: 2026-11-23 22:35 IST
 
 ## Current phase
 
@@ -37,17 +37,21 @@ Phase 4 deliverables and acceptance criteria are in PLAN.md, "Phase 4". The task
 - [x] 4.2 lib: `journeys.ts` (types, `parseBundle`: a bundle is checked against the manifest that came with it); `reader.ts` (the field-by-field reader, shared with the manifest; its error is now `DataError`); the elevation decoder back in `projection.ts`
 - [x] 4.3 lib: `drawList.ts`, `pick.ts`, `labels.ts`, `matches.ts`, `markerShapes.ts`. 270 tests. The draw lists of the committed data match the manifest for all 796 matches; 29 one-line faults put into the new modules are all noticed (4 were not at first, and the tests were tightened)
 - [x] 4.4 Store and data: `fetchBundle.ts`; the store holds journeys per map (loaded when a map is first opened), the open match per map, the switches set by hand and the focused journey; `state/shown.ts` gives one draw list per state. 281 tests
-- [ ] 4.5 Map surface: a list of layers, the journeys canvas, hover and click
-- [ ] 4.6 Sidebar (Matches, Journeys, Legend) and the tooltip
-- [ ] 4.7 Preview check on the three named matches; greyscale check; redraw time
+- [x] 4.5 Map surface: a list of layers (`components/layers/`): minimap, journeys, and the ring around what is under the pointer on a canvas of its own, so a moving pointer redraws no journey. Hover (marker within 10 pixels, else path within 6), click to focus, Esc or a click on empty map to clear. Markers are drawn once and stamped
+- [x] 4.6 Sidebar (`Sidebar`, `MatchList`, `JourneyList`, `Legend`, `Samples`) and `MapTooltip`. 285 tests
+- [x] 4.7 Checked in the preview at 1280 x 800 (22:35), no console error:
+  - Legend against the manifest: all of Ambrose Valley 568 humans, 268 bots, 1,789 kills, 487 deaths, 17 storm deaths, 9,902 loot (hidden by default); `fbbc5d02` 2, 14, 5, 8, 0, 7 with 16 journeys listed, one "human (no account id)"; `a476eb57` 1 human, 10 kills, 58 loot; `5a081fe4` 4 kills, 1 storm death, 37 loot, "killed by storm"
+  - Hover on a kill reads "Kill, bot 1440, at 1:28, x 111 z 69, elevation 105"; a click on a path focuses its journey and its row in the list; Esc, a click on empty map and a second press on the row clear; a drag is not a click
+  - Greyscale on `fbbc5d02`: the loot square could not be told from a bot's square head, so loot is now a ring, as PLAN.md provided for
+  - Redraw of the journeys layer, Ambrose Valley, all matches, default switches: 4.7 to 8.8 ms at fit and about 5 ms while panning at zoom 1.5 (target under 16 ms). With loot switched on by hand: 25 ms at fit, 10 to 12 ms at zoom 1.5, 7 to 9 ms at zoom 3.4. `fbbc5d02`: 0.9 ms. Read from the `journeys-draw` user timing; device pixel ratio 2, map area 960 x 752
 - [ ] 4.8 Independent review by two agents with a fixed budget; fixes
 - [ ] 4.9 Docs, phase-end checks; ask once to push the branch and open the pull request; stop
 
 ## Exactly where I stopped
 
 - Branch `phase-4-journeys`, cut from `main` at `83d973c`; local only. `main` equals `origin/main`.
-- Done and committed: 4.2 to 4.4, the pure functions and the store with their tests. Nothing of it is drawn yet.
-- **NEXT:** 4.5 (map layers: the journeys canvas, hover, click), then 4.6 (sidebar and tooltip); `npm run check` and a commit after each.
+- Done and committed: 4.2 to 4.7. Phase 4 is built and checked in the preview; `npm run check` (285 tests), `npm run build` and `make test` (237 tests) pass.
+- **NEXT:** 4.8 (the two-agent review with a fixed budget, then fixes), then 4.9 (PLAN.md and BRIEF.md as built, phase-end checks, ask to push and open the pull request).
 
 ## Decisions and assumptions made
 
@@ -116,6 +120,12 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 - Hover works on markers (10 pixels) and on paths (6 pixels). Click focuses a journey; Esc or a click on empty map clears.
 - A map's journeys are fetched when its tab is first opened.
 - Planned and built without planning agents; one review at the end by two agents with a fixed budget. Ultracode is on in the session; the usage rule decided.
+
+2026-11-23, while building Phase 4:
+- Loot is a small ring, not a small square: in the greyscale check a square could not be told from a bot's square head. The design tokens in CLAUDE.md say so now.
+- While all matches are open, heads and markers are drawn at 70% of their size and lines thinner and half transparent: at full size the 1,772 kill markers of Ambrose Valley hid the paths.
+- Markers are drawn once and stamped, and the ring around the hovered thing has a canvas of its own: with shapes drawn every frame the 8,988 loot markers took 28 ms.
+- In the preview pane the page draws about one frame a second while the pane is hidden, so a test there has to wait more than a second after each event before it reads the page. The app itself reacts on the next frame.
 
 ## Open questions for the user
 

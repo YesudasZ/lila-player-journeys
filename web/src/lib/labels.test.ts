@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import { manifest } from "../testing/committed.ts";
-import { clock, countLabel, counted, dayLabel, fateLabel, whoLabel } from "./labels.ts";
+import { LAYER_LABELS, clock, countLabel, counted, dayLabel, fateLabel, markerTitle, whoLabel } from "./labels.ts";
 import { findMatches, journeysIn, matchesOfMap } from "./matches.ts";
-import { MARKER_KINDS } from "./drawList.ts";
+import { LAYER_KEYS, MARKER_KINDS } from "./drawList.ts";
 import { MARKER_SHAPES, shapePath } from "./markerShapes.ts";
 
 describe("who a journey belongs to", () => {
@@ -26,6 +26,23 @@ describe("a fate in words", () => {
 
   it("reads as words for every fate of the manifest", () => {
     expect(manifest.fates.map(fateLabel)).toEqual(["killed by bot", "killed by player", "killed by storm", "killed", "no death recorded"]);
+  });
+});
+
+describe("what a marker stands for", () => {
+  it("is its event, with the number of rows when it stands for several", () => {
+    expect(markerTitle("kill", 1, "no_death_recorded")).toBe("Kill");
+    expect(markerTitle("loot", 3, "no_death_recorded")).toBe("Loot × 3");
+    expect(markerTitle("storm_death", 1, "killed_by_storm")).toBe("Storm death");
+  });
+
+  it("says how a death in combat came, from the fate of the journey", () => {
+    expect(markerTitle("death", 1, "killed_by_bot")).toBe("Death: killed by bot");
+    expect(markerTitle("death", 1, "killed")).toBe("Death: killed");
+  });
+
+  it("has a legend name for everything that can be shown", () => {
+    expect(LAYER_KEYS.map((layer) => LAYER_LABELS[layer])).toEqual(["Humans", "Bots", "Kills", "Deaths", "Storm deaths", "Loot"]);
   });
 });
 
@@ -95,8 +112,19 @@ describe("the marker shapes", () => {
   });
 
   it("become the path the legend draws", () => {
-    expect(shapePath(MARKER_SHAPES.loot)).toBe("M-3 -3L3 -3L3 3L-3 3Z");
+    expect(shapePath(MARKER_SHAPES.kill)).toBe("M0 -5.5L5.23 4.4L-5.23 4.4Z");
     expect(shapePath(MARKER_SHAPES.death)).toBe("M-4.5 -4.5L4.5 4.5M-4.5 4.5L4.5 -4.5"); // two open strokes
+  });
+
+  it("draw loot as a ring: a line around the centre that closes on itself and is not filled", () => {
+    const { lines, filled, radius } = MARKER_SHAPES.loot;
+    const [ring] = lines;
+    expect(filled).toBe(false);
+    expect([ring[0], ring[1]]).toEqual([1, 0]);
+    expect(ring.at(-2)).toBeCloseTo(1, 12);
+    expect(ring.at(-1)).toBeCloseTo(0, 12);
+    for (let at = 0; at < ring.length; at += 2) expect(Math.hypot(ring[at], ring[at + 1])).toBeCloseTo(1, 12);
+    expect(shapePath(MARKER_SHAPES.loot).startsWith(`M${radius} 0L`)).toBe(true);
   });
 
   it("differ from each other in outline, not only in colour", () => {
