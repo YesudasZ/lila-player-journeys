@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-23 23:18 IST
+Last updated: 2026-11-23 23:20 IST
 
 ## Current phase
 
@@ -37,15 +37,20 @@ Phase 5 deliverables and acceptance criteria are in PLAN.md, "Phase 5". The task
 - [x] 5.2 lib: `link.ts` (encode, decode, check against the manifest), `filters.ts` (matches on the chosen days, counts for the tabs, wording of the empty note), the draw list takes allowed matches and fates. 318 tests; 11 of 11 one-line faults in the new code are noticed
 - [x] 5.3 Store: `days`, `fates`, `toggleDay`, `toggleFate`, `clearFilters`; `loadManifest(link)` opens the view a link asks for and keeps the link for a retry; a filter that rules the open match out closes it; a focus from a link is checked when the journeys arrive. `shown.ts`: the draw list follows the filters, and `selectLink` gives the view as a link. 326 tests
 - [x] 5.4 `state/linkSync.ts` (the address follows the view, rewritten in place 300 ms after the last change; `currentAddress` for the copy button) and the components `Filters`, `CopyLink`, `EmptyNote`; counts on `MapTabs`; the day filter in `MatchList`. `npm run check` (326 tests) and the build pass; not yet looked at in the preview
-- [ ] 5.5 Preview check: filters, reload keeps the view, a copied link opens the same view, the empty note
-- [ ] 5.6 Independent review by two agents with a fixed budget; fixes
+- [x] 5.5 Checked in the preview at 1280 x 800 (23:20), no console error:
+  - Day chip "14 Feb": the tabs read 24, 8 and 5, the list holds 24 matches, the legend "24 matches, 44 journeys", the address `?days=February_14`; with the fate "killed by storm" as well: "1 match, 1 journey"
+  - Lockdown with the fate "killed by player": the note "No journey on Lockdown has the fate “killed by player”." with "Clear filters", which brings back 171 matches and 295 journeys
+  - A link with a match, a focused journey, loot switched on, a view and a day, given in another order, opens exactly that view and is rewritten in the canonical order; a link with an unknown map, match, day and a broken view keeps only its fate
+  - "Copy link": the preview pane refuses clipboard access, so only the refusal message could be seen there ("Copy the address from the address bar"); the address it would copy equals the address bar's
+- [ ] 5.6 Independent review by two agents, each held to 40 tool calls. Launched at 23:20 as the background workflow `phase5-review`; results not in yet; fixes follow
 - [ ] 5.7 Docs, phase-end checks; ask once to push the branch and open the pull request; stop
 
 ## Exactly where I stopped
 
 - Branch `phase-5-filters`, cut from `main` at `fb2aa02`; local only. `main` equals `origin/main`.
-- Done and committed: 5.2 to 5.4. Phase 5 is built; it has not been looked at in the preview yet.
-- **NEXT:** 5.5: restart the preview's dev server (`preview_start` with `lila-web`), then check: day and fate chips change the tabs' counts, the match list and the legend; open a match, focus a journey, zoom, reload and get the same view; "Copy link" gives an address that opens the same view; an empty combination (Lockdown with the fate killed by player) shows the note and "Clear filters" works; no console error. Then 5.6 (the two-agent review, 40 tool calls each) and 5.7.
+- Done and committed: 5.2 to 5.5. Phase 5 is built and checked in the preview; `npm run check` (326 tests), `npm run build` and `make test` (237 tests) pass.
+- In flight: 5.6, the review workflow `phase5-review` (two agents, read-only on the project; one drives the dev server on port 5183 in the preview pane, tab `tab-1`). Its result goes to `.local/phase5-review-result.raw`.
+- **NEXT:** when the review reports: reproduce each finding, fix what holds, re-run the checks, commit. Then 5.7: PLAN.md as built with a section on what the review changed, BRIEF.md (R5 and R8) and the README's status line, the commands table of this file, status "DONE (awaiting my review)"; ask once to push the branch and open the pull request.
 
 ## Decisions and assumptions made
 
