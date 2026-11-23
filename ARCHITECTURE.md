@@ -50,6 +50,8 @@ browser            manifest → one map bundle → typed arrays → canvas layer
 | 1,227 rows that repeat another row of the same file, all Loot or BotKill | Kept: they cannot be told apart from real repeats |
 | No extraction event | A journey with no death row is "no death recorded" |
 | Position is not sampled while a player stands still | Sample counts are labelled as movement, not time spent |
+| A gap of more than 5 s between two positions of a journey | Playback keeps the head at the earlier position and moves it in the last 5 s; across a shorter gap it moves in a straight line (assumption A6). The rule is one function, written once in the pipeline as the reference and once in the app, which is tested against a fixture the pipeline writes |
+| No journey's path is a single row | Playback handles one all the same: its head appears in that second and stays (assumption A9, tested on a made-up journey) |
 
 The full list, with the evidence for each, is in `docs/DATA_NOTES.md`.
 
@@ -59,6 +61,7 @@ The full list, with the evidence for each, is in `docs/DATA_NOTES.md`.
 |---|---|---|---|
 | Preprocess offline into static files | Parsing parquet in the browser, or an API | Fast first load, no backend, every number checked before it ships | New data needs a rebuild and a deploy |
 | One bundle per map | One file per match | 93% of matches are a single journey; the all-matches view would need hundreds of requests | Opening one match loads its whole map |
+| The clock of playback outside React, in a store of its own | The time in React state | The time changes with every frame; only the canvas layer and the slider listen to it, and React renders nothing while a match plays | State in two places: what is shown, and when |
 | Heatmaps binned in the browser | Precomputed grids | They follow every filter | Binning work on each change |
 | Canvas 2D | SVG, or WebGL with deck.gl | Enough for this much data, no heavy dependency | Hit-testing and zoom are written by hand |
 | The README's map constants | A fitted calibration | They are the studio's own transform | A point can sit up to about 10 world units off near one edge of a map |

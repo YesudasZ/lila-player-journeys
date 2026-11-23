@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-24 00:54 IST
+Last updated: 2026-11-24 00:58 IST
 
 ## Current phase
 
@@ -65,7 +65,7 @@ Phase 6 deliverables and acceptance criteria are in PLAN.md, "Phase 6". The task
 
 - Branch `phase-6-timeline`, cut from `main` at `89dfde3`; local only, nothing pushed. `main` equals `origin/main`.
 - Steps 6.2 to 6.7 are committed on `phase-6-timeline` (local only, nothing pushed): everything of playback is built. At 00:48 on 24 Nov: `npm run check` (396 tests), `npm run build` (87.68 kB of JavaScript gzipped) and `make test` (252 tests) pass.
-- Step 6.8 is done: the preview checks and the frame-time reading are in its entry above. The user said "Continue" at 00:50 with the 5-hour window at 88%; the review did not fit into what was left.
+- Step 6.8 is done: the preview checks and the frame-time reading are in its entry above. After it (00:58): a fault check of the new code (thirty one-line faults, 27 noticed, two tests added, the third unobservable), ARCHITECTURE.md's rows on playback, and PLAN.md's section "Changed while building Phase 6". The user said "Continue" at 00:50 with the 5-hour window at 88%; the review did not fit into what was left.
 - **NEXT:** 6.9, once the usage window has reset (03:00 IST on 24 Nov): the review by two agents, each held to 40 tool calls, then the fixes. Then 6.10: PLAN.md "Phase 6" as built with a section on what differs and what the review changed, BRIEF.md, the README's status line, ARCHITECTURE.md's mention of the clock, the commands table below, status "DONE (awaiting my review)", and the short manual test script for the closing message. Then ask once to push and open the pull request, and stop.
 
 ## Decisions and assumptions made
@@ -200,12 +200,12 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 |---|---|---|
 | `unzip _inbox/player_data.zip -d data/raw` | restores the raw data | 2026-11-22 |
 | `make setup` | creates `.venv`, installs pinned dependencies | 2026-11-22, in a fresh clone |
-| `make test` | 252 tests, no raw data needed; creates `.venv` on first use | 2026-11-23 23:46 |
-| `cd web && npm run check` | type check, ESLint with no warning allowed, 347 Vitest tests | 2026-11-23 23:46 |
-| `cd web && npm run build` | production build into `web/dist/` (not committed); JavaScript 85.48 kB gzipped | 2026-11-23 23:46 |
+| `make test` | 252 tests, no raw data needed; creates `.venv` on first use. Run it after `git add`: the hygiene tests see tracked files only | 2026-11-24 00:58 |
+| `cd web && npm run check` | type check, ESLint with no warning allowed, 397 Vitest tests | 2026-11-24 00:58 |
+| `cd web && npm run build` | production build into `web/dist/` (not committed); JavaScript 87.68 kB gzipped | 2026-11-24 00:58 |
 | `cd web && npm run dev` | the app on http://localhost:5173 | 2026-11-23 17:41 |
 | `make profile` | measures the raw data → `docs/profile/` (235 metrics) | 2026-11-23 13:10 |
-| `make data` | builds `web/public/data/` and the projection fixtures; writes nothing unless every check passes, the profile report included; 3 s | 2026-11-23 13:16 |
+| `make data` | builds `web/public/data/` and the two test fixtures (projection, playback); writes nothing unless every check passes, the profile report included; 3 s | 2026-11-24 00:35 |
 | `make overlay` | proof images → `docs/img/`, about 30 s | 2026-11-23 13:10 |
 
 ## Known issues / TODO later

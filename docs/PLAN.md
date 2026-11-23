@@ -232,7 +232,7 @@ web/src/components/            Filters, CopyLink, EmptyNote; MatchList, MapTabs,
 **Goal:** watch a match unfold smoothly. The detailed plan below was approved on 24 Nov 2026; it is built on the branch `phase-6-timeline`.
 
 **Deliverables**
-- A bar under the map, in the map's column: Play and Pause, the time (`02:05 / 08:43`), a slider, and the speed (1x, 2x, 5x, 10x, 20x, 60x; 10x at first, which plays a median match of 380 s in 38 s).
+- A bar under the map, in the map's column: Play and Pause, the time (`2:05 / 8:43`), a slider, and the speed (1x, 2x, 5x, 10x, 20x, 60x; 10x at first, which plays a median match of 380 s in 38 s).
 - The whole match is the resting state: opening a match shows everything, as before, with the timeline at its end. Play at the end starts again from 0:00.
 - While the time is before the end, each path is drawn up to the time and its head moves along it. A journey is not on the map before its first row. A marker appears at the second of its event; a marker that stands for several events counts those that have happened. Only what is drawn can be pointed at.
 - Position at a time (assumption A6; rule 4 of [DATA_FORMAT.md](DATA_FORMAT.md)): the head moves along the journey's path, whose points are all its rows up to the death row. It moves in a straight line across a gap of up to 5 s; across a longer gap it holds still and moves during the last 5 s; after the last point it stays put; of two rows in the same second the later one counts. The pipeline has the reference implementation, a small pure function (`pipeline/playback.py`), and writes a fixture of journeys with the expected heads; the TypeScript function is tested against every one of them.
@@ -486,3 +486,20 @@ After the fixes I checked them once more:
 | The button above the list read "All 566 matches" | "All matches (566)" | With one match left it read "All 1 matches" |
 
 Left as it is: a reload within 300 ms of a change loses that change (the price of not rewriting the address on every frame); the wording of the note follows the fate's own text ("has the fate “killed by player”") rather than the plan's first sentence, which PLAN.md now quotes as built.
+
+## Changed while building Phase 6 (24 Nov 2026), for your review
+
+The independent review is still to come; what it changes gets a section of its own.
+
+| Plan | Built | Why |
+|---|---|---|
+| The time reads `02:05 / 08:43` | `2:05 / 8:43` | It is written as the tooltip writes a time, which has no leading zero |
+| One tick per event above the slider's track | One mark per kind and second in which something happened | The 58 loot events of one journey would be a block. `fbbc5d02` has 19 marks |
+| A dragged time is kept to a tenth of a second | A dragged time is a whole second; the keys, a pause and a link keep tenths | Events are recorded in whole seconds, so a dragged time lands where something can have happened |
+| A marker keeps the times of its events in place of `last` | It keeps `count` as well | `count` is the length of `times`; the legend, the layer and the tests read it |
+| The clock starts counting with Play | The first frame after Play counts for no time and only sets the moment to count from | The clock then needs no second clock to start by, and neither do its tests |
+| Frame time under 16 ms, read from the page | Shown for the work per frame: a draw takes 0.7 ms at most and React commits nothing while a match plays. The time between frames was 33 ms | The browser pane shows about 30 frames a second, whatever the page does. A reading at 60 Hz is still to take |
+| The slider's keys shown where key help exists | They are in the slider's title and in a description for assistive technology | The tool has no visible key help |
+| Back and Forward step between matches and filters, not between pauses | Back and Forward leave the tool, as since Phase 5; `t` is written in place like everything else | The history entries for the user's steps are set aside for Phase 8, where the built work waits (see "Phase 8") |
+
+What the fault check found: of thirty one-line faults put into the new code, the tests noticed 27. Two were real gaps and have a test each now (Play pressed twice must not start a second clock; a tab that stays shown must not pause). The third changes nothing that can be observed.
