@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-23 10:53 IST
+Last updated: 2026-11-23 10:54 IST
 
 ## Current phase
 
@@ -35,7 +35,7 @@ Phase 2 deliverables and acceptance numbers are in PLAN.md, "Phase 2".
 - [x] 2.3 `pipeline/encode.py` (u, v on a 65,535-step grid; elevation in tenths), `uv_to_world` in `maps.py`, `pipeline/minimap.py` (shared image loader); tests
 - [x] 2.4 `pipeline/build_data.py`: manifest, map bundles, minimaps, cleaning report, projection fixtures, validation; 14 end-to-end tests on synthetic files; `make data`
 - [x] 2.5 Real data built in 3 s, byte-identical on a second run. Counts agree with the profiler and with PLAN.md: 796 matches (284/201/162/112/37 per day), 798 human journeys (17 anonymous), 444 bot journeys, 2,236 kills, 404 deaths, 39 storm deaths, 12,829 loot rows, 296 bot deaths. Bundles gzipped: 463, 53 and 160 kB. `web/public/data/` committed
-- [ ] 2.6 Profiler uses `clean.py` (one implementation of the rules); `make profile` output unchanged
+- [x] 2.6 Profiler uses `clean.py`, `EVENTS` and `actor_by_file` (one implementation of each rule); `make profile` left `docs/profile/` byte-identical
 - [ ] 2.7 GitHub Actions workflow and a repo hygiene test
 - [ ] 2.8 `ARCHITECTURE.md` first draft; README section on rebuilding the data
 - [ ] 2.9 Independent review of the phase; findings fixed
@@ -43,10 +43,9 @@ Phase 2 deliverables and acceptance numbers are in PLAN.md, "Phase 2".
 
 ## Exactly where I stopped
 
-- Last completed: 2.4 and 2.5 (this commit). `make test` passes with 68 tests; `make data` passes its reconciliation. The working tree is clean.
-- `web/public/data/` (manifest, three map bundles, three WebP minimaps, cleaning report) and `web/src/lib/__fixtures__/projection.json` are generated files and are committed. Never edit them by hand; run `make data`.
+- Last completed: 2.6 (this commit). `make test` (68 tests), `make data` and `make profile` pass; `docs/profile/` is unchanged by the refactor. The working tree is clean.
 - Local commits since the last push are not pushed.
-- **NEXT:** 2.6. In `pipeline/profile_data.py`, replace the private copy of the cleaning rules (`cleaning_preview`, `_is_written_twice`) with the functions of `pipeline/clean.py`, use `EVENTS` from `dataset.py` and `actor_by_file` from `journeys.py`. Then `make profile` must leave `docs/profile/` unchanged (`git status` clean).
+- **NEXT:** 2.7. Add `.github/workflows/ci.yml` (Python 3.12 and 3.14, `pip install -r pipeline/requirements.txt`, `python -m pytest -q`) and `pipeline/tests/test_repo_hygiene.py` (no raw data, PDF, zip or full id among the tracked files; the made-up ids of `pipeline/tests/helpers.py` are the only exception). Then 2.8: `ARCHITECTURE.md` first draft and the README's data section.
 
 ## Decisions and assumptions made
 
@@ -82,7 +81,7 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 | `unzip _inbox/player_data.zip -d data/raw` | restores the raw data | 2026-11-22 |
 | `make setup` | creates `.venv`, installs pinned dependencies | 2026-11-22, in a fresh clone |
 | `make test` | 68 unit tests, no raw data needed | 2026-11-23 10:53 |
-| `make profile` | measures the raw data → `docs/profile/` (231 metrics) | 2026-11-22 23:39 |
+| `make profile` | measures the raw data → `docs/profile/` (231 metrics) | 2026-11-23 10:54 |
 | `make data` | builds `web/public/data/` and the projection fixtures, then reconciles with the profile report; 3 s | 2026-11-23 10:53 |
 | `make overlay` | proof images → `docs/img/`, about 30 s | 2026-11-22 23:33 |
 

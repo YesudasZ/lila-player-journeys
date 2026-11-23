@@ -19,10 +19,17 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 
-from pipeline.dataset import COLUMNS, DEATH_EVENTS, MOVEMENT_EVENTS, RawData, load_raw
+from pipeline.clean import (
+    drop_kills_mirroring_a_death,
+    end_paths_at_death,
+    keep_first_half_of_files_written_twice,
+    keep_one_copy_per_journey,
+    repeats_itself,
+)
+from pipeline.dataset import COLUMNS, DEATH_EVENTS, EVENTS, MOVEMENT_EVENTS, RawData, load_raw
+from pipeline.journeys import actor_by_file
 from pipeline.maps import MAPS, uv_to_pixel, world_to_uv
 
-README_EVENTS = ("Position", "BotPosition", "Kill", "Killed", "BotKill", "BotKilled", "KilledByStorm", "Loot")
 README_FILES_PER_DAY = {"February_10": 437, "February_11": 293, "February_12": 268, "February_13": 166, "February_14": 79}
 README_EXAMPLE = {"map_id": "AmbroseValley", "x": -301.45, "z": -355.55, "image": 1024, "pixel": (78, 890)}
 README_SAMPLE_TS = ("1970-01-21 11:52:07.161", "1970-01-21 11:52:21.082")  # ts of the README's two sample rows, as printed
@@ -109,14 +116,6 @@ def _spread(series: pd.Series) -> dict[str, object]:
     }
 
 
-def _is_written_twice(part: pd.DataFrame) -> bool:
-    """True when a file's rows are its first half followed by an exact copy of that half."""
-    half, odd = divmod(len(part), 2)
-    if odd or half == 0:
-        return False
-    return part.iloc[:half].reset_index(drop=True).equals(part.iloc[half:].reset_index(drop=True))
-
-
 def file_table(rows: pd.DataFrame) -> pd.DataFrame:
     """One line per file: owner, match, time range, row count per event, and the actor type.
 
@@ -133,9 +132,9 @@ def file_table(rows: pd.DataFrame) -> pd.DataFrame:
         first_ts=("ts", "min"),
         last_ts=("ts", "max"),
     )
-    counts = pd.crosstab(rows["file"], rows["event"]).reindex(columns=list(README_EVENTS), fill_value=0)
+    counts = pd.crosstab(rows["file"], rows["event"]).reindex(columns=list(EVENTS), fill_value=0)
     table = meta.join(counts)
-    table["actor"] = np.select([table["Position"] > 0, table["BotPosition"] > 0], ["human", "bot"], default="none")
+    table["actor"] = actor_by_file(rows)
     return table
 
 
@@ -185,7 +184,7 @@ def schema(data: RawData, m: Metrics) -> dict[str, object]:
         "ts_parquet_logical_type": dict(Counter(f.ts_logical_type for f in readable)),
         "nulls_per_column": nulls.to_dict(),
         "event_values": event_values,
-        "event_values_not_in_readme": sorted(set(event_values) - set(README_EVENTS)),
+        "event_values_not_in_readme": sorted(set(event_values) - set(EVENTS)),
     }
 
 
@@ -323,7 +322,7 @@ def timestamps(rows: pd.DataFrame, files: pd.DataFrame, m: Metrics) -> dict[str,
         mismatch[zone] = {"first_row": first, "last_row": last}
     m.add(topic, "matches_in_several_day_folders", (rows.groupby("match_id")["day"].nunique() > 1).sum(), "match_ids that have files in more than one day folder.")
 
-    doubled = rows.groupby("file", sort=False)[COLUMNS].apply(_is_written_twice)
+    doubled = rows.groupby("file", sort=False)[COLUMNS].apply(repeats_itself)
     m.add(topic, "files_written_twice", doubled.sum(), "Files with an even row count whose second half repeats the first half exactly, row for row, on all eight columns.")
 
     ordered = movement.sort_values(["file", "ts", "row"])
@@ -577,46 +576,30 @@ def deaths(rows: pd.DataFrame, files: pd.DataFrame, m: Metrics) -> dict[str, obj
     }
 
 
-def cleaning_preview(rows: pd.DataFrame, files: pd.DataFrame, m: Metrics) -> dict[str, object]:
-    """What the four cleaning rules of DATA_NOTES.md remove, applied in order, and what is left.
-
-    The pipeline's own cleaning code must reproduce these numbers.
-    """
+def cleaning(rows: pd.DataFrame, files: pd.DataFrame, m: Metrics) -> dict[str, object]:
+    """What the four rules of pipeline/clean.py remove, applied in order, and what is left."""
     topic = "cleaning"
     flat = files.reset_index()
+    after_rule_1 = keep_one_copy_per_journey(rows)
+    after_rule_2 = keep_first_half_of_files_written_twice(after_rule_1)
+    after_rule_3 = drop_kills_mirroring_a_death(after_rule_2)
+    clean = end_paths_at_death(after_rule_3)
+    spare_files = set(rows["file"]) - set(after_rule_1["file"])
 
-    # Rule 1: a journey stored in several files keeps the copy filed with most of its match.
-    weight = flat.groupby(["match_id", "day"])["file"].transform("size")
-    best_first = flat.assign(weight=weight).sort_values(["weight", "file"], ascending=[False, True])
-    spare_files = set(best_first.loc[best_first.duplicated(["user_id", "match_id"]), "file"])
-    spare_copy = rows["file"].isin(spare_files)
-
-    # Rule 2: a file written twice keeps its first half.
-    written_twice = rows.groupby("file", sort=False)[COLUMNS].apply(_is_written_twice)
-    second_half = ~spare_copy & rows["file"].map(written_twice) & (rows["row"] >= rows["file"].map(files["rows"]) // 2)
-    kept = rows[~spare_copy & ~second_half]
-
-    # Rule 3: a Kill row mirrored by a Killed row of the same file, second and position is not a kill.
-    killed = kept.loc[kept["event"] == "Killed", ["file", "ts", "x", "y", "z"]].drop_duplicates()
-    mirrored = kept[kept["event"] == "Kill"].reset_index().merge(killed, on=["file", "ts", "x", "y", "z"])["index"]
-    kept = kept.drop(index=mirrored)
-
-    # Rule 4: a path ends at the death row; movement rows after it are dropped.
-    ordered = kept.sort_values(["file", "ts", "row"])
+    # Rule 4's input in the order the rule uses, to describe the rows it removed.
+    ordered = after_rule_3.sort_values(["file", "ts", "row"])
     is_death = ordered["event"].isin(DEATH_EVENTS)
-    is_movement = ordered["event"].isin(MOVEMENT_EVENTS)
     after_death = (is_death.groupby(ordered["file"], sort=False).cumsum() - is_death) > 0
     death_ts = ordered["ts"].where(is_death).groupby(ordered["file"], sort=False).transform("min")
-    late = after_death & is_movement
-    clean = ordered[~late]
+    late = ~ordered.index.isin(clean.index)
 
-    m.add(topic, "rows_removed_spare_copy_of_journey", spare_copy.sum(), "Rule 1. Rows of files holding a (user_id, match_id) journey that another file also holds. Among such files the one kept is the one whose day folder holds the most files of the same match (ties: first by name).")
-    m.add(topic, "rows_removed_second_half_of_file_written_twice", second_half.sum(), "Rule 2. Rows in the second half of the remaining files whose second half repeats the first half exactly.")
-    m.add(topic, "rows_removed_Kill_mirroring_Killed", len(mirrored), "Rule 3. Remaining Kill rows for which a Killed row exists in the same file with identical raw ts, x, y and z.")
+    m.add(topic, "rows_removed_spare_copy_of_journey", len(rows) - len(after_rule_1), "Rule 1. Rows of files holding a (user_id, match_id) journey that another file also holds. Among such files the one kept is the one whose day folder holds the most files of the same match (ties: first by name).")
+    m.add(topic, "rows_removed_second_half_of_file_written_twice", len(after_rule_1) - len(after_rule_2), "Rule 2. Rows in the second half of the remaining files whose second half repeats the first half exactly.")
+    m.add(topic, "rows_removed_Kill_mirroring_Killed", len(after_rule_2) - len(after_rule_3), "Rule 3. Remaining Kill rows for which a Killed row exists in the same file with identical raw ts, x, y and z.")
     m.add(topic, "rows_removed_movement_after_death", late.sum(), "Rule 4. Remaining Position or BotPosition rows that come after a death row (Killed, BotKilled, KilledByStorm) of the same file, rows ordered by (raw ts, file order).")
     m.add(topic, "rows_removed_movement_after_death_with_later_ts", (late & (ordered["ts"] > death_ts)).sum(), "Of the rule 4 rows, the ones whose raw ts is greater than that of the file's first death row. The rest share the death row's ts and follow it in file order.")
     m.add(topic, "rows_after_cleaning", len(clean), "Rows left after rules 1 to 4.")
-    for event in README_EVENTS:
+    for event in EVENTS:
         m.add(topic, f"rows_after_cleaning_{event}", (clean["event"] == event).sum(), f"Rows left after rules 1 to 4 whose event is {event}.")
 
     actor = clean["file"].map(files["actor"])
@@ -783,7 +766,7 @@ def build_report(raw_root: Path) -> dict[str, object]:
         "deaths": deaths(rows, files, m),
         "combat": combat(rows, files, m),
         "coordinates": coordinates(rows, raw_root, m),
-        "cleaning": cleaning_preview(rows, files, m),
+        "cleaning": cleaning(rows, files, m),
     }
     return _clean({"readme_check": readme_check(m, details), "metrics": m.as_dict(), "detail_definitions": DETAIL_DEFINITIONS, "details": details})
 
