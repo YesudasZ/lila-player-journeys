@@ -4,6 +4,8 @@
  * the legend and the list of journeys all read the same one.
  */
 import { LAYER_KEYS, buildDrawList, eventKinds, shownLayers, type DrawList } from "../lib/drawList.ts";
+import { allowedMatches } from "../lib/filters.ts";
+import { roundedView, type Link } from "../lib/link.ts";
 import type { MapEntry } from "../lib/manifest.ts";
 import type { AppState } from "./store.ts";
 
@@ -30,12 +32,27 @@ export function selectDrawList(state: AppState): DrawList | null {
   const match = selectMatchId(state);
   const shown = shownLayers(state.choices, match !== null);
 
-  const from = [journeys.value, manifest, map, match, ...LAYER_KEYS.map((layer) => shown[layer])];
+  const from = [journeys.value, manifest, map, match, state.days, state.fates, ...LAYER_KEYS.map((layer) => shown[layer])];
   if (last?.from.length === from.length && last.from.every((part, index) => part === from[index])) return last.list;
-  const list = buildDrawList(journeys.value, match, shown, eventKinds(manifest.event_groups), {
-    steps: manifest.encoding.uv_steps,
-    image: { width: map.minimap.width, height: map.minimap.height },
-  });
+  const grid = { steps: manifest.encoding.uv_steps, image: { width: map.minimap.width, height: map.minimap.height } };
+  const only = { matches: allowedMatches(manifest, map.id, state.days), fates: state.fates.length > 0 ? new Set(state.fates) : null };
+  const list = buildDrawList(journeys.value, match, shown, eventKinds(manifest.event_groups), grid, only);
   last = { from, list };
   return list;
+}
+
+/** The view as a link, as the state stands; null until the manifest is there. What `checkedLink` gives back for it is the same link. */
+export function selectLink(state: AppState): Link | null {
+  const map = selectMapEntry(state);
+  if (state.manifest.status !== "ready" || !map) return null;
+  const view = state.views[map.id];
+  return {
+    map: map === state.manifest.value.maps[0] ? null : map.id,
+    days: state.days,
+    match: selectMatchId(state),
+    journey: state.focus,
+    choices: state.choices,
+    fates: state.fates,
+    view: view ? roundedView(view) : null,
+  };
 }

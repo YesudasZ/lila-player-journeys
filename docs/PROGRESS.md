@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-23 23:15 IST
+Last updated: 2026-11-23 23:17 IST
 
 ## Current phase
 
@@ -35,7 +35,7 @@ Phase 5 deliverables and acceptance criteria are in PLAN.md, "Phase 5". The task
 - [x] 5.0 The user's go for Phase 5, in this session (23 Nov). Branch `phase-5-filters` cut from `main` at `fb2aa02`. This file corrected: Phase 4 is merged as pull request #3; the live site shows it (checked after the merge: legend and counts as on the branch, no failed request, empty console)
 - [x] 5.1 Plan approved by the user in plan mode (23 Nov, 23:12) and recorded in PLAN.md, "Phase 5". Approved with it: no `mode` in the URL (a link with a match shows that match); filters always hold (a filter that excludes the open match closes it); the fate filter works on journeys of humans and bots; the URL is rewritten in place, 300 ms after the last change; numbers in a link are rounded; no new dependency; one review by two agents held to 40 tool calls each
 - [x] 5.2 lib: `link.ts` (encode, decode, check against the manifest), `filters.ts` (matches on the chosen days, counts for the tabs, wording of the empty note), the draw list takes allowed matches and fates. 318 tests; 11 of 11 one-line faults in the new code are noticed
-- [ ] 5.3 Store: `days`, `fates`, toggles, "clear filters", applying a link; `shown.ts` derives the allowed matches; tests
+- [x] 5.3 Store: `days`, `fates`, `toggleDay`, `toggleFate`, `clearFilters`; `loadManifest(link)` opens the view a link asks for and keeps the link for a retry; a filter that rules the open match out closes it; a focus from a link is checked when the journeys arrive. `shown.ts`: the draw list follows the filters, and `selectLink` gives the view as a link. 326 tests
 - [ ] 5.4 `linkSync.ts` and the components: `Filters`, `CopyLink`, `EmptyNote`; `MatchList`, `MapTabs`, `TopBar`, `Sidebar`, `App`
 - [ ] 5.5 Preview check: filters, reload keeps the view, a copied link opens the same view, the empty note
 - [ ] 5.6 Independent review by two agents with a fixed budget; fixes
@@ -44,8 +44,8 @@ Phase 5 deliverables and acceptance criteria are in PLAN.md, "Phase 5". The task
 ## Exactly where I stopped
 
 - Branch `phase-5-filters`, cut from `main` at `fb2aa02`; local only. `main` equals `origin/main`.
-- Done and committed: 5.2, the pure functions for links and filters. Nothing of it is wired into the store or the screen yet.
-- **NEXT:** 5.3 (store), 5.4 (link sync and components), then the steps in order; `npm run check` and a commit after each. Restart the preview's dev server before 5.5 (the branch changed). This conversation is near the end of its context and will be summarised automatically; everything needed is in this file, PLAN.md and git.
+- Done and committed: 5.2 and 5.3, the pure functions and the store. Nothing of it is on the screen yet: no chips, no copy button, and the address is neither read nor written.
+- **NEXT:** 5.4: `state/linkSync.ts` (write `encodeLink(selectLink(state))` into the address with `history.replaceState`, 300 ms after the last change; `App` passes `decodeLink(location.search)` to `loadManifest`), then the components `Filters`, `CopyLink`, `EmptyNote`, the counts on `MapTabs`, the day filter in `MatchList`. Then the steps in order; `npm run check` and a commit after each. Restart the preview's dev server before 5.5 (the branch changed). This conversation is near the end of its context and will be summarised automatically; everything needed is in this file, PLAN.md and git.
 
 ## Decisions and assumptions made
 
