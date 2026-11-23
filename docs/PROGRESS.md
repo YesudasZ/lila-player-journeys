@@ -1,19 +1,19 @@
 # Progress Log
 
-Last updated: 2026-11-23 00:07 IST
+Last updated: 2026-11-23 10:48 IST
 
 ## Current phase
 
-Phase 1, Data discovery and repo setup. Status: **DONE (awaiting my review)**
+Phase 2, Pipeline. Status: **IN PROGRESS**
 
-Repo: https://github.com/YesudasZ/lila-player-journeys (public). `main` was pushed on 2026-11-22 after the user said "Yes, push".
+Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 
 ## Phase checklist
 
 | # | Phase | Status | Commit |
 |---|---|---|---|
-| 1 | Data discovery and repo setup | DONE (awaiting my review) | `bc63f0e` |
-| 2 | Pipeline | NOT STARTED | |
+| 1 | Data discovery and repo setup | APPROVED | `bc63f0e` |
+| 2 | Pipeline | IN PROGRESS | |
 | 3 | App shell and map canvas (ends with the first deployment, step 9.1) | NOT STARTED | |
 | 4 | Journeys, humans versus bots, markers | NOT STARTED | |
 | 5 | Filters and URL state | NOT STARTED | |
@@ -24,39 +24,35 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public). `main` was push
 | 10 | Insights and docs | NOT STARTED | |
 | 11 | Final QA | NOT STARTED | |
 
-Phases 2 to 11 are described in [PLAN.md](PLAN.md), a draft awaiting approval.
+[PLAN.md](PLAN.md) was approved by the user on 2026-11-23.
 
 ## Current phase task list
 
-- [x] 1.1 Project folder; PDF and zip copied to `_inbox/`; zip unzipped to `data/raw/` (both git-ignored)
-- [x] 1.2 `.venv` with pinned dependencies; repo initialised with the no-reply author (`0e02ae3`)
-- [x] 1.3 `pipeline/maps.py` and `pipeline/dataset.py` with 22 unit tests (`7f697a3`)
-- [x] 1.4 `pipeline/profile_data.py` → `docs/profile/profile_report.{json,md}` (`0084a38`, `596e694`; 231 metrics since `ec5f537`)
-- [x] 1.5 `pipeline/verify_overlay.py` → `docs/img/overlay_*.jpg`, `orientation_*.jpg`, `docs/profile/orientation_check.json` (`89800f0`)
-- [x] 1.6 Docs drafted: `BRIEF.md`, `DATA_NOTES.md`, `PLAN.md`, `CLAUDE.md`, `README.md` stub (`d22e705`)
-- [x] 1.7 Resumable progress system: this file, `/resume`, protocol and rules in `CLAUDE.md` (`2171c5a`)
-- [x] 1.8 Review (3 reviewers) and cross-check (5 blind re-derivations, 4 skeptics, 2 blind overlay judges) finished. Raw results in `.local/` (git-ignored); summary in `docs/profile/crosscheck.md`
-- [x] 1.9 All findings applied: `BRIEF.md` (`6dff70b`), profiler and overlay script (`ec5f537`), `crosscheck.md` and `DATA_NOTES.md` (`c3cfe0d`), `PLAN.md` second version and `CLAUDE.md` data facts (this commit)
-- [x] 1.10 Leak check passed on the tree and the whole history: 29 tracked files, 4.1 MB; no raw data, PDF or zip; no private email address, home-folder path, token or full player UUID; the only author is the no-reply address
-- [x] 1.11 Public GitHub repo created and `main` pushed, on the user's go: https://github.com/YesudasZ/lila-player-journeys
-- [x] 1.12 Phase report given to the user; stopped for review
+Phase 2 deliverables and acceptance numbers are in PLAN.md, "Phase 2".
+
+- [ ] 2.1 `pipeline/clean.py`: the four cleaning rules, with tests
+- [ ] 2.2 `pipeline/journeys.py`: actor, anonymous flag, death event, public ids, match table, with tests
+- [ ] 2.3 Integer encoding of positions (`pipeline/encode.py`) and the inverse projection, with tests
+- [ ] 2.4 `pipeline/build_data.py`: manifest, map bundles, minimaps, cleaning report, projection fixtures, validation; end-to-end test on synthetic files; `make data`
+- [ ] 2.5 Run on the real data; reconcile with the profiler's `cleaning` metrics; commit `web/public/data/`
+- [ ] 2.6 Profiler uses `clean.py` (one implementation of the rules); `make profile` output unchanged
+- [ ] 2.7 GitHub Actions workflow and a repo hygiene test
+- [ ] 2.8 `ARCHITECTURE.md` first draft; README section on rebuilding the data
+- [ ] 2.9 Independent review of the phase; findings fixed
+- [ ] 2.10 Phase-end checks; status to "DONE (awaiting my review)"; stop
 
 ## Exactly where I stopped
 
-- Phase 1 is complete at `bc63f0e` and waits for review. The working tree is clean.
-- The history was rewritten on 2026-11-22 to remove the `Co-Authored-By` line from every commit message, and the user force-pushed it. Local `main` and `origin/main` matched at `cd6af65` afterwards (17 commits, none with the line). The local backups of the old history are deleted.
-- The user pushed the follow-up commit `3eeba7b` themselves; `origin/main` matched local `main` there. The only ref on GitHub is `main`.
-- GitHub's "Contributors" box is stale after the rewrite: it still shows two contributors, while GitHub's API lists one. Decision (user, 2026-11-23): wait for GitHub to refresh it. Look at it again at the start of the next session and before submission. If it has not cleared by then, the fallbacks are to recreate the repo (the user deletes it, Claude creates it again and pushes) or to ask GitHub Support.
-- One local commit (this note) is not pushed.
-- `docs/PLAN.md` (second version) is a draft. No application code exists and none may be written until the user approves it.
-- **NEXT:** wait for the user's review. Once they approve PLAN.md and answer the open questions below, start Phase 2 with `pipeline/clean.py` and its tests. Every push needs the user's go.
+- Phase 2 has just started. Nothing of it exists yet: no `pipeline/clean.py`, no `web/` folder.
+- The working tree is clean. Two local commits are not pushed: `84b47f3` (contributors note) and the Phase 2 start.
+- **NEXT:** 2.1. Write `pipeline/clean.py` (four pure functions and `clean()`), and `pipeline/tests/test_clean.py` on small in-memory frames. Expected on the real data: 88, 190, 3 and 206 rows removed; 88,617 left.
 
 ## Decisions and assumptions made
 
-All dated 2026-11-22. Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row numbers in brackets, assumptions as A1 to A8).
+Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row numbers in brackets, assumptions as A1 to A8).
 
-- Project folder `~/projects/lila-player-journeys`; GitHub repo `YesudasZ/lila-player-journeys`, public from the start; commits use the GitHub no-reply address, set in this repo only (user's choices).
-- Deadline assumed to be Thu 26 Nov 2026, five days after the zip was downloaded. Not confirmed.
+2026-11-22:
+- Project folder `~/projects/lila-player-journeys`; GitHub repo public from the start; commits use the GitHub no-reply address, set in this repo only (user's choices).
 - Python 3.12 or newer (numpy 2.5 dropped 3.11); developed on 3.14. Proof images are JPEG, not PNG. matplotlib is not installed until something needs it. DuckDB was used for cross-checking only.
 - `ts` is Unix seconds [5]. Position is recorded about every 5 s and not while standing still [6, A6]. Sort by (`ts`, file order) [7].
 - Human or bot is decided per journey by its movement event [8]. The 17 numeric-id human journeys carry per-map placeholder ids and are "anonymous humans" [8, A1].
@@ -64,22 +60,19 @@ All dated 2026-11-22. Data decisions are recorded with evidence in [DATA_NOTES.m
 - "Duration" is the observed span of the recorded files, not match length [12]. Day folders are UTC days by time of writing; the date filter uses the folder name [13].
 - Cleaning, four rules in order: keep the February_11 copy of the journey stored twice (88 rows removed), first half of the three files written twice (190), drop Kill rows mirrored by a Killed row (3), drop movement rows after the death row (206). 88,617 rows and 1,242 journeys remain [14 to 17]. Repeated Loot and BotKill rows are kept [16, A2].
 - No death row means "no death recorded" [18, A3]. Storm deaths are markers, not a heatmap [19].
-- The README's coordinate transform and constants are used unchanged, with the real image sizes; orientation is proven, scale and origin are right to about 1 to 2% [20, 21, A8]. Elevation is kept in the app's data.
-- Public ids are 8-character prefixes of player and match ids (unique: 245 and 796). No full player UUID is committed.
-- Commit messages carry no `Co-Authored-By` line (user's choice, 2026-11-22; the rule is in `CLAUDE.md`). Earlier commit messages were rewritten to remove it.
-- Proposed in PLAN.md, not yet approved: the scope ladder, one data bundle per map, heatmaps binned in the browser, first deployment right after Phase 3.
+- The README's coordinate transform and constants are used unchanged, with the real image sizes [20, 21, A8]. Elevation is kept in the app's data.
+- Commit messages carry no `Co-Authored-By` line (user's choice; the rule is in `CLAUDE.md`). Earlier commit messages were rewritten to remove it.
+
+2026-11-23:
+- The user approved PLAN.md with the recommended answers: deadline Thu 26 Nov (end of day until the hour is known); the scope ladder as written; one data bundle per map with heatmaps binned in the browser; public ids are 8-character prefixes of player and match ids; the README's map constants; one review per phase.
+- The stale "Contributors" box on GitHub: the user chose to wait for GitHub to refresh it.
 
 ## Open questions for the user
 
-1. Is Thu 26 Nov the right deadline, and at what hour?
-2. The scope ladder in PLAN.md: agreed? It turns the storm heatmap into markers, adds a loot heatmap, and puts the dwell layer, density strip and all-matches playback below the core.
-3. One data bundle per map and in-browser heatmaps, instead of per-match files and precomputed grids: agreed?
-4. Public ids as 8-character prefixes: agreed?
-5. Map constants: keep the README's (recommended), or apply the fitted x scale on Ambrose Valley and Lockdown? See `docs/profile/crosscheck.md`, section 4.
-6. One review per phase, or one per day?
-7. Should `docs/PROGRESS.md`, `CLAUDE.md` and `.claude/` stay in the repo at submission? They show how the work was run with Claude Code, which the brief allows; they are also working notes in a public repo.
-8. The "Outside claims about this dataset, tested" table in DATA_NOTES.md shows that claims from outside were checked. Keep it, or drop it before submission?
-9. `/resume` is also the name of a built-in Claude Code command (reopen a past conversation). The documentation says a project skill of the same name replaces the built-in in a terminal session; for a `.claude/commands` file it does not say. Keep the name, or rename it (for example `/where`)?
+1. Should `docs/PROGRESS.md`, `CLAUDE.md` and `.claude/` stay in the repo at submission? They show how the work was run with Claude Code, which the brief allows; they are also working notes in a public repo.
+2. The "Outside claims about this dataset, tested" table in DATA_NOTES.md shows that claims from outside were checked. Keep it, or drop it before submission?
+3. `/resume` is also the name of a built-in Claude Code command (reopen a past conversation). Keep the name, or rename it (for example `/where`)?
+4. At what hour on Thu 26 Nov is the submission due?
 
 ## Commands that work
 
@@ -91,13 +84,11 @@ All dated 2026-11-22. Data decisions are recorded with evidence in [DATA_NOTES.m
 | `make profile` | measures the raw data → `docs/profile/` (231 metrics) | 2026-11-22 23:39 |
 | `make overlay` | proof images → `docs/img/`, about 30 s | 2026-11-22 23:33 |
 
-Not available yet: data rebuild (`make data`, Phase 2); dev server and `npm run check` (Phase 3).
+Not available yet: `make data` (this phase); dev server and `npm run check` (Phase 3).
 
 ## Known issues / TODO later
 
-- Commits stay local until the user approves each push.
-- GitHub's "Contributors" box is stale (see "Exactly where I stopped"). Recheck before submission; it is also a Phase 11 check in PLAN.md.
-- No CI yet (planned in Phase 2).
-- The README's map constants may be 1.5 to 2% too large in x on two maps (open question 5). The proof images use the README constants.
+- Commits stay local until the user approves each push. CI (task 2.7) can only be seen running after a push.
+- GitHub's "Contributors" box still showed two contributors on 2026-11-23 10:45 IST, about 11 hours after the rewrite was pushed; GitHub's API lists one. The user chose to wait. Recheck before submission (also a Phase 11 check). Fallbacks: recreate the repo, or GitHub Support.
+- The README's map constants may be 1.5 to 2% too large in x on two maps (`docs/profile/crosscheck.md`, section 4). Kept as documented, by the user's decision.
 - 56 of the profiler's 231 metrics were added after the blind cross-check and were not re-derived by it (the cleaning counts among them were confirmed by a skeptic).
-- The cross-check's scratch files (DuckDB environment, agents' scripts, shuffled overlays) sit in a temporary folder that a reboot can clear. Nothing in the repo depends on them.

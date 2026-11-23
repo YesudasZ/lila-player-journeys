@@ -1,6 +1,6 @@
 # Build plan
 
-**DRAFT, awaiting approval.** Phase 1 (data discovery) is complete. No application code is written until this plan is approved.
+**Approved on 23 Nov 2026**, with the recommended answers to questions 1 to 6 at the end. Phase 1 (data discovery) is complete.
 
 Requirements: [BRIEF.md](BRIEF.md). Data facts and decisions: [DATA_NOTES.md](DATA_NOTES.md). Status: [PROGRESS.md](PROGRESS.md).
 
@@ -196,14 +196,19 @@ Storm deaths are markers only: 39 points, 5 on Grand Rift, are not a heatmap.
 | The repo is public while work is in progress | Leak check in CI; no raw data, PDF or full player UUID is ever committed |
 | The minimap artwork is the studio's | It came with the assignment and the tool cannot work without it; it is published only as part of this submission |
 
-## Open questions for you
+## Questions and answers
 
-1. Is Thu 26 Nov the right deadline, and at what hour?
-2. The scope ladder: agreed? It moves the storm heatmap to markers, adds a loot heatmap, and puts the dwell layer, density strip and all-matches playback below the core.
-3. One data bundle per map and heatmaps binned in the browser, instead of one file per match and precomputed grids: agreed?
-4. Public ids as 8-character prefixes: agreed?
-5. Map constants: keep the README's (my recommendation), or apply the fitted x scale on Ambrose Valley and Lockdown?
-6. One review per phase, or one per day?
+Answered on 23 Nov 2026 (the plan was approved with the recommended answers):
+
+1. Deadline: Thu 26 Nov, treated as end of day until the hour is known.
+2. Scope ladder: as written above.
+3. Data format: one bundle per map; heatmaps binned in the browser.
+4. Public ids: 8-character prefixes of player and match ids.
+5. Map constants: the README's, unchanged.
+6. Reviews: one per phase.
+
+Still open, to settle before submission:
+
 7. Should `docs/PROGRESS.md`, `CLAUDE.md` and `.claude/` stay in the repo at submission?
 
 ## What changed from the first version
