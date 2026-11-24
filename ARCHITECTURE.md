@@ -1,71 +1,66 @@
 # Architecture
 
-> Draft. The data pipeline exists and is tested. The browser app is built in the next phases; what this page says about it are decisions, not finished code.
+An offline pipeline turns the telemetry into static files; a browser app draws them. There is no server.
 
-## What it is built with, and why
+## Stack, and why
 
 | Part | Choice | Why |
 |---|---|---|
-| Data pipeline | Python, pyarrow, pandas, Pillow; runs offline | pyarrow exposes the raw integer behind the mistyped `ts` column. The dataset is small (89,104 rows): a full build takes 3 seconds |
-| What the browser loads | Static files: a manifest, one JSON bundle per map, WebP minimaps | No server and no database to keep alive. The largest bundle is 470 kB gzipped |
-| App | Vite, React, TypeScript, Tailwind, Zustand; drawn on Canvas 2D | The largest map has about 61,000 rows: within reach of a plain canvas, too many for SVG nodes, too few to need WebGL |
-| Hosting | Vercel, static | A push deploys; a reviewer opens a link |
+| Pipeline | Python: pyarrow, pandas, numpy, Pillow | pyarrow shows the raw integer behind the mistyped `ts` column. 89,104 rows build in 3 s |
+| Browser data | A manifest, one JSON bundle per map, WebP minimaps | Nothing to keep alive. The largest bundle is 470 kB gzipped |
+| App | Vite, React, TypeScript, Tailwind, Zustand; Canvas 2D | 61,000 rows on the largest map: too many for SVG nodes, too few to need WebGL |
+| Hosting | Vercel, static, no environment variables | A merge to `main` deploys; a reviewer opens a link |
 
-## From parquet to pixels
+## Data flow
 
 ```
-player_data/February_*/<user>_<match>.nakama-0     1,243 Parquet files, not in git
-  │ pipeline/dataset.py      read; keep the raw ts integer; decode the event bytes
-  │ pipeline/build_data.py   check: stop on anything the pipeline was not built for
-  │ pipeline/clean.py        four rules, 89,104 → 88,617 rows
-  │ pipeline/journeys.py     human or bot, fate, public ids, counts per match
-  │ pipeline/maps.py         world (x, z) → (u, v)
-  │ pipeline/encode.py       u, v and elevation as small integers
-  ▼
-web/public/data/   manifest.json · maps/<Map>.json · minimaps/<Map>.webp · cleaning_report.json     committed
-  ▼
-browser            manifest → one map bundle → typed arrays → canvas layers
+1,243 parquet files (not in git)
+ → pipeline/: read (raw ts, decoded events) → check → clean (4 rules: 89,104 → 88,617 rows)
+              → journeys (human or bot, fate, public ids) → project (x, z → u, v) → encode
+ → web/public/data/ (committed): manifest.json · maps/<Map>.json · minimaps/<Map>.webp
+ → app: fetch a map → typed arrays → draw list → canvas layers (minimap, heat, journeys, hover ring)
 ```
 
-`make data` builds everything in memory and writes nothing unless every check passes: no full player id in any file, no bundle over 700 kB gzipped, and the same counts as the profile in `docs/profile/`. The profile shares the cleaning code, so the accepted numbers are also written out in a test that reads the committed files. The same build writes the reference points for the app's projection tests. Every field is described in `docs/DATA_FORMAT.md`.
+`make data` writes nothing unless every check passes: no full player id, bundle size, counts equal to the profile in `docs/profile/`. Filters, playback and heat are computed in the browser from the draw list, so they follow every filter, and every view has its own address.
 
-## Mapping game coordinates to the minimap
+## Coordinate mapping
 
-1. The dataset README gives every map a `scale` and an origin: `u = (x - origin_x) / scale`, `v = (z - origin_z) / scale`. The `y` column is elevation and takes no part.
-2. u and v are fractions of the image, so they do not depend on its size. That matters: the README says 1024×1024, the files are 4320², 2160×2158 and 9000². The pipeline stores u and v, never pixels: as integers on a grid of 65,535 steps, finer than 0.02 world units.
-3. The app multiplies by the size of the image it actually draws: `px = u × width`, `py = (1 − v) × height`. The flip is there because image rows count downward and z counts upward.
-4. One function per language holds this. The constants exist only in `pipeline/maps.py` and reach the app through the manifest.
+`u = (x − origin_x) / scale`, `v = (z − origin_z) / scale`, pixel `(u × width, (1 − v) × height)`. `y` is elevation and takes no part.
 
-**How we know it is right.** All 89,104 rows land inside the image. Of the eight possible axis orientations only the README's keeps players on the map: 0.00%, 0.40% and 0.00% of samples fall off it on the three maps, against at least 2.7% for any other. Two independent AI reviewers, shown the eight overlays unlabeled, picked it every time. Zoomed in, trails follow roads and cross a bridge (`docs/img/`).
+| Map | scale | origin_x | origin_z |
+|---|---|---|---|
+| Ambrose Valley | 900 | −370 | −473 |
+| Grand Rift | 581 | −290 | −290 |
+| Lockdown | 1000 | −500 | −500 |
 
-**How exact it is.** The orientation is certain. Scale and origin are right to about 1 to 2% of the map width; a fit suggests a slightly smaller x scale on two maps. We kept the documented constants.
+- **UV storage.** The pipeline stores u and v, never pixels, as integers on 65,535 steps (finer than 0.02 world units). So the image size is free: the README says 1024², the files are 4320², 2160×2158 and 9000², and the app draws 2048-pixel WebPs.
+- **Y flip.** Image rows count downward and z counts upward, hence `1 − v`.
+- **One function per language** (`pipeline/maps.py`, `web/src/lib/projection.ts`). The constants live only in the pipeline and reach the app through the manifest. The app's function is tested against points the pipeline writes, and both against the README's worked example.
+- **Proof.** Every row lands inside its image. Of the eight possible axis orientations only this one keeps players on the map: at most 0.40% of samples fall off it, against at least 2.7% for any other. Zoomed in, trails follow roads and cross a bridge (`docs/img/overlay_*.jpg`, `orientation_*.jpg`). Scale and origin are right to about 1 to 2% of a map's width.
 
-## Where the data was ambiguous
+## Assumptions
 
-| The data | What we did |
-|---|---|
-| `ts` is typed as milliseconds and described as match-relative | Read as Unix seconds: the values are dates in February 2026, and position samples are 5 apart |
-| 17 files carry a bot-style numeric id but human events | Human or bot is decided per journey, by its movement event. These 17 are shown as humans without an account id |
-| A journey stored twice, three files written twice, 3 Kill rows that mirror a death, positions logged after death | Four cleaning rules; 487 rows removed, each counted and tested |
-| 1,227 rows that repeat another row of the same file, all Loot or BotKill | Kept: they cannot be told apart from real repeats |
-| No extraction event | A journey with no death row is "no death recorded" |
-| Position is not sampled while a player stands still | Sample counts are labelled as movement, not time spent |
-| A gap of more than 5 s between two positions of a journey | Playback keeps the head at the earlier position and moves it in the last 5 s; across a shorter gap it moves in a straight line (assumption A6). The rule is one function, written once in the pipeline as the reference and once in the app, which is tested against a fixture the pipeline writes |
-| No journey's path is a single row | Playback handles one all the same: its head appears in that second and stays (assumption A9, tested on a made-up journey) |
+| The README says | The data shows | Decision |
+|---|---|---|
+| `ts` is milliseconds within the match | Unix seconds: dates in February 2026 | Read the raw integer as seconds |
+| A UUID is a human, a numeric id a bot | 17 numeric-id files hold human events | Human or bot by movement event; these are "no account id" (A1) |
+| Kill and Killed are player against player | Every event is written from its file owner's side; each Kill mirrors a Killed of the same file | A kill lies where the killer stood; the 3 mirrored rows are dropped (A4) |
+| Players must extract | No extraction or match-end event | "No death recorded", never "survived" (A3) |
+| Position is sampled periodically | Every 5 s, and not while standing still | Counts mean movement, not time; playback waits, then moves in the last 5 s (A6) |
+| Nothing | A journey stored twice, three files written twice, rows after a death | Four cleaning rules remove 487 rows, each tested; repeated Loot and BotKill rows stay (A2) |
+| Five day folders | UTC days of writing; 5 matches start the evening before | A match belongs to its folder's day (A10) |
 
-The full list, with the evidence for each, is in `docs/DATA_NOTES.md`.
+All ten, with evidence: `docs/DATA_NOTES.md`.
 
 ## Trade-offs
 
 | Decision | Instead of | Why | Cost |
 |---|---|---|---|
-| Preprocess offline into static files | Parsing parquet in the browser, or an API | Fast first load, no backend, every number checked before it ships | New data needs a rebuild and a deploy |
-| One bundle per map | One file per match | 93% of matches are a single journey; the all-matches view would need hundreds of requests | Opening one match loads its whole map |
-| The clock of playback outside React, in a store of its own | The time in React state | The time changes with every frame; only the canvas layer and the slider listen to it, and React renders nothing while a match plays | State in two places: what is shown, and when |
-| No layer for the areas that players ignore | A layer that marks every cell no path crosses | It needs a mask of the playable area, or roofs, rocks and water would count as ignored | Unused areas are read from the empty cells of the traffic layer |
-| A history entry for each thing the user chooses; moving, zooming and the time of playback rewrite the entry in place | An entry for every change, or none | Back undoes a choice without walking through every drag and pause | The store has to say what a choice is: it counts them |
-| No list of a journey's events as text | A list in the sidebar | Tooltips cover it, and the sidebar stays short | What a tooltip says about a single event can be reached with a pointer only |
-| Heatmaps binned in the browser | Precomputed grids | They follow every filter | Binning work on each change |
-| Canvas 2D | SVG, or WebGL with deck.gl | Enough for this much data, no heavy dependency | Hit-testing and zoom are written by hand |
-| The README's map constants | A fitted calibration | They are the studio's own transform | A point can sit up to about 10 world units off near one edge of a map |
-| Generated data committed to git | Building it on the host | The host has no raw data | 2.8 MB in the repo |
+| Offline pipeline, static files | Parquet in the browser, or an API | Fast first load, no backend, every number checked before it ships | New data needs a rebuild and a deploy |
+| Canvas 2D, written by hand | deck.gl, or SVG | Enough for this data; no heavy dependency | Hit-testing and zoom are our code |
+| One bundle per map | One file per match | 93% of matches hold one journey | Opening one match loads its map |
+| Heat binned in the browser | Precomputed grids | It follows every filter | About 2 ms of work per change |
+| No layer for ignored areas | Marking cells no path crosses | It needs a mask of walkable ground | Read from the Traffic layer |
+| No list of a journey's events | Text in the sidebar | Tooltips cover it | One event's details need a pointer |
+| Desktop only | Touch and pinch zoom | Level Designers work at a desk | A notice below 900 px |
+| A history entry per choice | One per change, or none | Back undoes a choice, not a drag | A double-click that changes the focus leaves one entry |
