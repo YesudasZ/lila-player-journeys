@@ -274,13 +274,14 @@ web/src/components/                          mapSurface, MapView and App change 
 **Goal:** answer "where" questions for a whole map at once. The detailed plan below was approved on 24 Nov 2026; it is built on the branch `phase-7-heatmaps`.
 
 **Deliverables**
-- One heat layer at a time: Traffic, Kills, Deaths or Loot (Should 2), chosen with a row of buttons in the sidebar, above the legend. None is on at first, so the bare address stays the view it was.
-- What feeds it: the journeys that are drawn. So the heat follows the map, the days, the fates, the open match and the switches for humans and bots; there is no second switch. Its kinds are event groups of the manifest: `movement`, `kill`, `death`, `loot`. Storm deaths stay markers: 39 points are not a heat map.
+- One heat layer at a time: Traffic, Kills, Deaths or Loot (Should 2), chosen with a row of buttons at the top of the sidebar, above the filters, where it is easy to find. None is on at first, so the bare address stays the view it was.
+- What feeds it: the journeys that are drawn. So the heat follows the map, the days, the fates, the open match and the switches for humans and bots; there is no second switch. Its kinds stand for event groups of the manifest: `movement`, `kill`, `death` with `storm_death`, and `loot`. Deaths include storm deaths, and the legend says how many ("incl. 39 storm deaths").
 - Cells of 10 x 10 world units (90 x 90 on Ambrose Valley, 58 x 58 on Grand Rift, 100 x 100 on Lockdown), smoothed once. One colour per layer, taken from the tokens: traffic teal, kills yellow, deaths vermilion, loot green. The strength of the colour says how much, on a square-root scale.
-- A legend with the real numbers: the rows counted, the matches behind them, the largest count in a cell and the cell's size. For traffic it says that these are movement samples, not time spent.
+- A legend with the real numbers: the rows counted, the matches behind them, the largest count in a cell and the cell's size. It says exactly what the layer counts and where: kills of players and of bots at the killer's position, deaths in combat and in the storm where the victim fell, movement samples (not time spent) where the player or bot was, and the count of each event by its name in the data. DATA_NOTES.md has the same as a table.
+- While a heat layer is on, the minimap under it is dimmed by about 40%, so that the colour reads clearly. There is no switch for it.
 - `heat` joins the address, written in place like the rest.
 - The heat lies between the minimap and the journeys and does not follow playback: it shows the whole selection.
-- Not built in this phase: the "no recorded path" layer (Should 1), which needs a mask of the map's artwork from the pipeline and a second way of counting, by path segments; the time-spent layer (Could 1); an opacity slider. The traffic layer shows unused areas as cells without colour.
+- Not built in this phase: the "no recorded path" layer (Should 1), which needs a mask of the map's artwork from the pipeline and a second way of counting, by path segments; the time-spent layer (Could 1); an opacity slider. The traffic layer shows unused areas as cells without colour. For ARCHITECTURE.md, as a trade-off: the ignored-areas layer is not built, since it needs a mask of the playable area; empty traffic cells show the unused areas instead.
 
 **Files**
 
@@ -295,7 +296,7 @@ web/src/components/HeatControl.tsx        the buttons and the legend; Sidebar an
 **Acceptance**
 - Before smoothing, the sum of each count grid equals the number of rows that fed it, for every kind on every map; over the three maps the sums equal the manifest's totals (unit tests). Smoothing keeps the total.
 - A row at each corner of the map lands in the corner cell, also on Grand Rift, whose image is not square.
-- Counting Ambrose Valley with all matches takes under 50 ms on the development machine (Vitest benchmark; the reading goes into PROGRESS.md).
+- Counting Ambrose Valley with all matches takes under 50 ms on the development machine (a test takes the median of 15 runs; the reading goes into PROGRESS.md).
 - In the preview: each layer on each map, and the legend's numbers follow a day filter, a fate filter and the bots switch.
 
 **Review:** no review agents in this phase (the user's decision with the plan: this model's weekly limit stood at 76% with five phases to go). Instead: the grid sums against the manifest's totals, one-line faults put into the new code, and every layer on every map in the preview.

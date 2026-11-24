@@ -117,3 +117,14 @@ Claims heard before profiling were treated as hypotheses only. None was used wit
 - **Storm deaths are few and late** (39, all after 10 min 55 s): markers, not a heatmap.
 - **Counts differ wildly between maps** (566 / 171 / 59 matches). Every aggregate view has to say how many matches it rests on.
 - **"Ignored areas" cannot come from sample counts alone.** Players cross cells between samples, and the artwork includes roofs, rocks and water nobody can walk on. It needs path segments, not points.
+
+## What the heat layers count
+
+Each layer counts rows of the journeys that are drawn, in cells of 10 x 10 world units. Every row is where the owner of its file stood in that second (row 9), so a kill lies where the killer stood and a death where the victim fell. The numbers are the rows left after cleaning, over all three maps.
+
+| Layer | Events counted | Rows | Counted at | Note |
+|---|---|---|---|---|
+| Traffic | Position, BotPosition | 50,931 and 21,712: 72,643 | where the player or bot was | Movement, not time spent: no position is recorded while a player stands still (row 6) |
+| Kills | Kill, BotKill | 0 and 2,406 | the killer's position | Kills of players and of bots are counted. After cleaning every kill row is a BotKill, a kill of a bot: 2,236 in human files and 170 in bot files. No kill of a player by a player can be verified (row 10) |
+| Deaths | Killed, BotKilled, KilledByStorm | 3, 697 and 39: 739 | where the victim fell | Storm deaths are included, and the legend says how many. Of the 697 BotKilled rows 401 are deaths of humans and 296 deaths of bots |
+| Loot | Loot | 12,829 | where the player stood | Repeated Loot rows are kept (assumption A2) |
