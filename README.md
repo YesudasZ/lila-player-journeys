@@ -14,7 +14,7 @@ Every view has its own address, so a finding can be sent as a link. Built for th
 | [ARCHITECTURE.md](ARCHITECTURE.md) | one page: stack, data flow, coordinate mapping, assumptions, trade-offs |
 | [docs/DATA_NOTES.md](docs/DATA_NOTES.md) | what the data really contains, where its README is wrong, and what the pipeline does about it |
 | [docs/DATA_FORMAT.md](docs/DATA_FORMAT.md) | the files the app loads, field by field |
-| [docs/BRIEF.md](docs/BRIEF.md) | the assignment as a checklist |
+| [docs/QA_REPORT.md](docs/QA_REPORT.md) | the final QA: every requirement of the brief tested on the live tool, with evidence |
 
 ## Tech stack
 
@@ -42,7 +42,7 @@ make data       # rebuild web/public/data/; writes nothing unless every check pa
 make insights   # print the numbers behind INSIGHTS.md
 ```
 
-`make profile` measures the raw data again (`docs/profile/`), and `make overlay` redraws the images that prove the coordinate mapping (`docs/img/`). `make help` lists every target.
+`make profile` measures the raw data again (`docs/profile/`), and `make overlay` redraws the images that prove the coordinate mapping (`docs/img/`). `make help` lists every target. Every number in the docs comes from these scripts: `make profile` for the raw data and `make insights` for the insights.
 
 ## Tests
 
@@ -98,6 +98,6 @@ Each step is a link into the live tool. A recording of the same steps: [docs/med
 
 9. **Data and keys.** The button at the top right opens a short panel: where the data differs from its README, what each heat layer counts, and the keys.
 
-## How it was built
+---
 
-AI tools were used throughout: the project was built with Claude Code. `CLAUDE.md`, `docs/PLAN.md` and `docs/PROGRESS.md` show how the work was planned, checked and recorded phase by phase. The numbers in the docs come from scripts in this repo: `make profile` for the raw data and `make insights` for the insights.
+Built by Yesudas M J. I used Claude Code as an AI pair-programmer, as encouraged in the brief; I planned the phases, made the architecture and scope decisions, reviewed every phase and ran the QA.

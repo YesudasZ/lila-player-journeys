@@ -50,7 +50,7 @@ One skeptic fitted scale and offset per map with a registration score (the colou
 
 A second, independent signal on Ambrose Valley points the same way: samples at water level (`y` of about 100) coincide best with river pixels at a slightly smaller x scale. My own zoomed side-by-side of Ambrose Valley's east road agrees: with the README constants the samples run up to about 9 units west of the road, with the fitted ones they sit on it.
 
-The tool uses the README constants, which are the studio's documented transform and right to first order. Whether to apply a calibration is a question for the project owner, recorded in `docs/PROGRESS.md`.
+The tool uses the README constants, which are the studio's documented transform and right to first order. Whether to apply a calibration was the project owner's decision: the documented constants were kept.
 
 ## 5. Review of the documents
 
@@ -61,6 +61,8 @@ Three more agents reviewed the Phase 1 documents with no access to the reasoning
 | Brief | `BRIEF.md` against the 6-page PDF | 2 should-fix, 5 nits; no requirement missing; no hidden or AI-directed text in the PDF | Applied |
 | Evidence | every number in `DATA_NOTES.md`, `CLAUDE.md`, `PLAN.md` against the profile report | 11 should-fix, 4 nits: statements without a source, claims wider than their number, two outright errors | Applied; missing numbers added to the profiler |
 | Plan | `PLAN.md` as a studio reviewer would read it | 6 blockers, 22 should-fix, 6 nits: acceptance criteria that could not be checked, hosting and all documents left to the last two days | Applied in the revised plan |
+
+`BRIEF.md`, `CLAUDE.md` and `PLAN.md` were the project's planning documents. They are the author's working files and are not part of the submitted repo.
 
 ## 6. Phase 2: the pipeline, checked twice
 
@@ -76,4 +78,4 @@ On 23 Nov 2026 three agents reviewed the finished pipeline. After the fixes two 
 | Mutation testing, second run | 347 single changes, run against the 149 tests of the time | 61 gaps and 10 changes that no input can tell apart; 31 tests added |
 | Mutation testing, on the finished code | The 319 of those changes that still apply, and 40 new ones for the code changed since, run against the 229 tests | 349 caught. The 10 that pass are the ones no input can tell apart |
 
-The decisions that changed are listed in the last section of [PLAN.md](../PLAN.md); the data files are described in [DATA_FORMAT.md](../DATA_FORMAT.md).
+The decisions that changed were recorded in the project's plan, a working file outside the submitted repo; the data files are described in [DATA_FORMAT.md](../DATA_FORMAT.md).

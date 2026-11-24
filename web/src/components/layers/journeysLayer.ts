@@ -28,7 +28,7 @@ const OFF_SCREEN = 12; // CSS pixels beyond the viewport within which a marker i
  * other read as density, and heads and markers are smaller, so that hundreds of them leave the paths visible.
  */
 const LOOKS = { single: { width: STROKES.line, strength: 0.95, size: 1 }, all: { width: 1.25, strength: 0.5, size: 0.7 } };
-/** The time of the last draw, for the browser's Performance panel and for the reading in PROGRESS.md. */
+/** The time of the last draw, for the browser's Performance panel and for frame-time readings (docs/QA_REPORT.md, C6). */
 const DRAW_MEASURE = "journeys-draw";
 
 /** What is under the pointer, for the tooltip. */

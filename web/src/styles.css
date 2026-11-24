@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* "LILA Night": the only colours and fonts of the app (CLAUDE.md, "Design tokens"). The default palette is switched off. */
+/* "LILA Night": the only colours and fonts of the app, the project's design tokens. The default palette is switched off. */
 @theme {
   --color-*: initial;
   --color-bg: #0c0c0d;
