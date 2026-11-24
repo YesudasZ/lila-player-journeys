@@ -3,7 +3,7 @@ PY   := .venv/bin/python
 RAW  := data/raw/player_data
 VENV := .venv/.installed
 
-.PHONY: help setup data profile overlay test
+.PHONY: help setup data profile overlay insights test
 
 help:     ## list these targets
 	@awk -F ':.*## ' '/^[a-z]+:.*## / {printf "make %-8s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -25,6 +25,9 @@ profile: $(VENV)  ## measure the raw data -> docs/profile/profile_report.{json,m
 
 overlay: $(VENV)  ## draw the coordinate-mapping proof images -> docs/img/
 	$(PY) -m pipeline.verify_overlay --raw $(RAW) --out docs/img
+
+insights: $(VENV) ## print the statistics behind INSIGHTS.md, from the committed data files (no raw data needed)
+	$(PY) -m analysis.insights
 
 test: $(VENV)     ## run the tests (no raw data needed)
 	$(PY) -m pytest -q

@@ -355,7 +355,7 @@ Checks: 476 Vitest tests, 254 pytest tests, type check and ESLint clean, build 9
 ## Phase 9: Deployment (0.5 h, in two steps)
 
 - **9.1, right after the Phase 3 pull request is merged** (before that, `main` has no `web/` folder to build). You create the Vercel project from the GitHub repo with root directory `web` (one-time, in the browser). Production follows `main`, so only merged phases are live; every later pull request gets its own preview link. The URL goes into the repo's About field and, through a one-line pull request, to the top of the README. **Done on 23 Nov:** https://lila-player-journeys-psi.vercel.app. Vercel offered the whole repo as a multi-service project, the Python pipeline next to the app; the `web` folder was imported as a single project with the Vite preset instead. The plain project name was taken, hence the `-psi` in the address.
-- **9.2, on Thursday.** The site and three deep links open in a private window; on a phone the page loads and shows the desktop notice.
+- **9.2, on Thursday.** The site and three deep links open in a private window; on a phone the page loads and shows the desktop notice. **Checked on 24 Nov**, on the branch of Phase 10: the evidence is in PROGRESS.md, step 9.2.
 
 ## Phase 10: Insights and docs (2 h, spread over Wednesday and Thursday)
 
@@ -368,6 +368,10 @@ Checks: 476 Vitest tests, 254 pytest tests, type check and ESLint clean, build 9
 **Candidate insights.** To be found with the tool, not assumed. Seen so far in the overlay images, not yet measured: kills concentrate in a few zones of each map; parts of each map carry almost no traffic. Measured: storm deaths come only after 10 min 55 s; 43% of identified human journeys record no death. Any kill-zone insight must say that the kills are of bots.
 
 **Acceptance:** every number in INSIGHTS.md is printed by `analysis/insights.py` and visible in the tool at its deep link; ARCHITECTURE.md prints to one A4 page from GitHub's rendered view; each checklist row C1 to C10 has a walkthrough step.
+
+**As the user set Phases 9 and 10 on 24 Nov 2026** (done together on the branch `phase-10-docs`; no review agents, small commits). Step 9.2: confirm that the production URL serves the merged `main`, has no console errors and opens deep links; the URL at the top of the README and in the repo's About field. Phase 10: (1) `analysis/insights.py` computes six to eight candidate findings from the committed data and prints the numbers; the user picks three before INSIGHTS.md is written. (2) INSIGHTS.md: for each of the three, what caught the eye, the evidence (numbers from the script and a deep link into the tool), what to do and which metrics it affects, and why a Level Designer should care. (3) ARCHITECTURE.md on one page: stack and why; the data's way from parquet to the canvas layers; the coordinate mapping walked through; assumptions as "README says / data shows / decision"; trade-offs. (4) README: the live URL first, what the tool does in three lines, tech stack, setup, "Env vars: none", tests, project structure, a walkthrough of numbered steps with deep links and screenshots (Playwright, in `docs/img/walkthrough/`), `docs/media/walkthrough.mp4` recorded and added by the user, links to ARCHITECTURE.md and INSIGHTS.md, and a note that AI tools (Claude Code) were used.
+
+**Measured on 24 Nov 2026, once the branch was pushed:** GitHub's view of ARCHITECTURE.md prints on three A4 pages, not on one as the acceptance below asks. One printed page holds about a third of it, which would not hold the sections and tables the brief lists. The content was kept. The user chose to keep it as it is (24 Nov), so this criterion is not met and is not pursued.
 
 ## Phase 11: Final QA (0.75 h)
 
