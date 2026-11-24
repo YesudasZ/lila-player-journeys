@@ -1,10 +1,10 @@
 # Progress Log
 
-Last updated: 2026-11-24 18:42 IST
+Last updated: 2026-11-24 19:27 IST
 
 ## Current phase
 
-Step 9.2 and Phase 10 (deployment check; insights and docs), done together on the branch `phase-10-docs` as the user set them on 24 Nov. Status: **IN PROGRESS**, stopped for the user to pick three of the eight candidate insights. No pull request yet.
+Step 9.2 and Phase 10 (deployment check; insights and docs), done together on the branch `phase-10-docs` as the user set them on 24 Nov. Status: **DONE (awaiting my review)**; the last commit before this file's is `1ae85c8`. No pull request yet: it is opened on the user's yes.
 
 Phases 1 to 8 and step 9.1 are merged: pull requests #1 to [#7](https://github.com/YesudasZ/lila-player-journeys/pull/7) were reviewed and merged by the user, the last one (Phase 8) on 24 Nov at 18:01 IST as merge commit `603c5ef`. The tool is live at https://lila-player-journeys-psi.vercel.app and shows Phase 8; production on Vercel follows `main`.
 
@@ -22,8 +22,8 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 | 6 | Timeline and playback | APPROVED (merged) | pull request [#5](https://github.com/YesudasZ/lila-player-journeys/pull/5) |
 | 7 | Heatmaps | APPROVED (merged) | pull request [#6](https://github.com/YesudasZ/lila-player-journeys/pull/6) |
 | 8 | Polish | APPROVED (merged) | pull request [#7](https://github.com/YesudasZ/lila-player-journeys/pull/7) |
-| 9 | Deployment (9.1 after Phase 3, 9.2 with Phase 10) | 9.1 APPROVED (merged); 9.2 checked on 24 Nov, awaiting my review with Phase 10 | pull request [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2); branch `phase-10-docs` |
-| 10 | Insights and docs | IN PROGRESS | branch `phase-10-docs` |
+| 9 | Deployment (9.1 after Phase 3, 9.2 with Phase 10) | 9.1 APPROVED (merged); 9.2 DONE (awaiting my review) with Phase 10 | pull request [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2); branch `phase-10-docs` |
+| 10 | Insights and docs | DONE (awaiting my review) | branch `phase-10-docs`, `1ae85c8` |
 | 11 | Final QA | NOT STARTED | |
 
 [PLAN.md](PLAN.md) was approved by the user on 2026-11-23. Phase 2 was approved with the user's go for Phase 3 the same day, the changed plan lines included.
@@ -38,13 +38,13 @@ Step 9.2 and Phase 10 are done together; the user's brief for them is in PLAN.md
 - [x] 10.3 INSIGHTS.md: (1) on Lockdown the storm kills half of the players who stay late (candidate B); (2) bots are fought where the loot is (D, with the kill concentration of C); (3) each map has a quiet quarter (E). E is worded more carefully than the candidate was: the screenshot of Lockdown showed that the artwork's rectangle holds sea and empty corners, so "cells no journey crosses" (45.9% / 46.1% / 64.6%) is a loose upper limit. The insight rests on what needs no mask (crossings per quarter, the busiest tenth, cells under one journey in a hundred) and says the limit. The script got the numbers the text needs: how the late journeys ended, the cells that hold half of the loot and the cells next to them, crossings by quarter. Tests: every number the text quotes is pinned, and every decimal in INSIGHTS.md has to be one the script prints. Each insight has deep links and a screenshot of the live tool. Three screenshots were looked at and show what the text says: Lockdown with 17 storm deaths of 17 matches, `fbbc5d02` at 1:58, Lockdown's traffic
 - [x] 10.4 ARCHITECTURE.md rewritten for one page (929 words): stack and why; data flow; the coordinate mapping with the constants of the three maps, UV storage, the Y flip, the proof and the tests; seven assumptions as "README says / data shows / decision"; eight trade-offs. Not verified yet: that GitHub's view of it prints on one A4 page, which is checked once the branch is pushed
 - [x] 10.5 README: the live URL first, what the tool does in three lines, tech stack, run the app, rebuild the data (the zip in `_inbox/`), "Env vars: none", tests, project structure, a walkthrough of nine steps with deep links and eight screenshots, and the note on AI tools. Screenshots: 11 JPEG files (1.9 MB) in `docs/img/walkthrough/` and `docs/img/insights/`, taken from the live tool at 1440 x 900 with Playwright 1.65.1 and the installed Chrome; nothing was added to `package.json`. `docs/media/walkthrough.mp4` is linked and not there yet: the user records and adds it
-- [ ] 10.6 Phase-end docs and checks; status "DONE (awaiting my review)"; ask once to push and open the pull request; stop
+- [x] 10.6 Phase-end checks: `make test` 263 tests, `npm run check` 476 tests (the app's code did not change in this phase). BRIEF.md rows S3 to S5 updated. Status "DONE (awaiting my review)"
 
 ## Exactly where I stopped
 
 - Branch `phase-10-docs`, cut from `main` at `603c5ef`; local only, nothing pushed.
-- Steps 9.2 and 10.1 are committed. The eight candidates and their numbers were shown to the user, who picks three.
-- **NEXT:** when the user has picked: step 10.3. For each picked finding, make its numbers the ones INSIGHTS.md quotes (add what a claim needs to `analysis/insights.py`, never a number by hand), pin them in `pipeline/tests/test_insights.py`, and open every deep link once to see that the tool shows what the text says. Then 10.4, 10.5 and 10.6, a commit after each.
+- Step 9.2 and Phase 10 are done and wait for the user's review: `analysis/insights.py`, INSIGHTS.md, ARCHITECTURE.md, README.md with the walkthrough, 11 screenshots.
+- **NEXT:** on the user's yes, push the branch and open the pull request into `main` (no attribution line), record it here, read the first CI run once. Then check once that GitHub's view of ARCHITECTURE.md prints on one A4 page (Playwright's `pdf` command on the page of the pushed branch) and shorten it if it does not. The user records `docs/media/walkthrough.mp4` and adds it; the README links to it already. Then stop for the review. Phase 11 (final QA) starts only on the user's go, in a fresh session.
 
 ## Decisions and assumptions made
 
@@ -200,6 +200,12 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 - "Check the deployed commit": GitHub lists no deployment records for this repo, so the check is the Vercel status on `main`'s commit together with the file names of the build, which carry a hash of their content and are the same in production and in a local build of that commit.
 - The statistics count in the cells of the app's heat layers, so a number of the script is a number of the tool's legend. A cell counts as crossed when a path passes through it between two rows, not only when a row lies in it.
 
+2026-11-24, Phase 10, while building:
+- The user picked candidates B, D and E. D carries the kill concentration of C as support.
+- E changed its weight after the screenshot of Lockdown: the share of cells no journey crosses counts sea and the corners of the artwork, so it is given as an upper limit only, and the insight rests on numbers that need no mask.
+- The README gives no test counts: they change with every phase.
+- The tool's links in the docs name the map also where it is the first one (`?map=AmbroseValley`); the tool opens them and writes the short form.
+
 ## Open questions for the user
 
 1. Should `docs/PROGRESS.md`, `CLAUDE.md` and `.claude/` stay in the repo at submission? They show how the work was run with Claude Code, which the brief allows; they are also working notes in a public repo.
@@ -207,6 +213,7 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 3. `/resume` is also the name of a built-in Claude Code command (reopen a past conversation). Keep the name, or rename it (for example `/where`)?
 4. At what hour on Thu 26 Nov is the submission due?
 5. The Phase 2 review asked for a linter and a type checker in CI (ruff and mypy, development-only dependencies). Add them? The code already keeps to one line length and has type hints, but nothing checks them. Not blocking.
+7. The repo's About description still ends in "Work in progress." Change it at submission (`gh repo edit --description`, on the user's yes)?
 6. Pull request #1 was merged with a merge commit. For the next pull requests: keep "Rebase and merge" as the rule (the repo can be set to offer only that method: one `gh repo edit` command, on the user's yes), or accept merge commits and change the rule in CLAUDE.md?
 
 ## Commands that work
@@ -215,7 +222,7 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 |---|---|---|
 | `unzip _inbox/player_data.zip -d data/raw` | restores the raw data | 2026-11-22 |
 | `make setup` | creates `.venv`, installs pinned dependencies | 2026-11-22, in a fresh clone |
-| `make test` | 261 tests, no raw data needed; creates `.venv` on first use. Run it after `git add`: the hygiene tests see tracked files only | 2026-11-24 18:42 |
+| `make test` | 263 tests, no raw data needed; creates `.venv` on first use. Run it after `git add`: the hygiene tests see tracked files only | 2026-11-24 19:27 |
 | `make insights` | prints the statistics behind INSIGHTS.md from the committed data files; no raw data needed | 2026-11-24 18:42 |
 | `cd web && npm run check` | type check, ESLint with no warning allowed, 476 Vitest tests | 2026-11-24 14:33 |
 | `cd web && npm run build` | production build into `web/dist/` (not committed); JavaScript 91.57 kB gzipped | 2026-11-24 14:33 |
@@ -235,11 +242,11 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 - In the dev server of the preview, removing a source file leaves two errors in the console of the page that was open (the hot reload asks for the file that is gone). A fresh load is clean; to tell, look at the failed requests of that page load, not at the console's history.
 - Commits stay local until the user approves each push.
 - CI: all three checks passed on pull request #1, the app job and the `@v7` actions included. The run on `main` after the merge has not been read.
-- Screenshots for pull requests and for the walkthrough: the preview pane's screenshots are not files the repo can hold. Phase 10 needs a way to write them (Playwright, a development dependency: ask first).
+- Screenshots are taken from the live tool with Playwright's command line and the installed Chrome: `node <the npx cache>/node_modules/playwright/cli.js screenshot --channel chrome --viewport-size 1440,900 --wait-for-timeout 7000 <address> <file.png>`, then saved as JPEG with Pillow. Going through `npx playwright` each time took minutes per picture; calling the cached command directly takes 8 s. Nothing was added to `package.json`. After a change to the tool that a picture shows, the picture has to be taken again from the deployed site.
 - The preview pane of this session reads `~/YesudasZ/.claude/launch.json`, where the entry `lila-web` (port 5183) was added. `.claude/launch.json` in this repo (entry `web`, port 5173) is for sessions started in this folder. Vite reloads the page when a file under `web/public/` changes, so a failure test that moves a data file away cannot show the retry working; set the failure in the app's own store instead.
 - Usage: the 5-hour limit was reached on 23 Nov shortly before 17:00 IST while three planning agents ran next to a long conversation, and the two-agent review of Phase 3 took about 40% of a window. Keep agent use low, and prefer a fresh session per phase, started with the resume protocol. The limit was reached again at 22:00 IST the same day, at the very end of step 9.1, in a conversation that had grown long; nothing was lost.
 - One of the reviewers' one-line faults is still not noticed by a test: removing the guard in `scaleBar` for `Math.log10` landing just under a whole number. No input reaches it in this JavaScript engine.
 - GitHub's "Contributors" box still showed two contributors on 2026-11-23 10:45 IST, about 11 hours after the rewrite was pushed; GitHub's API lists one. The user chose to wait. Recheck before submission (also a Phase 11 check). Fallbacks: recreate the repo, or GitHub Support.
-- `ARCHITECTURE.md` is a first draft of about 1,000 words. It has to fit one printed page by Phase 10: trim it then.
+- `ARCHITECTURE.md` has 929 words and is meant to fit one printed page. Whether GitHub's view of it does is checked once the branch is pushed.
 - The README's map constants may be 1.5 to 2% too large in x on two maps (`docs/profile/crosscheck.md`, section 4). Kept as documented, by the user's decision.
 - 60 of the profiler's 235 metrics were added after the blind cross-check and were not re-derived by it (the cleaning counts among them were confirmed by a skeptic).

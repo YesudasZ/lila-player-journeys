@@ -65,9 +65,9 @@ One GitHub repository link that contains everything. Links to documents or drive
 |---|---|---|---|
 | S1 | Source code | All of it, in the repo | ◐ |
 | S2 | Working deployment | A deployed URL, written in the repo (top of the README), that the reviewers can open and use | ◐ live, and written at the top of the README; it shows each phase once it is merged |
-| S3 | README | Tech stack, setup steps, environment variables | ◐ setup for the app and the pipeline written; tech stack and walkthrough in Phase 10 |
-| S4 | ARCHITECTURE.md, one page | (a) what it is built with and why; (b) data flow from parquet to screen; (c) how game coordinates are mapped to the minimap, walked through; (d) assumptions where the data was ambiguous; (e) major trade-offs, a simple table is fine | ◐ first draft |
-| S5 | INSIGHTS.md, three things learned about the game, using the tool we built | For each: (a) what caught the eye; (b) evidence: a pattern or statistic; (c) is it actionable, which metrics move, what to do; (d) why a Level Designer should care | ☐ |
+| S3 | README | Tech stack, setup steps, environment variables | ◐ rewritten in Phase 10: the live URL first, tech stack, setup for the app and for the data, "Env vars: none", tests, project structure, and a walkthrough of nine steps with links and screenshots; the recording `docs/media/walkthrough.mp4` is added by the author; awaiting review |
+| S4 | ARCHITECTURE.md, one page | (a) what it is built with and why; (b) data flow from parquet to screen; (c) how game coordinates are mapped to the minimap, walked through; (d) assumptions where the data was ambiguous; (e) major trade-offs, a simple table is fine | ◐ rewritten in Phase 10 to fit one page: stack, data flow, the coordinate mapping walked through, assumptions, trade-offs; the printed length is checked once the branch is pushed; awaiting review |
+| S5 | INSIGHTS.md, three things learned about the game, using the tool we built | For each: (a) what caught the eye; (b) evidence: a pattern or statistic; (c) is it actionable, which metrics move, what to do; (d) why a Level Designer should care | ◐ written in Phase 10: the storm on Lockdown, kills and loot, the quiet quarter of each map; every number is printed by `make insights` and pinned in a test, and each insight has deep links and a screenshot; awaiting review |
 
 ## Their pre-submission checklist
 
