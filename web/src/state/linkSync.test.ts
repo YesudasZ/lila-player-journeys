@@ -223,7 +223,7 @@ describe("the view in the address", () => {
 });
 
 describe("the time of playback in the address", () => {
-  it("is written when it comes to rest, in place, and never while the match plays", async () => {
+  it("is written in place when it comes to rest, and every 2 s while the match plays", async () => {
     followClock();
     await loadFrom("?match=fbbc5d02");
     vi.useFakeTimers();
@@ -235,21 +235,57 @@ describe("the time of playback in the address", () => {
     playback.setState({ playing: true, time: 200 }); // as while it plays
     state().setView("AmbroseValley", { x: 1000, y: 900, zoom: 2 });
     playback.setState({ time: 250 });
-    vi.advanceTimersByTime(5000);
-    expect(written).toHaveLength(1);
-    expect(currentAddress()).toBe("https://tool.example/?match=fbbc5d02&t=250&view=1000,900,2"); // the copy button gives the moment
+    vi.advanceTimersByTime(1999);
+    expect(written).toHaveLength(1); // not with every frame, and not 300 ms after the move
+    expect(currentAddress()).toBe("https://tool.example/?match=fbbc5d02&t=250&view=1000,900,2"); // the copy button gives the moment at once
+    vi.advanceTimersByTime(1);
+    expect(written.at(-1)).toBe("replace /?match=fbbc5d02&t=250&view=1000,900,2"); // a reload now comes back close to the moment
+    playback.setState({ time: 270 });
+    vi.advanceTimersByTime(2000);
+    expect(written.at(-1)).toBe("replace /?match=fbbc5d02&t=270&view=1000,900,2");
+    vi.advanceTimersByTime(4000);
+    expect(written).toHaveLength(3); // the moment stood still meanwhile: nothing new to write
 
     playback.setState({ playing: false, time: 300 }); // the pause
     vi.advanceTimersByTime(299);
-    expect(written).toHaveLength(1);
+    expect(written).toHaveLength(3);
     vi.advanceTimersByTime(1);
-    expect(written).toEqual(["replace /?match=fbbc5d02&t=120.5", "replace /?match=fbbc5d02&t=300&view=1000,900,2"]);
+    expect(written.at(-1)).toBe("replace /?match=fbbc5d02&t=300&view=1000,900,2");
+    vi.advanceTimersByTime(10_000);
+    expect(written).toHaveLength(4); // paused: nothing more
+    expect(vi.getTimerCount()).toBe(0); // and no timer keeps running
 
     seek(523); // the end, where the whole match is shown
     vi.advanceTimersByTime(300);
     expect(written.at(-1)).toBe("replace /?match=fbbc5d02&view=1000,900,2");
-    expect(written.every((entry) => entry.startsWith("replace "))).toBe(true); // a pause or a seek never adds an entry
+    expect(written.every((entry) => entry.startsWith("replace "))).toBe(true); // playing, a pause or a seek never adds an entry
     stop();
+  });
+
+  it("keeps its rhythm of 2 s while the frames of playback keep coming", async () => {
+    followClock();
+    await loadFrom("?match=fbbc5d02");
+    vi.useFakeTimers();
+    const stop = sync();
+    playback.setState({ playing: true, time: 100 });
+    for (let frame = 1; frame <= 60; frame += 1) {
+      vi.advanceTimersByTime(100); // a frame every 100 ms, 6 s in all
+      playback.setState({ time: 100 + frame });
+    }
+    expect(written).toEqual(["replace /?match=fbbc5d02&t=119", "replace /?match=fbbc5d02&t=139", "replace /?match=fbbc5d02&t=159"]);
+    stop();
+  });
+
+  it("stops writing the moment when the sync is stopped", async () => {
+    followClock();
+    await loadFrom("?match=fbbc5d02");
+    vi.useFakeTimers();
+    const stop = sync();
+    playback.setState({ playing: true, time: 100 });
+    stop();
+    playback.setState({ time: 150 });
+    vi.advanceTimersByTime(5000);
+    expect(written).toEqual([]);
   });
 
   it("goes with a step that is taken while the match plays: the entry that is left holds that moment, and so does the new one", async () => {
@@ -263,7 +299,7 @@ describe("the time of playback in the address", () => {
     playback.setState({ time: 250 });
     state().setFocus(null); // a click on the empty map changes nothing in the address, so it is no step for it
     vi.advanceTimersByTime(5000);
-    expect(written).toHaveLength(2); // the passing of time is still not written
+    expect(written.slice(2)).toEqual(["replace /?match=fbbc5d02&t=250&hide=kill"]); // the moment, every 2 s, in place: no entry of its own
     stop();
   });
 

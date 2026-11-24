@@ -36,6 +36,7 @@ npm ci && npm run dev    # http://localhost:5173
 Needs Python 3.12 or newer and the assignment's `player_data.zip`, which is not in this repo. Put the zip into `_inbox/`, then:
 
 ```bash
+mkdir -p data/raw                          # unzip makes only one folder level
 unzip _inbox/player_data.zip -d data/raw   # creates data/raw/player_data/
 make data       # rebuild web/public/data/; writes nothing unless every check passes
 make insights   # print the numbers behind INSIGHTS.md

@@ -72,6 +72,10 @@ def test_ranks_share_the_mean_rank_among_equals_and_a_share_of_nothing_is_nothin
 def test_the_totals_are_the_manifests_and_the_tools():
     manifest, maps = load()
     numbers = findings(manifest, maps)
+    expected = {"days": 5, "matches": 796, "journeys": 1_242, "journeys_of_humans": 798}
+    assert numbers[TITLES["T"]] == expected | {"journeys_of_humans_with_an_account_id": 781, "journeys_of_bots": 444}
+    total = manifest["totals"]
+    assert (total["matches"], total["humans"], total["bots"], total["humans"] - total["anonymous"]) == (796, 798, 444, 781)
     kills = numbers[TITLES["C"]]
     assert sum(entry["kills_by_humans"] for entry in kills.values()) == manifest["totals"]["kills"] == 2_236
     assert sum(entry["kills_by_bots"] for entry in kills.values()) == manifest["totals"]["bot_kills"] == 170
@@ -134,8 +138,12 @@ def test_the_numbers_insights_md_quotes():
     assert of("E", "pct_no_journey_crosses") == [45.9, 46.1, 64.6]
 
 
-def test_every_decimal_in_insights_md_is_a_number_the_script_prints():
-    printed = "\n".join(lines(findings(*load())))
-    quoted = set(re.findall(r"(?<![\w.,])\d+\.\d+(?![\w.])", (ROOT / "INSIGHTS.md").read_text()))
-    assert len(quoted) > 30
-    assert sorted(number for number in quoted if f": {number}\n" not in printed + "\n") == []
+def test_every_number_in_insights_md_is_a_number_the_script_prints():
+    printed = "\n".join(lines(findings(*load()))) + "\n"
+    text = (ROOT / "INSIGHTS.md").read_text()
+    decimals = set(re.findall(r"(?<![\w.,])\d+\.\d+(?![\w.])", text))
+    prose = re.sub(r"\(https?://[^)]*\)|docs/[\w/.-]+", "", text)  # links and image paths hold ids and places, not findings
+    whole = {n.replace(",", "") for n in re.findall(r"(?<![\w.:/−-])\d[\d,]*(?![\w.:%/])", prose)} - {"2026"}  # 2026: the year of the data
+    assert len(decimals) > 30 and len(whole) > 30
+    assert sorted(number for number in decimals if f": {number}\n" not in printed) == []
+    assert sorted((n for n in whole if f": {n}\n" not in printed and f": {n}.0\n" not in printed), key=int) == []

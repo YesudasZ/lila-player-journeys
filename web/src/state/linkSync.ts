@@ -15,6 +15,8 @@ import { useAppStore, type AppState } from "./store.ts";
 
 /** Milliseconds after the last change. Panning changes the view many times a second, and browsers limit how often an address may be rewritten. */
 const WRITE_AFTER = 300;
+/** Milliseconds of real time between two writes of the moment while a match plays: a reload then comes back close to it. Safari allows 100 writes in 30 s. */
+const WRITE_WHILE_PLAYING = 2000;
 
 /** The query of a view, which is a state of the app and the time of its playback; until the manifest is there, the one the page was opened with. */
 function queryOf(state: AppState, time: number | null): string {
@@ -48,8 +50,9 @@ function write(how: "pushState" | "replaceState", query: string) {
 
 /**
  * Keep the address in step with the view, and the view in step with Back and Forward. While a match
- * plays, the passing of its time is not written; it is written when it comes to rest, after a pause
- * or a seek. Returns what stops it.
+ * plays, its moment is written in place every 2 s, not with every frame, so that a reload comes back
+ * close to it; when the time comes to rest, after a pause or a seek, it is written at once. Returns
+ * what stops it.
  *
  * `App` starts the clock's follower (`startPlayback`) before this, so the follower hears a change of
  * the app first: when a step is heard here, the clock already belongs to the view that the step opened.
@@ -69,8 +72,18 @@ export function startLinkSync(): () => void {
   const later = () => {
     window.clearTimeout(timer);
     timer = window.setTimeout(() => {
-      if (!playback.getState().playing) rewrite(currentQuery()); // the pause that ends the playing writes what has changed meanwhile
+      if (!playback.getState().playing) rewrite(currentQuery()); // while a match plays the writes below take care of it
     }, WRITE_AFTER);
+  };
+  let playingTimer = 0;
+  /** While a match plays, rewrite the entry every few seconds with its moment and whatever else has changed. */
+  const writeWhilePlaying = () => {
+    window.clearTimeout(playingTimer);
+    playingTimer = window.setTimeout(() => {
+      if (!playback.getState().playing) return; // the pause that ended it writes the moment it stopped at
+      rewrite(currentQuery());
+      writeWhilePlaying();
+    }, WRITE_WHILE_PLAYING);
   };
 
   const stopApp = useAppStore.subscribe((state, before) => {
@@ -87,12 +100,13 @@ export function startLinkSync(): () => void {
     }
     [seen, rested] = [state, time];
   });
-  const stopClock = playback.subscribe((clock) => {
+  const stopClock = playback.subscribe((clock, before) => {
+    if (clock.playing && !before.playing) writeWhilePlaying(); // a match starts to play
     // A clock that the follower is setting for a change of the app is not the time of the view that
     // is being left: that change is heard above in a moment, and takes the clock's time with it.
     if (useAppStore.getState() !== seen) return;
     rested = linkTime(clock);
-    if (!clock.playing) later(); // while it plays, nothing would be written: no need to ask sixty times a second
+    if (!clock.playing) later(); // while it plays the time changes sixty times a second: it is written every few seconds instead
   });
   /**
    * Back or Forward: the address is the one of another entry, whose view is opened, with its time
@@ -107,6 +121,7 @@ export function startLinkSync(): () => void {
     stopApp();
     stopClock();
     window.clearTimeout(timer);
+    window.clearTimeout(playingTimer);
     window.removeEventListener("popstate", onPop);
   };
 }

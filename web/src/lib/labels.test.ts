@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import { manifest } from "../testing/committed.ts";
-import { LAYER_LABELS, clock, countLabel, counted, dayLabel, fateLabel, markerTitle, whoLabel } from "./labels.ts";
+import { LAYER_LABELS, clock, countLabel, counted, dayLabel, drawnLine, fateLabel, markerTitle, whoLabel } from "./labels.ts";
 import { findMatches, journeysIn, matchesOfMap, noMatchNote } from "./matches.ts";
-import { LAYER_KEYS, MARKER_KINDS } from "./drawList.ts";
+import { LAYER_KEYS, MARKER_KINDS, type DrawnJourney } from "./drawList.ts";
 import { MARKER_SHAPES, shapePath } from "./markerShapes.ts";
 
 describe("who a journey belongs to", () => {
@@ -135,5 +135,13 @@ describe("the marker shapes", () => {
 
   it("differ from each other in outline, not only in colour", () => {
     expect(new Set(MARKER_KINDS.map((kind) => shapePath({ ...MARKER_SHAPES[kind], radius: 1 }))).size).toBe(MARKER_KINDS.length);
+  });
+});
+
+describe("the legend's first line", () => {
+  it("counts the matches and journeys that are drawn", () => {
+    expect(drawnLine({ matches: 566, journeys: new Array<DrawnJourney>(836) })).toBe("566 matches, 836 journeys");
+    expect(drawnLine({ matches: 1, journeys: new Array<DrawnJourney>(1) })).toBe("1 match, 1 journey");
+    expect(drawnLine({ matches: 0, journeys: [] })).toBe("0 matches, 0 journeys");
   });
 });
