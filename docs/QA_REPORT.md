@@ -10,7 +10,7 @@ The full QA before submission, run on 24 Nov 2026 as the user's QA brief asks: t
 
 ## Summary
 
-**The tool passes the brief.** Every core requirement works on production and every number it shows equals a separate count from the data files. PageSpeed Insights scores it 90 / 100 / 100 / 100 on desktop and 95 / 100 / 100 / 100 on mobile; playback runs at 59.8 frames a second. Nothing is a blocker. Six items should be fixed before submitting; they are planned below and fixed on the branch `qa-fixes`.
+**The tool passes the brief.** Every core requirement works on production, and every number it shows equals a separate count from the data files. PageSpeed Insights scores it 90 / 100 / 100 / 100 on desktop and 95 / 100 / 100 / 100 on mobile, and playback runs at 59.8 frames a second. No blocker was found. The six should-fix items are fixed on `qa-fixes` (pull request [#9](https://github.com/YesudasZ/lila-player-journeys/pull/9)) and pass their re-test.
 
 ### The brief's checklist before submitting
 
@@ -20,32 +20,33 @@ The full QA before submission, run on 24 Nov 2026 as the user's QA brief asks: t
 | C2 | Player paths render correctly on the minimap | PASS | A3: all three maps match the proof images; [a3-*.jpg](qa/) |
 | C3 | Humans can be told apart from bots visually | PASS | A4: solid blue lines with round heads against dashed orange lines with square heads |
 | C4 | Kill, death, loot and storm events are marked | PASS | A5, C2: four shapes; tooltips name the event, who, the time and the place, also on a real hover |
-| C5 | Filtering by map, date and match works | PASS | A6: every count equals the data files; the legend's first line is a should-fix item (A6) |
-| C6 | Timeline or playback shows match progression | PASS | A7, C2, C6: all six speeds as labelled, real keys and drag, the first death at 1:58 at its path's end, 59.8 frames a second |
+| C5 | Filtering by map, date and match works | PASS | A6: every count equals the data files; the legend's first line now follows the switches (re-test R1) |
+| C6 | Timeline or playback shows match progression | PASS | A7, C2, C6: all six speeds, real keys and drag, the first death at 1:58 at its path's end, 59.8 frames a second; a reload during playback keeps the moment (re-test R2) |
 | C7 | Heatmaps show kill zones, death zones and traffic | PASS | A8: 12 pairs of map and layer, all numbers equal the data files |
 | C8 | Architecture doc covers the coordinate mapping approach | PASS | D3 |
-| C9 | Three insights with supporting evidence | PASS | D4: four parts each; every decimal re-computed; every link opens its view |
+| C9 | Three insights with supporting evidence | PASS | D4: four parts each; every number printed by `make insights` and held by a test |
 | C10 | Walkthrough covers all major features | PASS | D2: nine steps with working links and screenshots; the video is waiting on the user |
 
-### What failed or passed only in part, and the plan
+### What failed or passed only in part, and what was done
 
-| Severity | ID | Finding | Planned fix |
-|---|---|---|---|
-| Blocker | | None | |
-| Should fix | D2 | The README's "Rebuild the data" fails in a fresh clone: `unzip … -d data/raw` cannot create `data/raw` | `mkdir -p data/raw` before the `unzip`, in the README and wherever the command is written |
-| Should fix | B6b | A reload while a match plays goes back to the last pause or seek (30 s earlier in the test) | Write `t` into the address in place every 2 s while a match plays |
-| Should fix | A6 | With Humans or Bots switched off, the legend's first line still counts the hidden journeys and their matches | The first line counts what is drawn |
-| Should fix | D5 | docs/BRIEF.md still marks C2 to C10 as not started and S1 to S5 as in progress | Set every row, citing this report |
-| Should fix | D6 | The repo's About description ends in "Work in progress." | `gh repo edit --description`, after asking the user |
-| Should fix | D4 | INSIGHTS.md quotes 796 matches and 781 journeys, which `make insights` does not print as such | The script prints the totals |
-| Nice to have | C4 | On a phone (375 px) the two top-bar buttons lie off-screen and the map is 55 px wide | None planned: desktop-only is the documented scope, and the notice says so |
-| Nice to have | C5 | Desktop performance is exactly at 90 (Total Blocking Time 260 ms) | None planned; the score varies by a few points between runs |
-| Nice to have | D1 | The repo page shows "Contributors 2"; GitHub's API lists one | None possible from the repo: a cached box on GitHub's side |
+| Severity | ID | Finding | Fix | Re-test |
+|---|---|---|---|---|
+| Blocker | | None | | |
+| Should fix | D2 | The README's "Rebuild the data" failed in a fresh clone: `unzip … -d data/raw` cannot create `data/raw` | `mkdir -p data/raw` first (`6455ebd`) | PASS (R3) |
+| Should fix | B6b | A reload while a match played went back to the last pause or seek | The moment is written in place every 2 s while a match plays (`bf4878e`, `7fabb4f`) | PASS (R2) |
+| Should fix | A6 | With Humans or Bots off, the legend's first line still counted the hidden journeys | It counts the matches and journeys that are drawn (`a0660d9`) | PASS (R1) |
+| Should fix | D5 | docs/BRIEF.md showed the checklist as open | Every row set, citing this report (`f9196d3`) | PASS (R4) |
+| Should fix | D6 | The About description ended in "Work in progress." | `gh repo edit --description`, on the user's yes | PASS (R4) |
+| Should fix | D4 | `make insights` did not print 796 and 781 | It prints the totals; a test holds every number of INSIGHTS.md (`869e324`) | PASS (R3) |
+| Nice to have | C4 | On a phone (375 px) the two top-bar buttons lie off-screen and the map is 55 px wide | None: desktop-only is the documented scope, and the notice says so | |
+| Nice to have | C5 | Desktop performance is exactly at 90 (Total Blocking Time 260 ms) | None; the score varies by a few points between runs | |
+| Nice to have | D1 | The repo page shows "Contributors 2"; GitHub's API lists one | None possible from the repo | |
 
 ### Waiting on the user
 
 - `docs/media/walkthrough.mp4`: the README links to it; it is recorded and added by the user.
-- The yes for `gh repo edit` (D6), and for pushing `qa-fixes` and opening its pull request.
+- Review and merge pull request #9.
+- The Vercel preview of pull request #9 is protected by Vercel's login, which the browser tool could not pass. The re-test therefore ran on a production build of the same commit served locally (R0). A look at the preview, signed in, is the user's.
 
 ### Not testable with the browser tool: please test by hand
 
@@ -123,3 +124,18 @@ Checked on `main` at `abdaf02`, in the browser and in the terminal.
 | D9 | Fresh clone: `npm ci`, `npm run check`, `npm run build`; a venv, `make test`, `make data` from the zip; `web/public/data` regenerated identically | Clone of `main` into a temporary folder; the zip copied into `_inbox/` | Everything passes; `git diff --stat` empty | `npm ci`: 0 vulnerabilities; `npm run check`: 476 tests; build `index-CKbSPsBA.js`, 91.57 kB gzipped, the file production serves. `make test` created the venv and passed 263 tests (Python 3.14.6). After `mkdir -p data/raw` (see D2), `make data` ran in 7.3 s, reported "counts agree with docs/profile/profile_report.json", and `git status` and `git diff --stat` were empty: the data files, the fixtures and the profile were regenerated byte for byte | PASS (with the folder made by hand) | `_inbox/` and `data/raw/` are ignored by git |
 
 Console and network in Group D: no console message from the tool's pages; no failed request.
+
+## Step 4: re-test of the fixes
+
+| ID | What | Steps | Expected | Actual | Result |
+|---|---|---|---|---|---|
+| R0 | Where the re-test ran | Opened the preview of pull request #9; then `vite preview` of a production build of `qa-fixes` at `f9196d3` on `localhost:4183`, in Claude in Chrome | The preview | The preview redirected to Vercel's login (Vercel Authentication on previews); after two confirmations the tool's tab still had no Vercel session. The re-test ran on the local production build of the same commit (`index-3pYq543H.js`) | Note |
+| R1 | A6: the legend's first line follows the switches | Lockdown, 10 Feb: Bots off, Humans off, both off; Ambrose Valley: the same | Counts of what is drawn, equal to the data files | Lockdown 10 Feb: "61 matches, 94 journeys"; Bots off "61 matches, 61 journeys"; Humans off "3 matches, 33 journeys"; both off "0 matches, 0 journeys"; the rows keep "Humans 61, Bots 33". Ambrose Valley: Bots off "566 matches, 568 journeys", Humans off "33 matches, 268 journeys" | PASS |
+| R2 | B6b: a reload during playback keeps the moment | `fbbc5d02` from 100 s at 10x, the address read every 0.5 s for 7 s; then a real reload | The address follows every 2 s, adds no entry; the reload comes back within 2 s of real time | The address read `t=100`, then 120 at 2.0 s, 140 at 4.0 s, 160 at 6.0 s; no history entry added. Reloaded at 170.0 s (address `t=160`): the page came back at "2:40 / 8:43", paused, 1 s of real time before the moment | PASS |
+| R3 | D2 and D4: the README's data step and the totals | Fresh clone of `qa-fixes`; the zip in `_inbox/`; the README's block run as written | Exit 0; nothing tracked changes; the totals printed | Exit 0; "counts agree with docs/profile/profile_report.json"; `git diff --stat` empty; `make insights` prints "matches: 796" and "journeys_of_humans_with_an_account_id: 781" | PASS |
+| R4 | D5 and D6: BRIEF.md and the About text | BRIEF.md on the branch; the repo's description read without login | All rows set; no "Work in progress" | 23 rows ☑, none open; "Player journey visualization tool for LILA BLACK telemetry: paths, events and heatmaps on the game's minimaps." | PASS |
+| R5 | Smoke test of Groups A and B on the build | The three maps' totals and rows; Lockdown on 10 Feb with the Deaths layer; a match; zoom and seek; a heat choice; a filter that closes the match; Back; the empty note and Clear filters; a malformed link; `e325a53a` | As in Groups A and B | Totals and rows as in A2; "61 matches, 94 journeys", tabs 199 / 24 / 61; "61 deaths of 38 matches, incl. 7 storm deaths"; zoom and seek added no entry and wrote `t=118` and the view in place; the notice and "199 matches, 314 journeys"; Back returned to the match at "1:58 / 8:43" with its heat and zoom; the empty note and "171 matches, 295 journeys" after Clear filters; the malformed link gave the default view; `e325a53a` "1 match, 1 journey", "12:24 / 12:24" | PASS |
+| R6 | Tests and CI | `npm run check`, `make test`, one-line faults; CI on pull request #9 | Green | 480 Vitest tests (476 before), 263 pytest tests; 10 of 10 one-line faults noticed; CI on `f9196d3`: both pipeline jobs, the app job and Vercel succeeded | PASS |
+
+Console in the re-test: no message from the app. One warning came from Google's sign-in script on Vercel's login page, not from the tool.
+
