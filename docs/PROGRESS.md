@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-24 21:18 IST
+Last updated: 2026-11-24 21:25 IST
 
 ## Current phase
 
@@ -35,7 +35,7 @@ The user's QA brief (24 Nov): Step 0 state; Step 1 Groups A to D on production; 
 - [x] Step 0. Pull request #8 is merged (`abdaf02`), so no merge was needed. `qa-fixes` was cut from `main` with the four audit commits on top (cherry-picked from the local branch `chore-audit`), so that `docs/AUDIT.md` is in the repo. Production serves `main`: the Vercel status on `abdaf02` is "Deployment has completed", the page names the build files of `abdaf02` and the 8 served data files are byte-identical to `main`'s
 - [x] Group A, core requirements: 8 PASS, 1 PARTIAL (A6: the legend's first line and the Humans and Bots rows do not follow those two switches)
 - [x] Group B, logic and edge cases: 8 PASS, 1 FAIL (B6b: a reload while a match plays goes back to the last pause or seek)
-- [ ] Group C, the audit's open items (C1 tab switch while playing, C2 real mouse, C3 keyboard and the unnamed Tab stop, C4 below 900 px, C5 PageSpeed Insights, C6 frame rate)
+- [x] Group C, the audit's open items: C2, C3, C5, C6 PASS; C4 PARTIAL (the window cannot be resized by the tool; in a frame 880 px passes, at 375 px the top-bar buttons are cut off); C1 NOT TESTABLE with the tool (its tabs never become hidden; unit-tested; manual). PageSpeed Insights: desktop 90 / 100 / 100 / 100, mobile 95 / 100 / 100 / 100. The unnamed Tab stop is the browser tool's own empty `<div>` outside `#root`
 - [ ] Group D, repo and deliverables, fresh clone with `make data`
 - [ ] Step 2, the summary at the top of QA_REPORT.md, shown to the user
 - [ ] Step 3, fixes on `qa-fixes`: every Blocker and Should-fix item; BRIEF.md statuses citing QA_REPORT.md; About description (ask before `gh repo edit`); the legend's first line follows the Humans and Bots switches; `make insights` prints 796 and 781; `t` written every few seconds while playing. Not created: `docs/media/walkthrough.mp4` (the user records it)
@@ -44,7 +44,7 @@ The user's QA brief (24 Nov): Step 0 state; Step 1 Groups A to D on production; 
 ## Exactly where I stopped
 
 - QA in progress on the local branch `qa-fixes` (cut from `main` at `abdaf02`); nothing pushed.
-- Groups A and B are done and committed. **NEXT:** Group C, test C1 (switch to another tab while a match plays), on production in Claude in Chrome. Do not redo Groups A and B.
+- Groups A, B and C are done and committed. **NEXT:** Group D, repo and deliverables: README, ARCHITECTURE.md, INSIGHTS.md (re-run `make insights`, open every link), BRIEF.md, About field, history, CI on `main`, then the fresh clone with `npm ci`, `npm run check`, `npm run build`, a venv, `make test` and `make data` from the zip (expect an empty `git diff --stat`). Do not redo Groups A to C.
 - Usage rule of the QA brief: at a usage-limit warning, finish the step, write here "QA stopped at group X, test Y; next action: …", update QA_REPORT.md, commit and stop.
 
 ## Decisions and assumptions made
