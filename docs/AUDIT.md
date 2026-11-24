@@ -43,3 +43,15 @@ Console and network in batch A: no console message on any page load, no failed r
 | B10 | Scrubbing to a death puts the death marker at the end of the path (from A7) | Match `fbbc5d02` with the fate "killed by bot", so that one journey is drawn; slider at 110, 118 and 523 s | The cross appears at 1:58 on the head of the path, and the path does not go on | No cross at 110 s; 185 cross-coloured pixels at 118 s and at 523 s, in the same place. The nearest path pixel is 6.3 px from the cross's centre: the cross covers the head. The path's pixels do not grow after 118 s (1,037, then 1,067) | PASS | Canvas pixels |
 
 Console and network in batch B: no console message, no failed request.
+
+## Batch C: smoothness and performance
+
+Measured in the author's Chrome on this machine: the tab visible and focused, device pixel ratio 2, map canvas 2300 x 1462 pixels.
+
+| ID | Requirement | Steps | Expected | Actual | Result | Evidence |
+|---|---|---|---|---|---|---|
+| C1 | Playing the busiest match at 20x and 60x without stutter | `fbbc5d02` (Ambrose Valley, 16 journeys, the most of any match) and `d0a38c30` (Lockdown, the most rows): play from 0:00 at 20x and at 60x for 5 to 6 s, recording the time between animation frames | A frame about every 16.7 ms, none dropped | `fbbc5d02`: 359 frames in 6.0 s at both speeds, 59.8 a second; median 16.7 ms, 95th percentile 17.6 ms, longest 17.7 ms; no frame over 20 ms; no long task. `d0a38c30`: 299 frames in 5.0 s at both speeds; median 16.7 ms, longest 17.7 ms; no frame over 20 ms; no long task | PASS | This is the reading at 60 Hz that Phases 6 and 8 left open |
+| C2 | Heat toggles and filter changes feel instant; note any delay over about 200 ms | On Ambrose Valley with all matches: each heat layer, a day, a fate, "Clear filters", the Bots switch, Loot on (9,902 markers), opening a match, switching maps | Under 200 ms | Click handlers took 0.4 to 7.4 ms; the second frame after each click came 30 to 33 ms after it. A map switch was drawn after 50 to 67 ms | PASS | Longest handler: 7.4 ms for the first Traffic layer, 6.8 ms for Loot on |
+| C3 | Initial load time and the size of the largest assets | First load in a fresh tab | Reported, no threshold given | First byte 159 ms, DOM ready 300 ms, load event 547 ms; the first map's journeys arrived at 486 ms and its minimap at 528 ms. Over the wire: `AmbroseValley.json` 488 kB (1.50 MB unpacked), `Lockdown.webp` 193 kB, `AmbroseValley.webp` 177 kB, `Lockdown.json` 166 kB, `GrandRift.webp` 166 kB, the app's JavaScript 93 kB (290 kB), `GrandRift.json` 55 kB. 13 requests | PASS | On this machine's connection. Lighthouse was not run: the tools cannot run it |
+
+Console and network in batch C: no console message, no failed request.
