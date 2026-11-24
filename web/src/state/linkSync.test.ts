@@ -179,6 +179,14 @@ describe("the view in the address", () => {
     state().setFocus(null); // a click on the empty map
     vi.advanceTimersByTime(1000);
     expect(written).toEqual([]);
+    state().setView("GrandRift", { x: 1000, y: 900, zoom: 2 });
+    state().setFocus(null); // with a move of the map still to be written: that is written in its own time, in place
+    expect(written).toEqual([]);
+    vi.advanceTimersByTime(300);
+    expect(written).toEqual(["replace /?map=GrandRift&view=1000,900,2#notes"]);
+    state().setView("GrandRift", null);
+    vi.advanceTimersByTime(300);
+    written.length = 0;
     state().toggleFate("killed");
     expect(written).toEqual(["push /?map=GrandRift&fate=killed#notes"]);
     stop();
@@ -253,6 +261,7 @@ describe("the time of playback in the address", () => {
     state().setShown("kill", false);
     expect(written).toEqual(["replace /?match=fbbc5d02&t=200", "push /?match=fbbc5d02&t=200&hide=kill"]);
     playback.setState({ time: 250 });
+    state().setFocus(null); // a click on the empty map changes nothing in the address, so it is no step for it
     vi.advanceTimersByTime(5000);
     expect(written).toHaveLength(2); // the passing of time is still not written
     stop();

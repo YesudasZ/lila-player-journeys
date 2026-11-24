@@ -77,10 +77,13 @@ export function startLinkSync(): () => void {
     const time = linkTime(playback.getState());
     if (state.steps === before.steps) later();
     else {
-      // A step. The entry it leaves gets the view as it last was, then the new view gets an entry of its own.
       const [from, to] = [queryOf(before, rested), queryOf(state, time)];
-      rewrite(from);
-      if (to !== from) write("pushState", to);
+      if (to === from) later(); // a step that changes nothing in the address, as a click on the empty map: nothing to step back to
+      else {
+        // The entry that the step leaves gets the view as it last was, then the new view gets an entry of its own.
+        rewrite(from);
+        write("pushState", to);
+      }
     }
     [seen, rested] = [state, time];
   });
