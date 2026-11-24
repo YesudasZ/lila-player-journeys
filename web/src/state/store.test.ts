@@ -7,7 +7,7 @@ import type { Manifest, MapEntry } from "../lib/manifest.ts";
 import { DataError } from "../lib/reader.ts";
 import { journeysOf, manifest, mapOf } from "../testing/committed.ts";
 import { decodeLink, encodeLink } from "../lib/link.ts";
-import { selectDrawList, selectLink, selectMatchId } from "./shown.ts";
+import { selectDrawList, selectHeat, selectLink, selectMatchId } from "./shown.ts";
 import { useAppStore } from "./store.ts";
 
 // The store is tested with the real manifest and without a network: the two loaders are stand-ins.
@@ -499,5 +499,61 @@ describe("filters and links, as the review asked to pin them", () => {
     state().setShown("loot", true);
     state().setShown("bots", false);
     expect(encodeLink(selectLink(state()) ?? decodeLink(""))).toBe("?show=loot&hide=bots");
+  });
+});
+
+describe("heat", () => {
+  const open = async (query = "") => {
+    fetched.mockResolvedValue(manifest);
+    loaded.mockResolvedValue(IMAGE);
+    await state().loadManifest(decodeLink(query));
+    await vi.waitFor(() => {
+      expect(Object.values(state().journeys)[0]?.status).toBe("ready");
+    });
+    return encodeLink(selectLink(state()) ?? decodeLink(""));
+  };
+
+  it("is off at first, has one layer on at a time, and is part of the link", async () => {
+    expect(await open()).toBe("");
+    expect([state().heat, selectHeat(state())]).toEqual([null, null]);
+    state().setHeat("kill");
+    expect(selectHeat(state())?.kind).toBe("kill");
+    state().setHeat("death");
+    expect([selectHeat(state())?.kind, encodeLink(selectLink(state()) ?? decodeLink(""))]).toEqual(["death", "?heat=death"]);
+    state().setHeat(null);
+    expect([selectHeat(state()), encodeLink(selectLink(state()) ?? decodeLink(""))]).toEqual([null, ""]);
+  });
+
+  it("is counted once for what is drawn, and again when a switch or a filter changes that", async () => {
+    await open("?heat=movement");
+    const all = selectHeat(state());
+    expect([all?.kind, all?.matches, all?.cells]).toEqual(["movement", 566, 90]);
+    expect(selectHeat(state())).toBe(all); // asked again, nothing is counted again
+    state().setView("AmbroseValley", { x: 1000, y: 900, zoom: 2 });
+    state().setShown("kill", false);
+    state().setFocus("fbbc5d02-anon");
+    expect(selectHeat(state())?.total).toBe(all?.total); // moving the map, hiding a marker or focusing changes nothing that is counted
+    state().setShown("bots", false);
+    const humans = selectHeat(state());
+    expect(humans?.events).toEqual([
+      { name: "Position", count: all?.events[0].count },
+      { name: "BotPosition", count: 0 },
+    ]);
+    state().toggleDay("February_14");
+    expect(selectHeat(state())?.matches).toBe(24);
+    state().selectMatch("AmbroseValley", null);
+    state().toggleFate("killed_by_storm");
+    expect(selectHeat(state())?.matches).toBe(1); // one journey of 14 Feb ended in the storm
+  });
+
+  it("comes with a link, for the match the link opens", async () => {
+    expect(await open("?heat=death&match=5a081fe4")).toBe("?match=5a081fe4&heat=death");
+    const heat = selectHeat(state());
+    expect([heat?.total, heat?.storm, heat?.matches]).toEqual([1, 1, 1]);
+  });
+
+  it("is nothing while the journeys of the map are on their way", () => {
+    state().setHeat("movement");
+    expect(selectHeat(state())).toBeNull();
   });
 });
