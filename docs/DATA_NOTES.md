@@ -108,6 +108,7 @@ Claims heard before profiling were treated as hypotheses only. None was used wit
 | A7 | A match starts at its smallest `ts` | In matches with several files every human file starts at that second; bots follow 0 or 5 s later | Storm timings (row 19) would be measured from the journey's start, not the match's |
 | A8 | The README's scale and origin are used as given | They are the studio's documented transform and right to about 1 to 2% | Points near the east edge of a map could sit up to about 10 world units off. A calibration is an open question in PROGRESS.md |
 | A9 | A path of a single row is a head that appears at that row's second and stays | No path in the cleaned data has a single row: the shortest has 2 rows, the longest 218 (`test_no_path_in_the_data_has_a_single_row`). It is the playback rule A6 with nothing to move to, and the playback fixture holds a made-up journey for it | Nothing in this dataset. A later export with such a journey would show a point that never moves |
+| A10 | A match belongs to the day of its folder, not to the date of its first row | The folder is consistent with the UTC day on which the match's files were written (row 13). 5 matches start just before midnight and are filed under the next day: `e325a53a` starts at 23:58:55 UTC on 9 Feb and lies in February_10; the other four start between 23:51 and 23:58 UTC on 10 Feb and lie in February_11 (`test_numbers_quoted_in_the_data_format_document` lists the five) | The day filter and the day shown beside a match would put those 5 matches a day late |
 
 ## What this means for the tool
 
@@ -117,6 +118,19 @@ Claims heard before profiling were treated as hypotheses only. None was used wit
 - **Storm deaths are few and late** (39, all after 10 min 55 s): markers, not a heatmap.
 - **Counts differ wildly between maps** (566 / 171 / 59 matches). Every aggregate view has to say how many matches it rests on.
 - **"Ignored areas" cannot come from sample counts alone.** Players cross cells between samples, and the artwork includes roofs, rocks and water nobody can walk on. It needs path segments, not points.
+
+## How a link names a match and a journey
+
+The address of a view names things by the ids of the app's data ([DATA_FORMAT.md](DATA_FORMAT.md)). No full account id is in it.
+
+| What | Id | Example | Note |
+|---|---|---|---|
+| A match | the first 8 characters of its match id | `fbbc5d02` | Unique across all 796 matches |
+| A human with an account id | `<match>-<player>`, the player being the first 8 characters of the account id | `fbbc5d02-5787de75` | 781 journeys |
+| A human without an account id | `<match>-anon` | `fbbc5d02-anon` | 17 journeys (A1). A match has at most one of them, so the id is unique |
+| A bot | `<match>-bot<number>` | `fbbc5d02-bot1432` | 444 journeys. The number is the bot's id in the data; other matches reuse it, so it means something only together with the match |
+
+All 1,242 journey ids are unique, and the build stops if two would be the same. `test_ids_in_links_are_unique_across_all_matches_and_within_each_match` holds the committed data to this table, and the app's tests do the same from the app's side (`web/src/lib/link.test.ts`).
 
 ## What the heat layers count
 

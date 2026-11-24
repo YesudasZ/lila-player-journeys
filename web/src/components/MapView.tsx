@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-import { BUTTON_ZOOM_STEP } from "../lib/mapKeys.ts";
+import { BUTTON_ZOOM_STEP, MAP_HELP } from "../lib/mapKeys.ts";
 import type { Manifest, MapEntry } from "../lib/manifest.ts";
 import type { ZoomLimits } from "../lib/view.ts";
 import { togglePlay } from "../state/playback.ts";
@@ -14,6 +14,7 @@ import { MapTooltip } from "./MapTooltip.tsx";
 import { MAP_SURFACE_ID } from "./tabIds.ts";
 import { ZoomControls } from "./ZoomControls.tsx";
 import { EmptyNote } from "./EmptyNote.tsx";
+import { FilterNotice } from "./FilterNotice.tsx";
 
 const KEYS_ID = "map-keys";
 
@@ -91,11 +92,14 @@ export function MapView({ map, image, manifest }: { map: MapEntry; image: HTMLIm
         <div className="pointer-events-none absolute inset-0 opacity-0 shadow-[inset_0_0_0_4px_var(--color-bg)] outline-2 -outline-offset-2 outline-accent group-focus-visible:opacity-100" />
       </div>
       <p id={KEYS_ID} className="sr-only">
-        Drag to move. Scroll to zoom, double-click to zoom in. Click a path or a marker to focus its journey. Keyboard: arrow keys move, plus and minus
-        zoom, zero fits the map to the window, Escape clears the focus, Space plays and pauses the open match.
+        {MAP_HELP}
       </p>
       <MapTooltip hover={hover} map={map} manifest={manifest} />
-      <EmptyNote map={map} manifest={manifest} />
+      {/* What the filters did to the view, at the top of the map. The box itself lets the pointer through to the map. */}
+      <div className="pointer-events-none absolute top-4 left-1/2 z-10 flex w-max max-w-[80%] -translate-x-1/2 flex-col items-center gap-2">
+        <FilterNotice />
+        <EmptyNote map={map} manifest={manifest} />
+      </div>
       <MapReadout x={xRef} z={zRef} bar={barRef} label={labelRef} />
       <ZoomControls
         limits={limits}

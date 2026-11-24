@@ -226,3 +226,30 @@ describe("the heat layer in a link", () => {
     expect(decodeLink(query).heat).toBeNull();
   });
 });
+
+describe("the ids a link names things by", () => {
+  const journeys = manifest.maps.flatMap((map) => journeysOf(map.id));
+
+  it("are unique: the 8-character match id across all 796 matches, and a journey's id within its match", () => {
+    const matchIds = manifest.matches.map((match) => match.id);
+    expect([matchIds.length, new Set(matchIds).size]).toEqual([796, 796]);
+    expect(matchIds.every((id) => /^[0-9a-f]{8}$/.test(id))).toBe(true);
+
+    const withinMatch = new Set(journeys.map((journey) => `${journey.match} ${journey.id}`));
+    expect([journeys.length, withinMatch.size, new Set(journeys.map((journey) => journey.id)).size]).toEqual([1242, 1242, 1242]);
+    expect(journeys.every((journey) => journey.id.startsWith(`${journey.match}-`))).toBe(true);
+  });
+
+  it("name a human without an account id `<match>-anon`, and a match has at most one of them", () => {
+    const anonymous = journeys.filter((journey) => journey.anonymous);
+    expect(anonymous).toHaveLength(17);
+    expect(anonymous.every((journey) => journey.id === `${journey.match}-anon` && journey.actor === "human" && journey.player === null)).toBe(true);
+    expect(new Set(anonymous.map((journey) => journey.match)).size).toBe(17);
+  });
+
+  it("name a bot `<match>-bot<number>` and a human with an account `<match>-<player>`, as a link's comment says", () => {
+    const named = journeys.filter((journey) => !journey.anonymous);
+    expect(named.every((journey) => journey.id === `${journey.match}-${journey.actor === "bot" ? "bot" : ""}${journey.player ?? ""}`)).toBe(true);
+    expect(named.filter((journey) => journey.actor === "bot")).toHaveLength(444);
+  });
+});

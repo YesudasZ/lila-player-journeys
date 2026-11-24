@@ -207,6 +207,30 @@ describe("the clock of playback", () => {
     expect(clock().time).toBe(523); // opened by hand, it is whole
   });
 
+  it("takes the time of a link from the history too, paused: for another match, and for the match that is open already", async () => {
+    await open("?match=fbbc5d02");
+    app().applyLink(decodeLink("?match=a476eb57&t=600.04")); // Back or Forward landed on this entry
+    expect([clock().end, clock().time, clock().playing]).toEqual([780, 600, false]);
+    play();
+    frame(16);
+    frame(100);
+    expect([clock().playing, frames.length]).toEqual([true, 1]);
+    app().applyLink(decodeLink("?match=a476eb57&t=45&hide=kill")); // another entry of the same match
+    expect([clock().end, clock().time, clock().playing, frames.length]).toEqual([780, 45, false, 0]);
+    app().applyLink(decodeLink("?match=a476eb57")); // an entry without a time shows the whole match
+    expect(clock().time).toBe(780);
+    app().applyLink(decodeLink("?map=Lockdown&t=45")); // no match, so no clock
+    expect([clock().end, clock().time]).toEqual([null, 0]);
+  });
+
+  it("gives the time of a link to the match of that link only", async () => {
+    stop();
+    await open("?match=fbbc5d02&t=120.46");
+    app().selectMatch("AmbroseValley", "a476eb57"); // opened by hand before the clock follows
+    stop = startPlayback();
+    expect([clock().end, clock().time]).toEqual([780, 780]);
+  });
+
   it("opens the match of a link whole when the link's time is not one of that match", async () => {
     await open("?match=fbbc5d02&t=9999");
     expect([clock().end, clock().time]).toEqual([523, 523]);

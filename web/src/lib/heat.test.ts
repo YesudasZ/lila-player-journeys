@@ -146,12 +146,12 @@ describe("the legend of a heat layer", () => {
   it("gives the rows, the matches, the fullest cell and the cell's size, then what is counted and at whose position", () => {
     const heat = heatOf("AmbroseValley", "movement");
     expect(heatSummary(heat, 900)).toBe(
-      `${heat.total.toLocaleString("en-US")} movement samples of 566 matches; the fullest cell holds ${heat.most.toLocaleString("en-US")}. A cell is 10 × 10 units. Each sample is counted where the player or bot was. They show movement, not time spent.`,
+      `${heat.total.toLocaleString("en-US")} movement samples of 566 matches; the fullest cell holds ${heat.most.toLocaleString("en-US")}. A cell is 10 × 10 units. Each movement sample is counted where the player or bot was. The samples show movement, not time spent.`,
     );
     expect(heatSummary({ ...some, kind: "kill", total: 1, matches: 1, most: 1, cells: 58 }, 581)).toBe(
       "1 kill of 1 match; the fullest cell holds 1. A cell is 10 × 10 units. Kills of players and of bots are counted, each where the killer stood.",
     );
-    expect(heatSummary({ ...some, kind: "loot" }, 1000)).toBe("12 loot events of 3 matches; the fullest cell holds 4. A cell is 10 × 10 units. Each is counted where the player stood.");
+    expect(heatSummary({ ...some, kind: "loot" }, 1000)).toBe("12 loot events of 3 matches; the fullest cell holds 4. A cell is 10 × 10 units. Each loot event is counted where the player stood.");
   });
 
   it("says how many of the deaths are storm deaths, also when none is", () => {

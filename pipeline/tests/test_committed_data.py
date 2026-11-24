@@ -150,6 +150,19 @@ def test_journey_ids_are_unique_and_every_journey_belongs_to_a_match_on_its_map(
     assert all(journey["id"].startswith(journey["match"] + "-") for journey in journeys)
 
 
+def test_ids_in_links_are_unique_across_all_matches_and_within_each_match(manifest, journeys):
+    """A link names a match by the first 8 characters of its id and a journey by its id: neither may be ambiguous."""
+    match_ids = [match["id"] for match in manifest["matches"]]
+    assert len(match_ids) == len(set(match_ids)) == TOTALS["matches"] == 796
+    assert all(re.fullmatch(r"[0-9a-f]{8}", match_id) for match_id in match_ids)
+    assert max(Counter((journey["match"], journey["id"]) for journey in journeys).values()) == 1
+    anonymous = [journey for journey in journeys if journey["id"].endswith("-anon")]
+    assert len(anonymous) == len({journey["match"] for journey in anonymous}) == JOURNEYS["anonymous"]  # at most one per match
+    # A journey's id has one of three forms, and no other: for a human without an account id, for a bot, for a human with one.
+    forms = Counter(re.fullmatch(r"[0-9a-f]{8}-(?:(anon)|(bot)\d+|[0-9a-f]{8})", journey["id"]).groups() for journey in journeys)
+    assert forms == {("anon", None): 17, (None, "bot"): JOURNEYS["bot"], (None, None): JOURNEYS["human"] - 17}
+
+
 def test_journeys_say_who_they_are_and_how_they_ended(manifest, journeys):
     assert Counter((journey["actor"], journey["fate"]) for journey in journeys) == FATES
     assert {fate for _, fate in FATES} <= set(manifest["fates"])

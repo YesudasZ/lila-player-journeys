@@ -8,7 +8,8 @@ import { focusMapIfFocusWasLost } from "./focusMap.ts";
 /**
  * Over the map when the filters leave no journey on it: why, in plain words, and the way back. The
  * map itself stays visible. The sentence sits in a status element that is always on the page, so
- * that assistive technology announces it when it appears; the button is outside it.
+ * that assistive technology announces it when it appears; the button is outside it. `MapView`
+ * places it, below the notice about a match that a filter closed.
  */
 export function EmptyNote({ map, manifest }: { map: MapEntry; manifest: Manifest }) {
   const list = useAppStore(selectDrawList);
@@ -19,7 +20,7 @@ export function EmptyNote({ map, manifest }: { map: MapEntry; manifest: Manifest
   const chosenDays = manifest.days.filter((day) => days.includes(day.id)).map((day) => dayLabel(day.date));
 
   return (
-    <div className={empty ? "absolute top-4 left-1/2 z-10 w-max max-w-[80%] -translate-x-1/2 rounded-md border border-border bg-surface px-4 py-3 text-center text-[13px]" : "sr-only"}>
+    <div className={empty ? "pointer-events-auto rounded-md border border-border bg-surface px-4 py-3 text-center text-[13px]" : "sr-only"}>
       <p role="status">{empty && emptyNote(map.name, chosenDays, fates.map(fateLabel))}</p>
       {empty && (
         <button

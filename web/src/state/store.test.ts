@@ -433,6 +433,137 @@ describe("a link", () => {
   });
 });
 
+describe("steps, links from the history, and the notice", () => {
+  const open = async (query = "") => {
+    fetched.mockResolvedValue(manifest);
+    loaded.mockResolvedValue(IMAGE);
+    await state().loadManifest(decodeLink(query));
+    await vi.waitFor(() => {
+      expect(Object.values(state().journeys)[0]?.status).toBe("ready");
+    });
+    return encodeLink(selectLink(state()) ?? decodeLink(""));
+  };
+
+  it("count a step for what the user chooses, and none for a link, for data that arrives, or for moving the map", async () => {
+    await open("?match=fbbc5d02&journey=nobody");
+    expect([state().steps, state().focus]).toEqual([0, null]); // the link was applied and its focus corrected
+    state().setView("AmbroseValley", { x: 1000, y: 900, zoom: 2 });
+    state().restoreFocus("fbbc5d02-anon");
+    state().dismissNotice();
+    state().applyLink(decodeLink("?map=Lockdown"));
+    expect(state().steps).toBe(0);
+
+    state().selectMap("AmbroseValley");
+    state().selectMatch("AmbroseValley", "fbbc5d02");
+    state().setFocus("fbbc5d02-anon");
+    state().setShown("bots", false);
+    state().toggleDay("February_12");
+    state().toggleFate("killed_by_bot");
+    state().clearFilters();
+    state().setHeat("kill");
+    expect(state().steps).toBe(8);
+    state().selectMatch("AmbroseValley", "zzzzzzzz"); // refused, so nothing was chosen
+    state().selectMap("Nowhere");
+    expect(state().steps).toBe(8);
+  });
+
+  it("open the view of a link from the history: what it names, nothing the data lacks, and the other maps keep their match", async () => {
+    await open();
+    state().selectMatch("AmbroseValley", "fbbc5d02");
+    state().setView("AmbroseValley", { x: 1000, y: 900, zoom: 2 });
+    const link = decodeLink("?map=GrandRift&match=0273e16e&journey=0273e16e-94d042cb&hide=bots&days=February_30&heat=kill&view=1024.5,980.2,2.5");
+    state().applyLink(link);
+    await vi.waitFor(() => {
+      expect(state().journeys.GrandRift?.status).toBe("ready");
+    });
+    expect([state().mapId, state().days, state().choices, state().focus]).toEqual(["GrandRift", [], { bots: false }, "0273e16e-94d042cb"]);
+    expect([state().heat, state().asked]).toEqual(["kill", link]); // the clock takes the link's time from `asked`
+    expect(state().matches).toEqual({ AmbroseValley: "fbbc5d02", GrandRift: "0273e16e" });
+    expect(state().views).toEqual({ AmbroseValley: { x: 1000, y: 900, zoom: 2 }, GrandRift: { x: 1024.5, y: 980.2, zoom: 2.5 } });
+
+    state().applyLink(decodeLink("?map=GrandRift&journey=nobody&days=February_10"));
+    await vi.waitFor(() => {
+      expect(state().focus).toBeNull(); // checked against the journeys, which are there already
+    });
+    expect([state().matches, state().choices, state().days, state().heat]).toEqual([{}, {}, ["February_10"], null]); // fbbc5d02 is filed under 12 Feb
+    expect(state().views).toEqual({ AmbroseValley: { x: 1000, y: 900, zoom: 2 } }); // Grand Rift is fitted again, the other map keeps its view
+  });
+
+  it("hold a link's filters at once for the match that another map remembers, before any journeys arrive", async () => {
+    await open();
+    state().selectMatch("AmbroseValley", "fbbc5d02"); // filed under 12 Feb
+    bundled.mockImplementation(() => new Promise(() => {})); // the journeys of the next map never arrive
+    state().applyLink(decodeLink("?map=Lockdown&days=February_10"));
+    expect([state().mapId, state().matches]).toEqual(["Lockdown", {}]);
+  });
+
+  it("keep a link that comes before the manifest is there, and the manifest opens it", async () => {
+    state().applyLink(decodeLink("?map=Lockdown&heat=loot"));
+    expect([state().mapId, bundled.mock.calls.length]).toEqual([null, 0]);
+    fetched.mockResolvedValue(manifest);
+    loaded.mockResolvedValue(IMAGE);
+    await state().loadManifest();
+    expect([state().mapId, state().heat, state().steps]).toEqual(["Lockdown", "loot", 0]);
+  });
+
+  it("say which match a filter has closed, until something else is chosen or the notice is dismissed", async () => {
+    await open();
+    state().selectMatch("AmbroseValley", "fbbc5d02"); // filed under 12 Feb
+    state().toggleDay("February_12");
+    expect([selectMatchId(state()), state().closedByFilters]).toEqual(["fbbc5d02", null]); // this filter leaves it open
+    state().toggleDay("February_12");
+    state().toggleDay("February_10");
+    expect([selectMatchId(state()), state().closedByFilters]).toEqual([null, "fbbc5d02"]);
+    state().applyLink(decodeLink("?match=fbbc5d02")); // Back, to before the filter
+    expect([selectMatchId(state()), state().closedByFilters, state().days]).toEqual(["fbbc5d02", null, []]);
+    state().toggleDay("February_10");
+    expect(state().closedByFilters).toBe("fbbc5d02");
+    state().clearFilters();
+    expect(state().closedByFilters).toBeNull();
+
+    state().selectMatch("AmbroseValley", "a476eb57"); // its one journey has no death recorded
+    state().toggleFate("killed_by_storm");
+    expect(state().closedByFilters).toBe("a476eb57");
+    state().toggleFate("killed_by_bot"); // the next filter closes nothing
+    expect(state().closedByFilters).toBeNull();
+  });
+
+  it("say so too when the journeys of a link arrive and its fate rules its match out, and forget it with the next choice", async () => {
+    expect(await open("?match=a476eb57&fate=killed_by_storm")).toBe("?fate=killed_by_storm");
+    expect(state().closedByFilters).toBe("a476eb57");
+    state().selectMatch("AmbroseValley", null); // "All matches": something else was chosen
+    expect(state().closedByFilters).toBeNull();
+
+    state().selectMatch("AmbroseValley", "5a081fe4"); // this one ends in the storm
+    state().toggleFate("killed_by_storm");
+    state().toggleFate("killed_by_bot");
+    expect(state().closedByFilters).toBe("5a081fe4");
+    state().dismissNotice();
+    expect(state().closedByFilters).toBeNull();
+
+    state().toggleFate("killed_by_bot");
+    state().selectMatch("AmbroseValley", "5a081fe4");
+    state().toggleFate("killed_by_bot");
+    expect(state().closedByFilters).toBe("5a081fe4");
+    state().selectMap("Lockdown");
+    expect(state().closedByFilters).toBeNull();
+  });
+
+  it("keep the notice when the journeys of the map arrive after the filter was chosen", async () => {
+    const own = deferred<ReturnType<typeof journeysOf>>();
+    bundled.mockImplementation(() => own.promise);
+    fetched.mockResolvedValue(manifest);
+    loaded.mockResolvedValue(IMAGE);
+    await state().loadManifest(decodeLink("?match=fbbc5d02"));
+    state().toggleDay("February_10");
+    own.resolve(journeysOf("AmbroseValley"));
+    await vi.waitFor(() => {
+      expect(state().journeys.AmbroseValley?.status).toBe("ready");
+    });
+    expect(state().closedByFilters).toBe("fbbc5d02");
+  });
+});
+
 describe("filters and links, as the review asked to pin them", () => {
   const open = async (query = "") => {
     fetched.mockResolvedValue(manifest);

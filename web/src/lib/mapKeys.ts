@@ -1,5 +1,10 @@
 /** What a key does on the map. Pure; the map surface carries the action out. */
 
+/** How the map is moved, zoomed and used, in words: for assistive technology on the map itself, and for the panel about the keys. */
+export const MAP_HELP =
+  "Drag to move. Scroll to zoom, double-click to zoom in. Click a path or a marker to focus its journey. Keyboard: arrow keys move, plus and minus zoom, " +
+  "zero fits the map to the window, Escape clears the focus, Space plays and pauses the open match.";
+
 /** CSS pixels the map moves per press of an arrow key. */
 export const KEY_PAN_STEP = 64;
 /** The zoom factor of one press of a zoom button or of the plus and minus keys. */

@@ -340,9 +340,9 @@ export function createJourneysLayer({ canvas, ringCanvas, onHover }: Parts): Jou
     setFocus(found ? list.journeys[found.journey].journey.id : null);
   }
 
-  /** The last click was the first half of a double-click, which zooms: the focus goes back to what it was. */
+  /** The last click was the first half of a double-click, which zooms: the focus goes back to what it was, and that is no step of its own. */
   function unclick() {
-    useAppStore.getState().setFocus(beforeClick);
+    useAppStore.getState().restoreFocus(beforeClick);
   }
 
   function watch(notify: (layer: Layer) => void, drawNow: (layer: Layer) => void): () => void {
