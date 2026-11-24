@@ -28,7 +28,7 @@ export function CopyLink() {
   }
 
   return (
-    <div className="flex shrink-0 items-center gap-3 pr-4">
+    <div className="flex shrink-0 items-center gap-3">
       <span role="status" className="text-xs text-text-muted">
         {said === "copied" && "Link copied"}
         {said === "refused" && "Copy the address from the address bar"}

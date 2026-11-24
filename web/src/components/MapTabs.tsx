@@ -25,7 +25,8 @@ export function MapTabs({ maps, counts }: { maps: MapEntry[]; counts: ReadonlyMa
   if (maps.length === 0) return null; // nothing to choose from until the manifest is there
 
   return (
-    <div role="tablist" aria-label="Map" className="flex gap-1">
+    // In a narrow window the tabs scroll sideways, so that the buttons at the end of the top bar stay in view.
+    <div role="tablist" aria-label="Map" className="flex min-w-0 gap-1 overflow-x-auto [scrollbar-width:none]">
       {maps.map((map, index) => {
         const selected = map.id === mapId;
         return (

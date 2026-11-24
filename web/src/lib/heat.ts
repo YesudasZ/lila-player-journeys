@@ -33,12 +33,12 @@ const NOUNS: Record<HeatKind, [string, string]> = {
   death: ["death", "deaths"],
   loot: ["loot event", "loot events"],
 };
-/** What a kind counts, and at whose position. */
-const WHAT: Record<HeatKind, string> = {
-  movement: "Each sample is counted where the player or bot was. They show movement, not time spent.",
+/** What a kind counts, and at whose position: the last sentences of its legend, and its entry in the panel about the data. */
+export const HEAT_MEANING: Record<HeatKind, string> = {
+  movement: "Each movement sample is counted where the player or bot was. The samples show movement, not time spent.",
   kill: "Kills of players and of bots are counted, each where the killer stood.",
   death: "Deaths in combat and in the storm are counted, each where the victim fell.",
-  loot: "Each is counted where the player stood.",
+  loot: "Each loot event is counted where the player stood.",
 };
 
 /** The side of a cell, in world units. */
@@ -162,7 +162,7 @@ export function heatSummary(heat: Pick<Heat, "kind" | "total" | "matches" | "mos
   if (heat.total === 0) return `The journeys that are drawn have no ${many}.`;
   const side = Math.round(scale / heat.cells);
   const storm = heat.kind === "death" ? `, incl. ${counted(heat.storm, "storm death", "storm deaths")}` : "";
-  return `${counted(heat.total, one, many)} of ${counted(heat.matches, "match", "matches")}${storm}; the fullest cell holds ${countLabel(heat.most)}. A cell is ${side} × ${side} units. ${WHAT[heat.kind]}`;
+  return `${counted(heat.total, one, many)} of ${counted(heat.matches, "match", "matches")}${storm}; the fullest cell holds ${countLabel(heat.most)}. A cell is ${side} × ${side} units. ${HEAT_MEANING[heat.kind]}`;
 }
 
 /** The rows counted of each event, by its name in the data: "Killed 3 · BotKilled 697 · KilledByStorm 39". */
