@@ -1,10 +1,10 @@
 # Progress Log
 
-Last updated: 2026-11-24 13:31 IST
+Last updated: 2026-11-24 13:37 IST
 
 ## Current phase
 
-Phase 7, Heatmaps. Status: **IN PROGRESS** on the branch `phase-7-heatmaps` (the plan is not approved yet; no pull request yet).
+Phase 7, Heatmaps. Status: **IN PROGRESS** on the branch `phase-7-heatmaps` (plan approved; no pull request yet).
 
 Phases 1 to 6 and step 9.1 are merged: pull requests [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) (Phase 3), [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) (step 9.1), [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3) (Phase 4), [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4) (Phase 5) and [#5](https://github.com/YesudasZ/lila-player-journeys/pull/5) (Phase 6) were reviewed and merged by the user, the last one on 24 Nov at 13:27 IST. The tool is live at https://lila-player-journeys-psi.vercel.app and shows Phase 6; production on Vercel follows `main`.
 
@@ -33,13 +33,19 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 Phase 7 deliverables and acceptance criteria are in PLAN.md, "Phase 7". The task lists of Phases 2 to 6 and of step 9.1 are in the history of this file (`git log -p docs/PROGRESS.md`).
 
 - [x] 7.0 The user's go for Phase 7, in this session (24 Nov, 13:31). Branch `phase-7-heatmaps` cut from `main` at `78197e9`. This file corrected: Phase 6 is merged as pull request #5; the live site shows it (checked after the merge at 13:30: `?match=fbbc5d02&t=118` opens paused at 1:58 with the slider at 118 of 523; Play runs 30 s of the match in 3 s at 10x and leaves the address alone until the pause; 12 marks stand on the track and 7 hang below it; no request failed, empty console)
-- [ ] 7.1 Plan Phase 7 in plan mode; on the user's approval, record it in PLAN.md
+- [x] 7.1 Plan approved by the user in plan mode (24 Nov, 13:37) and recorded in PLAN.md, "Phase 7". Approved with it: one heat layer at a time (Traffic, Kills, Deaths, Loot), none at first; fed by the journeys that are drawn; cells of 10 x 10 world units, one token colour per layer, strength on a square-root scale; a legend with the real numbers; `heat` in the address; the "no recorded path" layer, the time-spent layer and an opacity slider are not built; the heat does not follow playback; no review agents in this phase, but grid sums against the manifest, one-line faults and the preview; no new dependency, no change to the data files
+- [ ] 7.2 lib: `heat.ts` (kinds, grid, counting, smoothing, strength, the legend's sentence) with tests and a benchmark
+- [ ] 7.3 Store, selector and link: `heat`, `setHeat`, `selectHeat`, `heat` in the address
+- [ ] 7.4 The heat layer and the sidebar control
+- [ ] 7.5 Checked in the preview; one-line faults; the benchmark's reading
+- [ ] 7.6 Docs and phase-end checks; status "DONE (awaiting my review)"
+- [ ] 7.7 On the user's yes: push the branch, open the pull request, record it here, read the first CI run. Then stop for the review with a short manual test script
 
 ## Exactly where I stopped
 
 - Branch `phase-7-heatmaps`, cut from `main` at `78197e9`; local only, nothing pushed. `main` equals `origin/main`.
-- Phase 7 has no code yet. Its plan is being written in plan mode and waits for the user's approval.
-- **NEXT:** on approval: record the plan in PLAN.md ("Phase 7") and in the task list above, then build in small commits.
+- Phase 7 has no code yet. Its plan is approved and recorded in PLAN.md.
+- **NEXT:** step 7.2: `web/src/lib/heat.ts` with its tests and `heat.bench.ts`. Then 7.3 and 7.4; each commit leaves the checks green.
 
 ## Decisions and assumptions made
 

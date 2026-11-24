@@ -271,20 +271,36 @@ web/src/components/                          mapSurface, MapView and App change 
 
 ## Phase 7: Heatmaps (1.5 h)
 
-**Goal:** answer "where" questions for a whole map at once.
+**Goal:** answer "where" questions for a whole map at once. The detailed plan below was approved on 24 Nov 2026; it is built on the branch `phase-7-heatmaps`.
 
 **Deliverables**
-- Core layers, binned in the browser from the map bundle so they follow the active filters: traffic (movement samples, labelled as such), kills (where players stood when they killed), deaths (where they fell). Human journeys by default; the sidebar toggles decide, there is no second switch.
-- Grid cells of a fixed size in world units, a blur, one perceptual colour ramp per layer, opacity, a legend with the real counts and the number of matches behind them. `heat` joins the URL.
-- Should 1: "no recorded path" layer. Path segments, not samples, are rasterised; a cell counts as crossed if any human segment passes through it; the layer is limited to the map artwork and says in its legend that roofs, rocks and water are included. The artwork mask comes from the pipeline (the flood fill that `verify_overlay.py` already uses), not from a second implementation in the browser.
-- Should 2: loot layer. Could 1: time-spent layer, where each gap's seconds go to the cell of its earlier sample, capped at 60 s.
+- One heat layer at a time: Traffic, Kills, Deaths or Loot (Should 2), chosen with a row of buttons in the sidebar, above the legend. None is on at first, so the bare address stays the view it was.
+- What feeds it: the journeys that are drawn. So the heat follows the map, the days, the fates, the open match and the switches for humans and bots; there is no second switch. Its kinds are event groups of the manifest: `movement`, `kill`, `death`, `loot`. Storm deaths stay markers: 39 points are not a heat map.
+- Cells of 10 x 10 world units (90 x 90 on Ambrose Valley, 58 x 58 on Grand Rift, 100 x 100 on Lockdown), smoothed once. One colour per layer, taken from the tokens: traffic teal, kills yellow, deaths vermilion, loot green. The strength of the colour says how much, on a square-root scale.
+- A legend with the real numbers: the rows counted, the matches behind them, the largest count in a cell and the cell's size. For traffic it says that these are movement samples, not time spent.
+- `heat` joins the address, written in place like the rest.
+- The heat lies between the minimap and the journeys and does not follow playback: it shows the whole selection.
+- Not built in this phase: the "no recorded path" layer (Should 1), which needs a mask of the map's artwork from the pipeline and a second way of counting, by path segments; the time-spent layer (Could 1); an opacity slider. The traffic layer shows unused areas as cells without colour.
+
+**Files**
+
+```
+web/src/lib/heat.ts                       the kinds, the grid's size, counting, smoothing, strength, a token colour as numbers, the legend's sentence
+web/src/state/store.ts, shown.ts          heat, setHeat; selectHeat builds the grid once per draw list and kind
+web/src/lib/link.ts                       heat
+web/src/components/layers/heatLayer.ts    paints the grid into a small image and draws it scaled into the map's rectangle
+web/src/components/HeatControl.tsx        the buttons and the legend; Sidebar and MapView change a little
+```
 
 **Acceptance**
-- Before blur, the sum of each count grid equals the number of rows that fed it (unit test). The time-spent grid sums to the seconds assigned. A synthetic path that jumps over a cell marks that cell as crossed.
-- Binning Ambrose Valley, all matches, takes under 50 ms on the development machine (Vitest benchmark; the reading goes into PROGRESS.md).
-- The "no recorded path" layer marks nothing on the black surround.
+- Before smoothing, the sum of each count grid equals the number of rows that fed it, for every kind on every map; over the three maps the sums equal the manifest's totals (unit tests). Smoothing keeps the total.
+- A row at each corner of the map lands in the corner cell, also on Grand Rift, whose image is not square.
+- Counting Ambrose Valley with all matches takes under 50 ms on the development machine (Vitest benchmark; the reading goes into PROGRESS.md).
+- In the preview: each layer on each map, and the legend's numbers follow a day filter, a fate filter and the bots switch.
 
-**Verify locally:** toggle each layer on each map; compare the kill hot spots with `docs/img/overlay_*.jpg`.
+**Review:** no review agents in this phase (the user's decision with the plan: this model's weekly limit stood at 76% with five phases to go). Instead: the grid sums against the manifest's totals, one-line faults put into the new code, and every layer on every map in the preview.
+
+**Verify locally:** switch each layer on, on each map; compare the kill hot spots with `docs/img/overlay_*.jpg`.
 
 ## Phase 8: Polish (1 h)
 
