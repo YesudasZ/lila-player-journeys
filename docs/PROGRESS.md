@@ -1,10 +1,10 @@
 # Progress Log
 
-Last updated: 2026-11-24 19:27 IST
+Last updated: 2026-11-24 20:18 IST
 
 ## Current phase
 
-Step 9.2 and Phase 10 (deployment check; insights and docs), done together on the branch `phase-10-docs` as the user set them on 24 Nov. Status: **DONE (awaiting my review)**; the last commit before this file's is `1ae85c8`. No pull request yet: it is opened on the user's yes.
+Step 9.2 and Phase 10 (deployment check; insights and docs), done together on the branch `phase-10-docs` as the user set them on 24 Nov. Status: **DONE (awaiting my review)**; the last commit before this file's is `1ae85c8`. Pull request [#8](https://github.com/YesudasZ/lila-player-journeys/pull/8), opened on 24 Nov at 20:18 IST on the user's yes.
 
 Phases 1 to 8 and step 9.1 are merged: pull requests #1 to [#7](https://github.com/YesudasZ/lila-player-journeys/pull/7) were reviewed and merged by the user, the last one (Phase 8) on 24 Nov at 18:01 IST as merge commit `603c5ef`. The tool is live at https://lila-player-journeys-psi.vercel.app and shows Phase 8; production on Vercel follows `main`.
 
@@ -22,8 +22,8 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 | 6 | Timeline and playback | APPROVED (merged) | pull request [#5](https://github.com/YesudasZ/lila-player-journeys/pull/5) |
 | 7 | Heatmaps | APPROVED (merged) | pull request [#6](https://github.com/YesudasZ/lila-player-journeys/pull/6) |
 | 8 | Polish | APPROVED (merged) | pull request [#7](https://github.com/YesudasZ/lila-player-journeys/pull/7) |
-| 9 | Deployment (9.1 after Phase 3, 9.2 with Phase 10) | 9.1 APPROVED (merged); 9.2 DONE (awaiting my review) with Phase 10 | pull request [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2); branch `phase-10-docs` |
-| 10 | Insights and docs | DONE (awaiting my review) | branch `phase-10-docs`, `1ae85c8` |
+| 9 | Deployment (9.1 after Phase 3, 9.2 with Phase 10) | 9.1 APPROVED (merged); 9.2 DONE (awaiting my review) with Phase 10 | pull request [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2); pull request [#8](https://github.com/YesudasZ/lila-player-journeys/pull/8) |
+| 10 | Insights and docs | DONE (awaiting my review) | pull request [#8](https://github.com/YesudasZ/lila-player-journeys/pull/8) |
 | 11 | Final QA | NOT STARTED | |
 
 [PLAN.md](PLAN.md) was approved by the user on 2026-11-23. Phase 2 was approved with the user's go for Phase 3 the same day, the changed plan lines included.
@@ -42,9 +42,10 @@ Step 9.2 and Phase 10 are done together; the user's brief for them is in PLAN.md
 
 ## Exactly where I stopped
 
-- Branch `phase-10-docs`, cut from `main` at `603c5ef`; local only, nothing pushed.
-- Step 9.2 and Phase 10 are done and wait for the user's review: `analysis/insights.py`, INSIGHTS.md, ARCHITECTURE.md, README.md with the walkthrough, 11 screenshots.
-- **NEXT:** on the user's yes, push the branch and open the pull request into `main` (no attribution line), record it here, read the first CI run once. Then check once that GitHub's view of ARCHITECTURE.md prints on one A4 page (Playwright's `pdf` command on the page of the pushed branch) and shorten it if it does not. The user records `docs/media/walkthrough.mp4` and adds it; the README links to it already. Then stop for the review. Phase 11 (final QA) starts only on the user's go, in a fresh session.
+- Branch `phase-10-docs` is pushed, and pull request [#8](https://github.com/YesudasZ/lila-player-journeys/pull/8) into `main` is open. `main` equals `origin/main` (`603c5ef`).
+- Step 9.2 and Phase 10 are done and wait for the user's review on GitHub. Changes asked for in the review go onto the same branch.
+- **Open with the user:** ARCHITECTURE.md prints on three A4 pages from GitHub's view (measured with Playwright's `pdf` command on the pushed page), not on one as PLAN.md's criterion says. One printed page holds about a third of it. The content the brief lists was kept; a hard cut is the user's call.
+- **NEXT:** nothing until the user speaks. The user records `docs/media/walkthrough.mp4` and adds it to this branch. After the merge: `git switch main`, `git pull --ff-only`, check the live site, and start Phase 11 (final QA) only on the user's go, in a fresh session.
 
 ## Decisions and assumptions made
 
@@ -247,6 +248,6 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 - Usage: the 5-hour limit was reached on 23 Nov shortly before 17:00 IST while three planning agents ran next to a long conversation, and the two-agent review of Phase 3 took about 40% of a window. Keep agent use low, and prefer a fresh session per phase, started with the resume protocol. The limit was reached again at 22:00 IST the same day, at the very end of step 9.1, in a conversation that had grown long; nothing was lost.
 - One of the reviewers' one-line faults is still not noticed by a test: removing the guard in `scaleBar` for `Math.log10` landing just under a whole number. No input reaches it in this JavaScript engine.
 - GitHub's "Contributors" box still showed two contributors on 2026-11-23 10:45 IST, about 11 hours after the rewrite was pushed; GitHub's API lists one. The user chose to wait. Recheck before submission (also a Phase 11 check). Fallbacks: recreate the repo, or GitHub Support.
-- `ARCHITECTURE.md` has 929 words and is meant to fit one printed page. Whether GitHub's view of it does is checked once the branch is pushed.
+- `ARCHITECTURE.md` does not print on one A4 page from GitHub's view: it takes three (the first holds GitHub's own header too). GitHub prints at its screen font size, so one printed page holds about 300 words, a third of the page as written. Whether to cut it that far is open with the user.
 - The README's map constants may be 1.5 to 2% too large in x on two maps (`docs/profile/crosscheck.md`, section 4). Kept as documented, by the user's decision.
 - 60 of the profiler's 235 metrics were added after the blind cross-check and were not re-derived by it (the cleaning counts among them were confirmed by a skeptic).
