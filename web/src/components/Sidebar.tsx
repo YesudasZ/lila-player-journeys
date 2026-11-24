@@ -11,7 +11,7 @@ import { MatchList } from "./MatchList.tsx";
 export function Sidebar({ manifest, map }: { manifest: Manifest; map: MapEntry }) {
   const matchId = useAppStore(selectMatchId);
   return (
-    <aside aria-label="Filters, matches and legend" className="row-span-2 flex min-h-0 flex-col border-r border-border bg-surface text-[13px]">
+    <aside aria-label="Filters, matches and legend" className="row-span-2 flex min-h-0 flex-col overflow-y-auto border-r border-border bg-surface text-[13px]">
       <HeatControl map={map} />
       <Filters manifest={manifest} />
       <MatchList key={map.id} manifest={manifest} map={map} />
