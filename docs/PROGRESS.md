@@ -1,12 +1,12 @@
 # Progress Log
 
-Last updated: 2026-11-24 20:20 IST
+Last updated: 2026-11-24 21:14 IST
 
 ## Current phase
 
-Step 9.2 and Phase 10 (deployment check; insights and docs), done together on the branch `phase-10-docs` as the user set them on 24 Nov. Status: **DONE (awaiting my review)**; the last commit before this file's is `1ae85c8`. Pull request [#8](https://github.com/YesudasZ/lila-player-journeys/pull/8), opened on 24 Nov at 20:18 IST on the user's yes.
+Phase 11, final QA, as the user's QA brief of 24 Nov sets it: test everything on production, report in [QA_REPORT.md](QA_REPORT.md), fix on the branch `qa-fixes`, re-test on its preview. Status: **IN PROGRESS** on the local branch `qa-fixes`. No pull request yet.
 
-Phases 1 to 8 and step 9.1 are merged: pull requests #1 to [#7](https://github.com/YesudasZ/lila-player-journeys/pull/7) were reviewed and merged by the user, the last one (Phase 8) on 24 Nov at 18:01 IST as merge commit `603c5ef`. The tool is live at https://lila-player-journeys-psi.vercel.app and shows Phase 8; production on Vercel follows `main`.
+Phases 1 to 10 are merged: pull requests #1 to [#8](https://github.com/YesudasZ/lila-player-journeys/pull/8) were reviewed and merged by the user, the last one (step 9.2 and Phase 10) on 24 Nov at 21:05 IST as merge commit `abdaf02`. The tool is live at https://lila-player-journeys-psi.vercel.app; production on Vercel follows `main`.
 
 Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 
@@ -22,31 +22,30 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 | 6 | Timeline and playback | APPROVED (merged) | pull request [#5](https://github.com/YesudasZ/lila-player-journeys/pull/5) |
 | 7 | Heatmaps | APPROVED (merged) | pull request [#6](https://github.com/YesudasZ/lila-player-journeys/pull/6) |
 | 8 | Polish | APPROVED (merged) | pull request [#7](https://github.com/YesudasZ/lila-player-journeys/pull/7) |
-| 9 | Deployment (9.1 after Phase 3, 9.2 with Phase 10) | 9.1 APPROVED (merged); 9.2 DONE (awaiting my review) with Phase 10 | pull request [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2); pull request [#8](https://github.com/YesudasZ/lila-player-journeys/pull/8) |
-| 10 | Insights and docs | DONE (awaiting my review) | pull request [#8](https://github.com/YesudasZ/lila-player-journeys/pull/8) |
-| 11 | Final QA | NOT STARTED | |
+| 9 | Deployment (9.1 after Phase 3, 9.2 with Phase 10) | APPROVED (merged) | pull requests [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) and [#8](https://github.com/YesudasZ/lila-player-journeys/pull/8) |
+| 10 | Insights and docs | APPROVED (merged) | pull request [#8](https://github.com/YesudasZ/lila-player-journeys/pull/8) |
+| 11 | Final QA | IN PROGRESS | branch `qa-fixes` (local) |
 
 [PLAN.md](PLAN.md) was approved by the user on 2026-11-23. Phase 2 was approved with the user's go for Phase 3 the same day, the changed plan lines included.
 
 ## Current phase task list
 
-Step 9.2 and Phase 10 are done together; the user's brief for them is in PLAN.md, at the end of "Phase 10". The task lists of Phases 2 to 8 and of step 9.1 are in the history of this file (`git log -p docs/PROGRESS.md`).
+The user's QA brief (24 Nov): Step 0 state; Step 1 Groups A to D on production; Step 2 the summary at the top of QA_REPORT.md; Step 3 fixes on `qa-fixes`; Step 4 re-test on the preview, ask once to push and open the pull request, stop. The task lists of Phases 2 to 10 are in the history of this file. Results of each group are in [QA_REPORT.md](QA_REPORT.md).
 
-- [x] 9.2 Production checked on 24 Nov. `main` is `603c5ef`, the merge of pull request #7; its three CI jobs and its Vercel status are green. Production serves `index-CKbSPsBA.js` and `index-DyQpQSEB.css`, the very file names a local build of `603c5ef` gives, so it runs this build. In the browser: the root shows "566 matches, 836 journeys" and the button "Data and keys"; `?map=Lockdown&heat=death` opens Lockdown with the Deaths layer ("183 deaths of 102 matches, incl. 17 storm deaths"); `?match=fbbc5d02&t=118&journey=fbbc5d02-5787de75` opens the match at "1:58 / 8:43" with the journey focused; `?map=GrandRift&days=February_10&fate=killed_by_storm&heat=movement` opens one match with one journey and all four choices pressed. No request failed in any of the four loads, the console had no error, and at 375 px the page loads with the desktop notice. The live URL is the first line under the README's title. The repo's About field already has it as its homepage (set in step 9.1), so no `gh repo edit` was needed; its description still ends in "Work in progress."
-- [x] 10.1 `analysis/insights.py` (`make insights`): eight candidate findings, A to H, counted from the committed manifest and bundles in the cells of the app's heat layers, a path followed between its rows. Its totals are the manifest's (2,236 kills by humans, 170 by bots, 39 storm deaths, 781 journeys of humans with an account id, 12,829 loot events, 52 matches with a bot's journey), and its Kills numbers are what the tool's legend says on each map (441, 42 and 122 matches; the fullest cell holds 29, 8 and 7). Tests in `pipeline/tests/test_insights.py`: the helpers on small cases, the totals, and that the cell size is the app's. `make test`: 261 tests
-- [x] 10.2 The user picked B, D and E (24 Nov)
-- [x] 10.3 INSIGHTS.md: (1) on Lockdown the storm kills half of the players who stay late (candidate B); (2) bots are fought where the loot is (D, with the kill concentration of C); (3) each map has a quiet quarter (E). E is worded more carefully than the candidate was: the screenshot of Lockdown showed that the artwork's rectangle holds sea and empty corners, so "cells no journey crosses" (45.9% / 46.1% / 64.6%) is a loose upper limit. The insight rests on what needs no mask (crossings per quarter, the busiest tenth, cells under one journey in a hundred) and says the limit. The script got the numbers the text needs: how the late journeys ended, the cells that hold half of the loot and the cells next to them, crossings by quarter. Tests: every number the text quotes is pinned, and every decimal in INSIGHTS.md has to be one the script prints. Each insight has deep links and a screenshot of the live tool. Three screenshots were looked at and show what the text says: Lockdown with 17 storm deaths of 17 matches, `fbbc5d02` at 1:58, Lockdown's traffic
-- [x] 10.4 ARCHITECTURE.md rewritten for one page (929 words): stack and why; data flow; the coordinate mapping with the constants of the three maps, UV storage, the Y flip, the proof and the tests; seven assumptions as "README says / data shows / decision"; eight trade-offs. Not verified yet: that GitHub's view of it prints on one A4 page, which is checked once the branch is pushed
-- [x] 10.5 README: the live URL first, what the tool does in three lines, tech stack, run the app, rebuild the data (the zip in `_inbox/`), "Env vars: none", tests, project structure, a walkthrough of nine steps with deep links and eight screenshots, and the note on AI tools. Screenshots: 11 JPEG files (1.9 MB) in `docs/img/walkthrough/` and `docs/img/insights/`, taken from the live tool at 1440 x 900 with Playwright 1.65.1 and the installed Chrome; nothing was added to `package.json`. `docs/media/walkthrough.mp4` is linked and not there yet: the user records and adds it
-- [x] 10.6 Phase-end checks: `make test` 263 tests, `npm run check` 476 tests (the app's code did not change in this phase). BRIEF.md rows S3 to S5 updated. Status "DONE (awaiting my review)"
+- [x] Step 0. Pull request #8 is merged (`abdaf02`), so no merge was needed. `qa-fixes` was cut from `main` with the four audit commits on top (cherry-picked from the local branch `chore-audit`), so that `docs/AUDIT.md` is in the repo. Production serves `main`: the Vercel status on `abdaf02` is "Deployment has completed", the page names the build files of `abdaf02` and the 8 served data files are byte-identical to `main`'s
+- [x] Group A, core requirements: 8 PASS, 1 PARTIAL (A6: the legend's first line and the Humans and Bots rows do not follow those two switches)
+- [ ] Group B, logic and edge cases
+- [ ] Group C, the audit's open items (C1 tab switch while playing, C2 real mouse, C3 keyboard and the unnamed Tab stop, C4 below 900 px, C5 PageSpeed Insights, C6 frame rate)
+- [ ] Group D, repo and deliverables, fresh clone with `make data`
+- [ ] Step 2, the summary at the top of QA_REPORT.md, shown to the user
+- [ ] Step 3, fixes on `qa-fixes`: every Blocker and Should-fix item; BRIEF.md statuses citing QA_REPORT.md; About description (ask before `gh repo edit`); the legend's first line follows the Humans and Bots switches; `make insights` prints 796 and 781; `t` written every few seconds while playing. Not created: `docs/media/walkthrough.mp4` (the user records it)
+- [ ] Step 4, re-test on the preview of `qa-fixes`; ask once to push and open the pull request; stop
 
 ## Exactly where I stopped
 
-- Branch `phase-10-docs` is pushed, and pull request [#8](https://github.com/YesudasZ/lila-player-journeys/pull/8) into `main` is open. `main` equals `origin/main` (`603c5ef`).
-- Step 9.2 and Phase 10 are done and wait for the user's review on GitHub. Changes asked for in the review go onto the same branch.
-- **Decided by the user on 24 Nov:** ARCHITECTURE.md stays as it is. From GitHub's view it prints on three A4 pages (measured with Playwright's `pdf` command on the pushed page), not on one as PLAN.md's criterion says. One printed page would hold about a third of it, and the sections and tables the brief lists matter more.
-- **Audit, 24 Nov (read-only, nothing fixed):** `docs/AUDIT.md` on the local branch `chore-audit`, cut from `phase-10-docs` and not pushed. Batches A to D are complete. The tool passes every check that could be run; the one blocker is that pull request #8 is not merged, so `main` lacks INSIGHTS.md, the new README and the new ARCHITECTURE.md. The user decides the fixes from the summary at the top of that file.
-- **NEXT:** nothing until the user speaks. The user records `docs/media/walkthrough.mp4` and adds it to this branch. After the merge: `git switch main`, `git pull --ff-only`, check the live site, and start Phase 11 (final QA) only on the user's go, in a fresh session.
+- QA in progress on the local branch `qa-fixes` (cut from `main` at `abdaf02`); nothing pushed.
+- Group A is done and committed. **NEXT:** Group B, test B1 (Back and Forward), on production in Claude in Chrome. Do not redo Group A.
+- Usage rule of the QA brief: at a usage-limit warning, finish the step, write here "QA stopped at group X, test Y; next action: …", update QA_REPORT.md, commit and stop.
 
 ## Decisions and assumptions made
 
