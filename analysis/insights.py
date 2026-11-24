@@ -372,6 +372,7 @@ def by_fate(manifest: dict[str, Any], maps: list[MapData]) -> dict[str, Any]:
 
 
 TITLES = {
+    "T": "Totals of the data the tool draws",
     "A": "A. How the journeys of humans with an account id ended, by map",
     "B": "B. Deaths in the storm",
     "C": "C. Where humans kill (every kill left in the data is a kill of a bot)",
@@ -383,10 +384,25 @@ TITLES = {
 }
 
 
+def totals(manifest: dict[str, Any], maps: list[MapData]) -> dict[str, Any]:
+    """T. The totals that INSIGHTS.md quotes in its introduction, counted from the journeys."""
+    journeys = [journey for data in maps for journey in data.journeys]
+    humans = [journey for journey in journeys if journey["actor"] == "human"]
+    return {
+        "days": len(manifest["days"]),
+        "matches": len({journey["match"] for journey in journeys}),
+        "journeys": len(journeys),
+        "journeys_of_humans": len(humans),
+        "journeys_of_humans_with_an_account_id": sum(not journey["anonymous"] for journey in humans),
+        "journeys_of_bots": len(journeys) - len(humans),
+    }
+
+
 def findings(manifest: dict[str, Any], maps: list[MapData]) -> dict[str, dict[str, Any]]:
-    """Every number, by candidate finding and map."""
+    """Every number: the totals, then by candidate finding and map."""
     earliest = int(min(data.t[data.kind == STORM].min() for data in maps if (data.kind == STORM).any()))
     out: dict[str, dict[str, Any]] = {title: {} for title in TITLES.values()}
+    out[TITLES["T"]] = totals(manifest, maps)
     for data in maps:
         humans_cross, bots_cross = crossed(data, data.human), crossed(data, ~data.human)
         out[TITLES["A"]][data.name] = fates(data, manifest)
