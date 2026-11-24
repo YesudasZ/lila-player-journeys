@@ -1,10 +1,10 @@
 # Progress Log
 
-Last updated: 2026-11-24 13:21 IST
+Last updated: 2026-11-24 13:27 IST
 
 ## Current phase
 
-Phase 6, Timeline and playback. Status: **DONE (awaiting my review)** on the branch `phase-6-timeline`, last code commit `f6d9424`. Not pushed yet: the push and the pull request wait for the user's yes.
+Phase 6, Timeline and playback. Status: **DONE (awaiting my review)** on the branch `phase-6-timeline`, pull request [#5](https://github.com/YesudasZ/lila-player-journeys/pull/5), last code commit `f6d9424`. Pushed; it waits for the user's review and merge.
 
 Phases 1 to 5 and step 9.1 are merged: pull requests [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) (Phase 3), [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) (step 9.1), [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3) (Phase 4) and [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4) (Phase 5) were reviewed and merged by the user, the last one on 23 Nov, 23:54 IST. The tool is live at https://lila-player-journeys-psi.vercel.app and shows Phase 5; production on Vercel follows `main`.
 
@@ -19,7 +19,7 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 | 3 | App shell and map canvas (ends with the first deployment, step 9.1) | APPROVED (merged and hosted) | pull request [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) |
 | 4 | Journeys, humans versus bots, markers | APPROVED (merged) | pull request [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3) |
 | 5 | Filters and URL state | APPROVED (merged) | pull request [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4) |
-| 6 | Timeline and playback | DONE (awaiting my review) | branch `phase-6-timeline`, `f6d9424`; pull request not opened yet |
+| 6 | Timeline and playback | DONE (awaiting my review) | pull request [#5](https://github.com/YesudasZ/lila-player-journeys/pull/5), branch `phase-6-timeline`, `f6d9424` |
 | 7 | Heatmaps | NOT STARTED | |
 | 8 | Polish | NOT STARTED | |
 | 9 | Deployment (9.1 after Phase 3, 9.2 on the last day) | 9.1 APPROVED (merged); 9.2 on the last day | pull request [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) |
@@ -59,15 +59,15 @@ Phase 6 deliverables and acceptance criteria are in PLAN.md, "Phase 6". The task
     The app's work per frame is far under 16 ms, and React renders nothing while a match plays. The time between frames is the pane's and not the app's: the browser pane shows about 30 frames a second and stood still for up to a second several times (21 and 20 frames longer than 34 ms). So "frame time under 16 ms" is shown for the work and not for the pacing; a reading in a browser window at 60 Hz is still missing. The stalls showed the 100 ms limit at work: at 20x the matches reached 147 s and 110 s instead of 200 s, and neither jumped
 - [x] 6.9 Independent review by two agents, each held to 40 tool calls (49 used together; 24 Nov, 12:32 to 13:11). No blocker; 4 findings to fix and 12 small ones. In the browser the app's heads equal a computation written afresh from rule 4 for 1,094,028 heads of all 1,242 journeys, and all 13,247 markers appear in their second. Fixed in `f6d9424`; what changed and what was left is PLAN.md's last section. Raw result: `.local/phase6-review-result.raw`. The fixes were looked at in the preview (13:21): a head between two rows gives its tooltip and ring and takes the focus on a click; 12 marks stand on the track and 7 deaths hang below it; a held Space toggles once; what is spoken stays "0:17 of 8:43" while it plays and reads "0:19 of 8:43" after the pause; the console is empty. Not seen as pixels: the track's new colour
 - [x] 6.10 PLAN.md, BRIEF.md, DATA_FORMAT.md, ARCHITECTURE.md and the README describe Phase 6 as built. Phase-end checks pass (13:21): `npm run check` (410 tests), `npm run build` (87.91 kB of JavaScript gzipped), `make test` (253 tests)
-- [ ] 6.11 On the user's yes: push the branch, open the pull request, record it here, read the first CI run. Then stop for the review
+- [x] 6.11 On the user's yes (24 Nov, 13:27): the branch is pushed and pull request [#5](https://github.com/YesudasZ/lila-player-journeys/pull/5) is open. Its description gives the evidence for each acceptance criterion, what differs from the plan, what was not verified, and the manual test script. CI runs on the pull request and is read there
 
 ## Exactly where I stopped
 
-- Branch `phase-6-timeline`, cut from `main` at `89dfde3`; local only, nothing pushed. `main` equals `origin/main`.
-- Everything of Phase 6 is committed. At 13:21 on 24 Nov: `npm run check` (410 tests), `npm run build` and `make test` (253 tests) pass.
+- Branch `phase-6-timeline`, cut from `main` at `89dfde3`, is pushed; pull request [#5](https://github.com/YesudasZ/lila-player-journeys/pull/5) into `main` is open. `main` equals `origin/main`.
+- Everything of Phase 6 is committed and pushed. At 13:21 on 24 Nov: `npm run check` (410 tests), `npm run build` and `make test` (253 tests) pass.
 - The branch `fix-phase-5-approved-changes` is parked (see "Known issues / TODO later"): it is not part of this phase.
-- Waiting for the user's yes to push the branch and open the pull request.
-- **NEXT:** on yes: `git push -u origin phase-6-timeline`; `gh pr create` into `main` (what the phase delivers, the evidence for each acceptance criterion, what differs from the plan, what was not verified, how to verify; no attribution line; no screenshots, and why); record the pull request here in one docs commit and push it; read the first CI run. Then stop. After the user's merge and go: `git switch main`, `git pull --ff-only`, look at the live site, then Phase 7 on a new branch, in a fresh session: this one holds over 700,000 tokens, and reading them again after an hour's pause cost 13% of a usage window.
+- Waiting for the user's review and merge of pull request #5. Still for the user, or for me in the user's Chrome on request: the frame-time reading at 60 Hz, and one real drag of the slider.
+- **NEXT:** changes asked for in the review go onto this branch. After the user's merge and go: `git switch main`, `git pull --ff-only`, look at the live site, then Phase 7 (heatmaps) on a new branch, in a fresh session: this one holds over 700,000 tokens, and reading them again after an hour's pause cost 13% of a usage window.
 
 ## Decisions and assumptions made
 
