@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-24 00:58 IST
+Last updated: 2026-11-24 12:32 IST
 
 ## Current phase
 
@@ -57,7 +57,7 @@ Phase 6 deliverables and acceptance criteria are in PLAN.md, "Phase 6". The task
     | `d0a38c30` on Lockdown, which has the most rows | 15 | 0.2, 0.3 and 0.4 ms (161 draws) | none; one at Play, one at Pause | 33.3 and 34.3 ms |
 
     The app's work per frame is far under 16 ms, and React renders nothing while a match plays. The time between frames is the pane's and not the app's: the browser pane shows about 30 frames a second and stood still for up to a second several times (21 and 20 frames longer than 34 ms). So "frame time under 16 ms" is shown for the work and not for the pacing; a reading in a browser window at 60 Hz is still missing. The stalls showed the 100 ms limit at work: at 20x the matches reached 147 s and 110 s instead of 200 s, and neither jumped
-- [ ] 6.9 Independent review by two agents, each held to 40 tool calls; fixes
+- [ ] 6.9 Independent review by two agents, each held to 40 tool calls: launched on 24 Nov at 12:32 (workflow `phase6-review`, run `wf_48d4439c-642`), one in the browser against the data, one on the code, the accessibility of the timeline and the strength of the tests. Its raw result goes to `.local/phase6-review-result.raw`; then the fixes
 - [ ] 6.10 Docs and phase-end checks; status "DONE (awaiting my review)"
 - [ ] 6.11 On the user's yes: push the branch, open the pull request, record it here, read the first CI run. Then stop for the review
 
@@ -66,7 +66,8 @@ Phase 6 deliverables and acceptance criteria are in PLAN.md, "Phase 6". The task
 - Branch `phase-6-timeline`, cut from `main` at `89dfde3`; local only, nothing pushed. `main` equals `origin/main`.
 - Steps 6.2 to 6.7 are committed on `phase-6-timeline` (local only, nothing pushed): everything of playback is built. At 00:48 on 24 Nov: `npm run check` (396 tests), `npm run build` (87.68 kB of JavaScript gzipped) and `make test` (252 tests) pass.
 - Step 6.8 is done: the preview checks and the frame-time reading are in its entry above. After it (00:58): a fault check of the new code (thirty one-line faults, 27 noticed, two tests added, the third unobservable), ARCHITECTURE.md's rows on playback, and PLAN.md's section "Changed while building Phase 6". The user said "Continue" at 00:50 with the 5-hour window at 88%; the review did not fit into what was left.
-- **NEXT:** 6.9, once the usage window has reset (03:00 IST on 24 Nov): the review by two agents, each held to 40 tool calls, then the fixes. Then 6.10: PLAN.md "Phase 6" as built with a section on what differs and what the review changed, BRIEF.md, the README's status line, ARCHITECTURE.md's mention of the clock, the commands table below, status "DONE (awaiting my review)", and the short manual test script for the closing message. Then ask once to push and open the pull request, and stop.
+- 24 Nov, 12:32: the user said "Continue" in a new usage window (13% used). The review of step 6.9 is running; while it runs, no file of the code is touched, because one reviewer puts temporary faults into the code to test the tests.
+- **NEXT:** when the review reports: save its result, reproduce each finding, fix what holds, re-run the checks, commit. Then 6.10: PLAN.md "Phase 6" as built with a section on what the review changed, BRIEF.md (R6, C6, R8), the README's status line, the status "DONE (awaiting my review)", and the short manual test script for the closing message. Then ask once to push and open the pull request, and stop.
 
 ## Decisions and assumptions made
 
