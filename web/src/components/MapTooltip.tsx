@@ -12,7 +12,7 @@ const ROOM_BELOW = 100; // CSS pixels a tooltip needs below the thing; nearer to
  * the place in world units. It opens toward the middle of the map, so it is never cut off at an
  * edge. It is hidden from assistive technology: it can only be reached with a pointer, and what it
  * says about a single event has no other way in. A list of a journey's events as text was planned
- * for Phase 8 and cut from it (see PLAN.md).
+ * and cut: tooltips cover it (ARCHITECTURE.md, trade-offs).
  */
 export function MapTooltip({ hover, map, manifest }: { hover: Hover | null; map: MapEntry; manifest: Manifest }) {
   if (!hover) return null;

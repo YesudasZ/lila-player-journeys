@@ -93,7 +93,7 @@ describe("counting", () => {
       heatOf("AmbroseValley", "movement", list);
       return performance.now() - started;
     }).sort((a, b) => a - b);
-    expect(times[7]).toBeLessThan(50); // the median; the reading on the development machine is in PROGRESS.md
+    expect(times[7]).toBeLessThan(50); // the median; on the development machine it was 1.7 ms
   });
 });
 

@@ -4,7 +4,8 @@ The full QA before submission, run on 24 Nov 2026 as the user's QA brief asks: t
 
 - **Production:** https://lila-player-journeys-psi.vercel.app, serving `main` at `abdaf02` (the merge of pull request #8).
 - **Method:** Claude in Chrome on fresh tabs. Page state was read from the DOM and from the canvas pixels by scripts; clicks, keys, hovers and drags were real input from the browser tool wherever a row says so. Expected numbers were counted from the committed data files with a separate script, not taken from the app.
-- **Previous audit:** [AUDIT.md](AUDIT.md) (24 Nov, read-only). Its results are reused where nothing changed; its open items are re-checked in Group C.
+- **Previous audit:** a read-only audit on 24 Nov. Its results are reused where nothing changed; its open items are re-checked in Group C.
+- **Working files:** `docs/BRIEF.md` (the brief as a checklist), the plan, the progress log and the audit were in the repo during the QA. They are the author's working files and are kept out of the submitted repo, so this report names them without links.
 - **Evidence:** screenshots in [docs/qa/](qa/); numbers and texts as read from the page.
 - **Result key:** PASS, PARTIAL, FAIL. "Observation" marks something that works but deserves a note.
 
