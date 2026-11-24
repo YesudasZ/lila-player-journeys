@@ -81,7 +81,7 @@ Phases 1 and 2 were committed straight to `main`. From Phase 3 on:
 
 ## Data facts (evidence, row by row: `docs/DATA_NOTES.md`; independent check: `docs/profile/crosscheck.md`)
 
-Measured unless marked as an assumption (A1 to A9 in DATA_NOTES.md).
+Measured unless marked as an assumption (A1 to A10 in DATA_NOTES.md).
 
 - 1,243 Parquet files (no extension), 89,104 rows, 796 matches, 3 maps. One file is one journey, one player or bot in one match; one journey is stored twice.
 - `ts` is **Unix seconds** in a `timestamp[ms]` column. Read the raw int64; never let a library convert it.

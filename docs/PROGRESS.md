@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-24 14:10 IST
+Last updated: 2026-11-24 14:12 IST
 
 ## Current phase
 
@@ -35,7 +35,7 @@ Phase 8 deliverables are in PLAN.md, "Phase 8". The task lists of Phases 2 to 7 
 - [x] 8.0 The user's go for Phase 8, in this session (24 Nov, 13:54). Branch `phase-8-polish` cut from `main` at `94bf1fb`. This file corrected: Phase 7 is merged as pull request #6, and CI ended green on its last commit; the live site shows it (checked after the merge at 13:55: `?heat=kill` has Heat as the first section of the sidebar and "1,789 kills of 441 matches"; Deaths reads "504 deaths of 338 matches, incl. 17 storm deaths" and puts `heat=death` into the address; switching it off clears the layer and the address; no request failed, empty console)
 - [x] 8.1 Plan approved by the user in plan mode (24 Nov, 13:56) and recorded in PLAN.md, "Phase 8" ("The plan as approved"). In short: the Phase 5 changes first; a heat layer is a step too, and Back restores the time of playback; the events of the focused journey as text; an "About the data and the keys" panel and a notice below 900 px; pinch zoom is cut and named as a limit; Lighthouse, the 60 Hz reading, a real drag of the slider and "Copy link" are left to the user; no review agents; no new dependency
 - [x] 8.2 History and notice. The store counts the user's steps (`steps`: selectMap, selectMatch, setShown, setFocus, toggleDay, toggleFate, clearFilters, setHeat) and has `closedByFilters`, `applyLink`, `restoreFocus` and `dismissNotice`. `state/linkSync.ts`: a step first gives the entry it leaves its last view and time (`replaceState`), then adds an entry (`pushState`), at once; everything else is rewritten in place after 300 ms, and the passing of time not while a match plays; `popstate` calls `applyLink`. `FilterNotice.tsx` stands over the map with `EmptyNote`. Three things differ from the entry as planned: (1) there is no `restoreTime`: `applyLink` keeps the link as `asked`, and the clock's follower gives the time of every newly asked link to its match, paused, the same way it did for the link the page was opened with; (2) a link's time goes to the match of that link only; (3) a write that the browser refuses (Safari allows 100 in 30 s and throws) is caught, so that a refused write cannot stop the step that caused it. Evidence: 468 Vitest tests; 41 one-line faults in the three state files, all noticed. In the preview with real clicks and keys: Kills, a match and "10 Feb" gave `?heat=kill`, `?match=fbbc5d02&heat=kill` and `?days=February_10&heat=kill` with the history growing from 1 to 4, and the notice stood over the map and was gone 6 s later; `history.back()` three times and `history.forward()` three times opened each view again and added nothing; Home and three times Right on the slider wrote `&t=15` in place; another match was opened, and Back showed "0:15 / 8:43", paused; no console message
-- [ ] 8.3 Tests that match and journey ids are unique (pytest and Vitest, from the parked branch); the journey id's format in `lib/link.ts` and in DATA_NOTES.md; the day-folder assumption as A10; "A1 to A10" in CLAUDE.md and in this file
+- [x] 8.3 Ids and notes. `test_ids_in_links_are_unique_across_all_matches_and_within_each_match` (pytest): 796 of 796 match ids, 1,242 of 1,242 journey ids, at most one journey without an account id per match, and every journey id has one of the three forms (17 `-anon`, 444 `-bot<number>`, 781 `-<player>`). The same from the app's side in `lib/link.test.ts` ("the ids a link names things by"). The format is in the comment on `journey` in `lib/link.ts` and in DATA_NOTES.md, "How a link names a match and a journey". The day-folder assumption is A10 there, with the five matches that start before midnight; "A1 to A10" in CLAUDE.md and here. 254 pytest tests, 471 Vitest tests
 - [ ] 8.4 The events of the focused journey as text in `JourneyList.tsx`
 - [ ] 8.5 `AboutPanel.tsx` opened from the top bar; the notice below 900 px in `App.tsx`
 - [ ] 8.6 Preview and keyboard pass; one-line faults
@@ -45,12 +45,12 @@ Phase 8 deliverables are in PLAN.md, "Phase 8". The task lists of Phases 2 to 7 
 ## Exactly where I stopped
 
 - Branch `phase-8-polish`, cut from `main` at `94bf1fb`; local only, nothing pushed. `main` equals `origin/main`.
-- Step 8.2 is committed: history entries, Back and Forward, the notice.
-- **NEXT:** step 8.3. Take `test_ids_in_links_are_unique_across_all_matches_and_within_each_match` (pytest) and the describe "the ids a link names things by" (Vitest, `lib/link.test.ts`) from `git diff 728ea77 fix-phase-5-approved-changes`; the comment on `journey` in `lib/link.ts`; in DATA_NOTES.md the journey id's format and the day-folder assumption as A10 (the parked text calls it A9, which is taken); "A1 to A10" in CLAUDE.md and here.
+- Steps 8.2 (history entries, Back and Forward, the notice) and 8.3 (id tests, the two notes) are committed.
+- **NEXT:** step 8.4: under the focused journey in `JourneyList.tsx`, its events as text in time order ("1:58 death, killed by bot"), from the draw list's markers and their times, with the wording of `lib/labels.ts`; a pure function with tests, then the component.
 
 ## Decisions and assumptions made
 
-Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row numbers in brackets, assumptions as A1 to A9).
+Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row numbers in brackets, assumptions as A1 to A10).
 
 2026-11-22:
 - Project folder `~/projects/lila-player-journeys`; GitHub repo public from the start; commits use the GitHub no-reply address, set in this repo only (user's choices).
@@ -204,8 +204,8 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 |---|---|---|
 | `unzip _inbox/player_data.zip -d data/raw` | restores the raw data | 2026-11-22 |
 | `make setup` | creates `.venv`, installs pinned dependencies | 2026-11-22, in a fresh clone |
-| `make test` | 253 tests, no raw data needed; creates `.venv` on first use. Run it after `git add`: the hygiene tests see tracked files only | 2026-11-24 13:47 |
-| `cd web && npm run check` | type check, ESLint with no warning allowed, 468 Vitest tests | 2026-11-24 14:10 |
+| `make test` | 254 tests, no raw data needed; creates `.venv` on first use. Run it after `git add`: the hygiene tests see tracked files only | 2026-11-24 14:12 |
+| `cd web && npm run check` | type check, ESLint with no warning allowed, 471 Vitest tests | 2026-11-24 14:12 |
 | `cd web && npm run build` | production build into `web/dist/` (not committed); JavaScript 89.57 kB gzipped | 2026-11-24 13:47 |
 | `cd web && npm run dev` | the app on http://localhost:5173 | 2026-11-23 17:41 |
 | `make profile` | measures the raw data → `docs/profile/` (235 metrics) | 2026-11-23 13:10 |

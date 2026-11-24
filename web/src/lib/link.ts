@@ -17,7 +17,12 @@ export interface Link {
   match: string | null;
   /** Seconds into the open match at which playback stands; null is its end, where the whole match is shown. */
   t: number | null;
-  /** The id of the focused journey, if there is one. */
+  /**
+   * The id of the focused journey, if there is one, as the data names it (docs/DATA_FORMAT.md):
+   * `<match>-<player>` for a human with an account, both parts being the first eight characters of
+   * the ids; `<match>-anon` for a human whose account id was not recorded, of whom a match has at
+   * most one; `<match>-bot<number>` for a bot.
+   */
   journey: string | null;
   /** The switches set by hand. */
   choices: Partial<Shown>;
