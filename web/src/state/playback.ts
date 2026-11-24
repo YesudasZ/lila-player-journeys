@@ -5,7 +5,7 @@
  */
 import { createStore } from "zustand/vanilla";
 
-import { checkedLink, roundedTime } from "../lib/link.ts";
+import { checkedLink, roundedTime, type Link } from "../lib/link.ts";
 import { FIRST_SPEED, advance } from "../lib/playback.ts";
 import { selectMatchId } from "./shown.ts";
 import { useAppStore, type AppState } from "./store.ts";
@@ -84,24 +84,26 @@ export function linkTime({ end, time }: PlaybackState): number | null {
 
 /**
  * Let the clock follow the app: a match that is opened starts whole and paused, at its end, and all
- * matches together have no clock. The link the page was opened with may name a time, which its
- * match gets once. The clock also stops when the tab is hidden, so that coming back to the tab
- * never finds the match far ahead. Returns what stops all this.
+ * matches together have no clock. A link may name a time, which its match gets when the link is
+ * opened, paused: the link the page was opened with, and the link of every history entry that Back
+ * or Forward lands on, also when its match is open already. The clock also stops when the tab is
+ * hidden, so that coming back to the tab never finds the match far ahead. Returns what stops all this.
  */
 export function startPlayback(): () => void {
   let opened: string | null = null; // the id of the match the clock is set for
-  let fromLink = true; // the link the page was opened with has not been applied yet
+  let taken: Link | null = null; // the link whose time the clock has been given
   const follow = (state: AppState) => {
     const manifest = state.manifest.status === "ready" ? state.manifest.value : null;
     const id = selectMatchId(state);
     const match = manifest?.matches.find((entry) => entry.id === id) ?? null;
-    if ((match?.id ?? null) !== opened) {
+    const link = manifest && state.asked !== taken ? checkedLink(state.asked, manifest) : null; // a link that has just been opened
+    if ((match?.id ?? null) !== opened || link) {
       opened = match?.id ?? null;
       stand();
-      const linked = fromLink && manifest && match ? checkedLink(state.asked, manifest).t : null;
+      const linked = link && link.match === match?.id ? link.t : null; // a time belongs to its match
       playback.setState({ end: match?.span ?? null, time: linked ?? match?.span ?? 0, playing: false });
     }
-    if (manifest) fromLink = false;
+    if (manifest) taken = state.asked;
   };
   follow(useAppStore.getState());
   const stopFollowing = useAppStore.subscribe(follow);

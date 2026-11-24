@@ -14,6 +14,7 @@ import { MapTooltip } from "./MapTooltip.tsx";
 import { MAP_SURFACE_ID } from "./tabIds.ts";
 import { ZoomControls } from "./ZoomControls.tsx";
 import { EmptyNote } from "./EmptyNote.tsx";
+import { FilterNotice } from "./FilterNotice.tsx";
 
 const KEYS_ID = "map-keys";
 
@@ -95,7 +96,11 @@ export function MapView({ map, image, manifest }: { map: MapEntry; image: HTMLIm
         zoom, zero fits the map to the window, Escape clears the focus, Space plays and pauses the open match.
       </p>
       <MapTooltip hover={hover} map={map} manifest={manifest} />
-      <EmptyNote map={map} manifest={manifest} />
+      {/* What the filters did to the view, at the top of the map. The box itself lets the pointer through to the map. */}
+      <div className="pointer-events-none absolute top-4 left-1/2 z-10 flex w-max max-w-[80%] -translate-x-1/2 flex-col items-center gap-2">
+        <FilterNotice />
+        <EmptyNote map={map} manifest={manifest} />
+      </div>
       <MapReadout x={xRef} z={zRef} bar={barRef} label={labelRef} />
       <ZoomControls
         limits={limits}

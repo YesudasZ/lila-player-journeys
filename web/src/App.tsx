@@ -25,7 +25,9 @@ export function App() {
 
   // The page opens the view its address asks for, and from then on the address follows the view.
   useEffect(() => {
-    const stopClock = startPlayback(); // before the manifest arrives, so that the clock gets the time the link names
+    // The clock first: before the manifest arrives, so that it gets the time the link names, and before
+    // the address code, which reads the clock whenever the view changes.
+    const stopClock = startPlayback();
     const stopLink = startLinkSync();
     void loadManifest(decodeLink(location.search));
     return () => {

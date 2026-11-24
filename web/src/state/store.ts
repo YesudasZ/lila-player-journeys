@@ -46,8 +46,20 @@ export interface AppState {
   fates: string[];
   /** The heat layer that is on; null when none is. */
   heat: HeatKind | null;
-  /** The link the page was opened with, kept for a retry of the manifest. */
+  /**
+   * The link that was last asked for, as it came: the one the page was opened with, kept for a retry
+   * of the manifest, or the one of the history entry that Back or Forward landed on. The clock takes
+   * its time of playback (see playback.ts).
+   */
   asked: Link;
+  /**
+   * How many steps the user has taken: a map, a match, a focus, a filter, a switch or a heat layer
+   * chosen. Back undoes a step, so the address gets a history entry for each (see linkSync). Moving
+   * the map is no step, and neither is what a link or the arrival of data changes.
+   */
+  steps: number;
+  /** The id of the match that a filter has just closed, for the notice that says so; null once that is said or something else was chosen. */
+  closedByFilters: string | null;
 
   /**
    * Fetch the manifest and open the view that a link asks for, as far as the data has it: the first
@@ -77,6 +89,15 @@ export interface AppState {
   setView: (mapId: string, view: View | null) => void;
   /** Switch a heat layer on, which switches any other off; null switches the heat off. */
   setHeat: (kind: HeatKind | null) => void;
+  /**
+   * Open the view a link asks for, as far as the data has it: Back and Forward land on a link. Not a
+   * step. Before the manifest is there the link is kept, and the manifest opens it.
+   */
+  applyLink: (link: Link) => void;
+  /** Put the focus back where it was before a click that turned out to be the first half of a double-click. Not a step. */
+  restoreFocus: (journeyId: string | null) => void;
+  /** The notice about the match that a filter closed has been shown long enough. */
+  dismissNotice: () => void;
 }
 
 /** The fetch of the manifest that is under way, so that asking twice loads once. */
@@ -98,6 +119,13 @@ function matchesLeft(state: AppState, manifest: Manifest, days: readonly string[
       return fates.length === 0 || journeys?.status !== "ready" || journeys.value.some((journey) => journey.match === matchId && fates.includes(journey.fate));
     }),
   );
+}
+
+/** The open match of the open map when `left` no longer holds it: the match that a filter has just closed. */
+function closedBy(state: AppState, left: AppState["matches"]): string | null {
+  if (state.mapId === null) return null;
+  const open = state.matches[state.mapId];
+  return open !== undefined && left[state.mapId] === undefined ? open : null;
 }
 
 /** The state of a load that just failed. The reason itself goes to the console, where a developer finds it. */
@@ -133,6 +161,8 @@ export const useAppStore = create<AppState>()((set, get) => ({
   fates: [],
   heat: null,
   asked: DEFAULT_LINK,
+  steps: 0,
+  closedByFilters: null,
 
   loadManifest: (link) => {
     if (link) set({ asked: link });
@@ -190,7 +220,8 @@ export const useAppStore = create<AppState>()((set, get) => ({
     const state = get();
     const loaded = state.journeys[map.id];
     if (loaded?.status !== "ready" || state.mapId !== map.id) return;
-    set({ matches: matchesLeft(state, manifest.value, state.days, state.fates) });
+    const left = matchesLeft(state, manifest.value, state.days, state.fates);
+    set({ matches: left, closedByFilters: closedBy(state, left) ?? state.closedByFilters });
     const drawn = selectDrawList(get())?.journeys.some((each) => each.journey.id === state.focus) ?? false;
     if (!drawn) set({ focus: null }); // a focus that came with a link stays only when its journey is drawn
   },
@@ -199,7 +230,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
     const { manifest, loadMinimap, loadJourneys } = get();
     const map = manifest.status === "ready" ? manifest.value.maps.find((entry) => entry.id === mapId) : undefined;
     if (!map) return;
-    set({ mapId, focus: null });
+    set((state) => ({ mapId, focus: null, closedByFilters: null, steps: state.steps + 1 }));
     void loadMinimap(map);
     void loadJourneys(map);
   },
@@ -211,7 +242,12 @@ export const useAppStore = create<AppState>()((set, get) => ({
     const loaded = journeys[mapId];
     const left = matchId === null || loaded?.status !== "ready" || (matchesWithFates(loaded.value, fates)?.has(matchId) ?? true); // the chosen fates have to leave something of it
     if (matchId !== null && (!known || !left)) return;
-    set((state) => ({ matches: matchId === null ? without(state.matches, mapId) : { ...state.matches, [mapId]: matchId }, focus: null }));
+    set((state) => ({
+      matches: matchId === null ? without(state.matches, mapId) : { ...state.matches, [mapId]: matchId },
+      focus: null,
+      closedByFilters: null,
+      steps: state.steps + 1,
+    }));
   },
 
   setShown: (layer, shown) => {
@@ -221,11 +257,12 @@ export const useAppStore = create<AppState>()((set, get) => ({
     set((state) => ({
       choices: forgotten ? Object.fromEntries(Object.entries(state.choices).filter(([each]) => each !== layer)) : { ...state.choices, [layer]: shown },
       focus: hidesJourneys ? null : state.focus,
+      steps: state.steps + 1,
     }));
   },
 
   setFocus: (journeyId) => {
-    set({ focus: journeyId });
+    set((state) => ({ focus: journeyId, steps: state.steps + 1 }));
   },
 
   toggleDay: (dayId) => {
@@ -233,7 +270,8 @@ export const useAppStore = create<AppState>()((set, get) => ({
     if (manifest.status !== "ready") return;
     set((state) => {
       const days = toggled(manifest.value.days.map((day) => day.id), state.days, dayId);
-      return { days, matches: matchesLeft(state, manifest.value, days, state.fates), focus: null }; // what was focused may be gone
+      const matches = matchesLeft(state, manifest.value, days, state.fates);
+      return { days, matches, focus: null, closedByFilters: closedBy(state, matches), steps: state.steps + 1 }; // what was focused may be gone
     });
   },
 
@@ -242,12 +280,13 @@ export const useAppStore = create<AppState>()((set, get) => ({
     if (manifest.status !== "ready") return;
     set((state) => {
       const fates = toggled(manifest.value.fates, state.fates, fate);
-      return { fates, matches: matchesLeft(state, manifest.value, state.days, fates), focus: null };
+      const matches = matchesLeft(state, manifest.value, state.days, fates);
+      return { fates, matches, focus: null, closedByFilters: closedBy(state, matches), steps: state.steps + 1 };
     });
   },
 
   clearFilters: () => {
-    set({ days: [], fates: [] });
+    set((state) => ({ days: [], fates: [], closedByFilters: null, steps: state.steps + 1 }));
   },
 
   setView: (mapId, view) => {
@@ -260,6 +299,42 @@ export const useAppStore = create<AppState>()((set, get) => ({
   },
 
   setHeat: (kind) => {
-    set({ heat: kind });
+    set((state) => ({ heat: kind, steps: state.steps + 1 }));
+  },
+
+  applyLink: (link) => {
+    const { manifest } = get();
+    if (manifest.status !== "ready") {
+      set({ asked: link });
+      return;
+    }
+    const view = checkedLink(link, manifest.value);
+    const open = manifest.value.maps.find((map) => map.id === view.map) ?? manifest.value.maps[0];
+    set((state) => {
+      // A link says nothing about the other maps: they keep their match and their view, as far as the link's filters leave them.
+      const matches = view.match === null ? without(state.matches, open.id) : { ...state.matches, [open.id]: view.match };
+      return {
+        asked: link,
+        mapId: open.id,
+        days: view.days,
+        fates: view.fates,
+        heat: view.heat,
+        matches: matchesLeft({ ...state, matches }, manifest.value, view.days, view.fates),
+        focus: view.journey,
+        choices: view.choices,
+        views: view.view ? { ...without(state.views, open.id), [open.id]: view.view } : without(state.views, open.id),
+        closedByFilters: null,
+      };
+    });
+    void get().loadMinimap(open);
+    void get().loadJourneys(open); // which also checks the focus and the fates against the journeys, at once when they are there already
+  },
+
+  restoreFocus: (journeyId) => {
+    set({ focus: journeyId });
+  },
+
+  dismissNotice: () => {
+    set({ closedByFilters: null });
   },
 }));
