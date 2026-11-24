@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-24 14:12 IST
+Last updated: 2026-11-24 14:17 IST
 
 ## Current phase
 
@@ -36,7 +36,7 @@ Phase 8 deliverables are in PLAN.md, "Phase 8". The task lists of Phases 2 to 7 
 - [x] 8.1 Plan approved by the user in plan mode (24 Nov, 13:56) and recorded in PLAN.md, "Phase 8" ("The plan as approved"). In short: the Phase 5 changes first; a heat layer is a step too, and Back restores the time of playback; the events of the focused journey as text; an "About the data and the keys" panel and a notice below 900 px; pinch zoom is cut and named as a limit; Lighthouse, the 60 Hz reading, a real drag of the slider and "Copy link" are left to the user; no review agents; no new dependency
 - [x] 8.2 History and notice. The store counts the user's steps (`steps`: selectMap, selectMatch, setShown, setFocus, toggleDay, toggleFate, clearFilters, setHeat) and has `closedByFilters`, `applyLink`, `restoreFocus` and `dismissNotice`. `state/linkSync.ts`: a step first gives the entry it leaves its last view and time (`replaceState`), then adds an entry (`pushState`), at once; everything else is rewritten in place after 300 ms, and the passing of time not while a match plays; `popstate` calls `applyLink`. `FilterNotice.tsx` stands over the map with `EmptyNote`. Three things differ from the entry as planned: (1) there is no `restoreTime`: `applyLink` keeps the link as `asked`, and the clock's follower gives the time of every newly asked link to its match, paused, the same way it did for the link the page was opened with; (2) a link's time goes to the match of that link only; (3) a write that the browser refuses (Safari allows 100 in 30 s and throws) is caught, so that a refused write cannot stop the step that caused it. Evidence: 468 Vitest tests; 41 one-line faults in the three state files, all noticed. In the preview with real clicks and keys: Kills, a match and "10 Feb" gave `?heat=kill`, `?match=fbbc5d02&heat=kill` and `?days=February_10&heat=kill` with the history growing from 1 to 4, and the notice stood over the map and was gone 6 s later; `history.back()` three times and `history.forward()` three times opened each view again and added nothing; Home and three times Right on the slider wrote `&t=15` in place; another match was opened, and Back showed "0:15 / 8:43", paused; no console message
 - [x] 8.3 Ids and notes. `test_ids_in_links_are_unique_across_all_matches_and_within_each_match` (pytest): 796 of 796 match ids, 1,242 of 1,242 journey ids, at most one journey without an account id per match, and every journey id has one of the three forms (17 `-anon`, 444 `-bot<number>`, 781 `-<player>`). The same from the app's side in `lib/link.test.ts` ("the ids a link names things by"). The format is in the comment on `journey` in `lib/link.ts` and in DATA_NOTES.md, "How a link names a match and a journey". The day-folder assumption is A10 there, with the five matches that start before midnight; "A1 to A10" in CLAUDE.md and here. 254 pytest tests, 471 Vitest tests
-- [ ] 8.4 The events of the focused journey as text in `JourneyList.tsx`
+- [x] 8.4 The events of the focused journey as text. `lib/journeyEvents.ts` (`eventLines`, `timeSpan`, `placeOf`) makes one line per marker of the journey, in the order of time: when, what and where, in the tooltip's words; `MapTooltip.tsx` now takes its time and place from the same two functions. `JourneyEvents.tsx` is a section of its own below the journey list, not a list inside it as planned: a list of its own can take the keyboard focus and be scrolled with the keys, which a list inside the journeys' list could not. It follows the legend's switches and shows the whole journey, not the moment of playback (no React render per frame). Evidence: the expected lines of four journeys were worked out from the data files in Python and are what the code gives (475 Vitest tests); 11 one-line faults, all noticed. In the preview at 1280 x 800: `?match=e325a53a&journey=e325a53a-2c551757` shows "Events of human 2c551757" with 33 lines; Tab from the journey's button puts the focus on the list (magenta outline), five times Down scrolls it 200 px; Enter on the journey's button hides the section and Enter again shows it; a real hover over the last kill reads "Kill, human 2c551757, at 9:01 · x 14 z 155 · elevation 116"; no console message. With a journey focused the sidebar needs 936 px at a window height of 800, so it scrolls
 - [ ] 8.5 `AboutPanel.tsx` opened from the top bar; the notice below 900 px in `App.tsx`
 - [ ] 8.6 Preview and keyboard pass; one-line faults
 - [ ] 8.7 Docs and phase-end checks; status "DONE (awaiting my review)"
@@ -45,8 +45,8 @@ Phase 8 deliverables are in PLAN.md, "Phase 8". The task lists of Phases 2 to 7 
 ## Exactly where I stopped
 
 - Branch `phase-8-polish`, cut from `main` at `94bf1fb`; local only, nothing pushed. `main` equals `origin/main`.
-- Steps 8.2 (history entries, Back and Forward, the notice) and 8.3 (id tests, the two notes) are committed.
-- **NEXT:** step 8.4: under the focused journey in `JourneyList.tsx`, its events as text in time order ("1:58 death, killed by bot"), from the draw list's markers and their times, with the wording of `lib/labels.ts`; a pure function with tests, then the component.
+- Steps 8.2 (history entries, Back and Forward, the notice), 8.3 (id tests, the two notes) and 8.4 (events of the focused journey as text) are committed.
+- **NEXT:** step 8.5: `AboutPanel.tsx`, a native `dialog` opened from a button in `TopBar.tsx` ("About the data and the keys"), its numbers from the manifest through a pure `lib/about.ts` with tests, the key help of the slider from `sliderKeysHelp`; then the notice below 900 px in `App.tsx`.
 
 ## Decisions and assumptions made
 
@@ -205,7 +205,7 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 | `unzip _inbox/player_data.zip -d data/raw` | restores the raw data | 2026-11-22 |
 | `make setup` | creates `.venv`, installs pinned dependencies | 2026-11-22, in a fresh clone |
 | `make test` | 254 tests, no raw data needed; creates `.venv` on first use. Run it after `git add`: the hygiene tests see tracked files only | 2026-11-24 14:12 |
-| `cd web && npm run check` | type check, ESLint with no warning allowed, 471 Vitest tests | 2026-11-24 14:12 |
+| `cd web && npm run check` | type check, ESLint with no warning allowed, 475 Vitest tests | 2026-11-24 14:17 |
 | `cd web && npm run build` | production build into `web/dist/` (not committed); JavaScript 89.57 kB gzipped | 2026-11-24 13:47 |
 | `cd web && npm run dev` | the app on http://localhost:5173 | 2026-11-23 17:41 |
 | `make profile` | measures the raw data → `docs/profile/` (235 metrics) | 2026-11-23 13:10 |
