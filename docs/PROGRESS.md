@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-24 20:18 IST
+Last updated: 2026-11-24 20:20 IST
 
 ## Current phase
 
@@ -44,7 +44,7 @@ Step 9.2 and Phase 10 are done together; the user's brief for them is in PLAN.md
 
 - Branch `phase-10-docs` is pushed, and pull request [#8](https://github.com/YesudasZ/lila-player-journeys/pull/8) into `main` is open. `main` equals `origin/main` (`603c5ef`).
 - Step 9.2 and Phase 10 are done and wait for the user's review on GitHub. Changes asked for in the review go onto the same branch.
-- **Open with the user:** ARCHITECTURE.md prints on three A4 pages from GitHub's view (measured with Playwright's `pdf` command on the pushed page), not on one as PLAN.md's criterion says. One printed page holds about a third of it. The content the brief lists was kept; a hard cut is the user's call.
+- **Decided by the user on 24 Nov:** ARCHITECTURE.md stays as it is. From GitHub's view it prints on three A4 pages (measured with Playwright's `pdf` command on the pushed page), not on one as PLAN.md's criterion says. One printed page would hold about a third of it, and the sections and tables the brief lists matter more.
 - **NEXT:** nothing until the user speaks. The user records `docs/media/walkthrough.mp4` and adds it to this branch. After the merge: `git switch main`, `git pull --ff-only`, check the live site, and start Phase 11 (final QA) only on the user's go, in a fresh session.
 
 ## Decisions and assumptions made
@@ -205,6 +205,7 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 - The user picked candidates B, D and E. D carries the kill concentration of C as support.
 - E changed its weight after the screenshot of Lockdown: the share of cells no journey crosses counts sea and the corners of the artwork, so it is given as an upper limit only, and the insight rests on numbers that need no mask.
 - The README gives no test counts: they change with every phase.
+- ARCHITECTURE.md keeps its length (the user's choice, 24 Nov). The criterion "prints to one A4 page from GitHub's view" in PLAN.md is not met and is not pursued.
 - The tool's links in the docs name the map also where it is the first one (`?map=AmbroseValley`); the tool opens them and writes the short form.
 
 ## Open questions for the user
@@ -248,6 +249,6 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 - Usage: the 5-hour limit was reached on 23 Nov shortly before 17:00 IST while three planning agents ran next to a long conversation, and the two-agent review of Phase 3 took about 40% of a window. Keep agent use low, and prefer a fresh session per phase, started with the resume protocol. The limit was reached again at 22:00 IST the same day, at the very end of step 9.1, in a conversation that had grown long; nothing was lost.
 - One of the reviewers' one-line faults is still not noticed by a test: removing the guard in `scaleBar` for `Math.log10` landing just under a whole number. No input reaches it in this JavaScript engine.
 - GitHub's "Contributors" box still showed two contributors on 2026-11-23 10:45 IST, about 11 hours after the rewrite was pushed; GitHub's API lists one. The user chose to wait. Recheck before submission (also a Phase 11 check). Fallbacks: recreate the repo, or GitHub Support.
-- `ARCHITECTURE.md` does not print on one A4 page from GitHub's view: it takes three (the first holds GitHub's own header too). GitHub prints at its screen font size, so one printed page holds about 300 words, a third of the page as written. Whether to cut it that far is open with the user.
+- `ARCHITECTURE.md` does not print on one A4 page from GitHub's view: it takes three (the first holds GitHub's own header too). GitHub prints at its screen font size, so one printed page holds about 300 words, a third of the page as written. The user chose to keep it as it is (24 Nov).
 - The README's map constants may be 1.5 to 2% too large in x on two maps (`docs/profile/crosscheck.md`, section 4). Kept as documented, by the user's decision.
 - 60 of the profiler's 235 metrics were added after the blind cross-check and were not re-derived by it (the cleaning counts among them were confirmed by a skeptic).
