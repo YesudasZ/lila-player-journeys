@@ -222,7 +222,7 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 
 | Command | What it does | Last passed |
 |---|---|---|
-| `unzip _inbox/player_data.zip -d data/raw` | restores the raw data | 2026-11-22 |
+| `mkdir -p data/raw && unzip _inbox/player_data.zip -d data/raw` | restores the raw data; without the `mkdir` it fails in a fresh clone (QA, D2) | 2026-11-24, in a fresh clone |
 | `make setup` | creates `.venv`, installs pinned dependencies | 2026-11-22, in a fresh clone |
 | `make test` | 263 tests, no raw data needed; creates `.venv` on first use. Run it after `git add`: the hygiene tests see tracked files only | 2026-11-24 19:27 |
 | `make insights` | prints the statistics behind INSIGHTS.md from the committed data files; no raw data needed | 2026-11-24 18:42 |
