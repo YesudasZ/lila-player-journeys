@@ -51,6 +51,8 @@ export interface MapSurface {
   fit: () => void;
   /** Draw a layer again on the next frame: what it shows has changed. */
   invalidate: (layer: Layer) => void;
+  /** Draw a layer again at once: for a change made inside an animation frame, as a playing clock's are, that has to show in that frame. */
+  drawNow: (layer: Layer) => void;
   /** Stop listening and drawing. */
   destroy: () => void;
 }
@@ -73,6 +75,8 @@ interface Parts {
   onDoubleClick?: () => void;
   /** Esc was pressed inside the map area. */
   onEscape?: () => void;
+  /** Space was pressed while the map itself had the focus. */
+  onPlay?: () => void;
 }
 
 /** Call `changed` whenever the device pixel ratio changes, for browsers whose ResizeObserver does not say so. */
@@ -95,7 +99,7 @@ function onPixelRatioChange(changed: () => void): () => void {
   };
 }
 
-export function mountMapSurface({ area, surface, map, layers, readout, onLimits, onPointer, onClick, onDoubleClick, onEscape }: Parts): MapSurface {
+export function mountMapSurface({ area, surface, map, layers, readout, onLimits, onPointer, onClick, onDoubleClick, onEscape, onPlay }: Parts): MapSurface {
   const contexts = new Map(
     layers.map((layer) => {
       const context = layer.canvas.getContext("2d");
@@ -178,6 +182,13 @@ export function mountMapSurface({ area, surface, map, layers, readout, onLimits,
   function invalidate(layer: Layer) {
     stale.add(layer);
     schedule();
+  }
+
+  function drawNow(layer: Layer) {
+    stale.add(layer);
+    if (rendering) return; // the frame that is under way draws it
+    cancelAnimationFrame(pending);
+    render();
   }
 
   /** The canvases get one pixel per device pixel, so the map is sharp on any screen. */
@@ -298,10 +309,12 @@ export function mountMapSurface({ area, surface, map, layers, readout, onLimits,
   function onKeyDown(event: KeyboardEvent) {
     const action = mapKeyAction(event);
     if (!action) return;
+    if (action.kind === "play" && event.target !== surface) return; // on one of the map's buttons Space presses that button
     event.preventDefault();
     if (action.kind === "pan") show(panBy(view(), action.dx, action.dy, stage()));
     else if (action.kind === "zoom") zoomBy(action.factor);
     else if (action.kind === "fit") fit();
+    else if (action.kind === "play") onPlay?.();
     else onEscape?.();
   }
 
@@ -334,6 +347,7 @@ export function mountMapSurface({ area, surface, map, layers, readout, onLimits,
     zoomBy,
     fit,
     invalidate,
+    drawNow,
     destroy() {
       observer.disconnect();
       stopWatchingRatio();

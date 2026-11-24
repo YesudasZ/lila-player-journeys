@@ -6,7 +6,7 @@
 
 A browser tool for Level Designers to see how players move, fight, loot and die on LILA BLACK's three maps. Built for the LILA Games Product Engineer written test.
 
-> **Work in progress.** The raw telemetry has been measured, cleaned and built into the files the app loads. The app shows every journey on the three maps, humans and bots told apart, with markers for kills, deaths, storm deaths and loot: all matches of a map or one match, with pan and zoom, world coordinates under the cursor and a scale bar. Filters by day and by fate narrow what is shown, and every view has its own address to share. Playback and heatmaps come next. The live tool shows what has been reviewed and merged so far.
+> **Work in progress.** The raw telemetry has been measured, cleaned and built into the files the app loads. The app shows every journey on the three maps, humans and bots told apart, with markers for kills, deaths, storm deaths and loot: all matches of a map or one match, with pan and zoom, world coordinates under the cursor and a scale bar. Filters by day and by fate narrow what is shown, and every view has its own address to share. A timeline plays a single match: paths grow, markers appear in their second, and the moment is part of the address. Heatmaps come next. The live tool shows what has been reviewed and merged so far.
 
 | Read this | To learn |
 |---|---|

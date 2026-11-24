@@ -1,12 +1,12 @@
 # Progress Log
 
-Last updated: 2026-11-23 23:52 IST
+Last updated: 2026-11-24 13:27 IST
 
 ## Current phase
 
-Phase 5, Filters and URL state. Status: **DONE (awaiting my review)** on the branch `phase-5-filters`, pull request [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4), last code commit `d44647d`. Pushed; it waits for the user's review and merge.
+Phase 6, Timeline and playback. Status: **DONE (awaiting my review)** on the branch `phase-6-timeline`, pull request [#5](https://github.com/YesudasZ/lila-player-journeys/pull/5), last code commit `f6d9424`. Pushed; it waits for the user's review and merge.
 
-Phases 1 to 4 and step 9.1 are merged: pull requests [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) (Phase 3), [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) (step 9.1) and [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3) (Phase 4) were reviewed and merged by the user on 23 Nov. The tool is live at https://lila-player-journeys-psi.vercel.app and shows Phase 4; production on Vercel follows `main`.
+Phases 1 to 5 and step 9.1 are merged: pull requests [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) (Phase 3), [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) (step 9.1), [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3) (Phase 4) and [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4) (Phase 5) were reviewed and merged by the user, the last one on 23 Nov, 23:54 IST. The tool is live at https://lila-player-journeys-psi.vercel.app and shows Phase 5; production on Vercel follows `main`.
 
 Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 
@@ -18,8 +18,8 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 | 2 | Pipeline | APPROVED | `ccc2369` |
 | 3 | App shell and map canvas (ends with the first deployment, step 9.1) | APPROVED (merged and hosted) | pull request [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) |
 | 4 | Journeys, humans versus bots, markers | APPROVED (merged) | pull request [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3) |
-| 5 | Filters and URL state | DONE (awaiting my review) | pull request [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4), branch `phase-5-filters`, `d44647d` |
-| 6 | Timeline and playback | NOT STARTED | |
+| 5 | Filters and URL state | APPROVED (merged) | pull request [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4) |
+| 6 | Timeline and playback | DONE (awaiting my review) | pull request [#5](https://github.com/YesudasZ/lila-player-journeys/pull/5), branch `phase-6-timeline`, `f6d9424` |
 | 7 | Heatmaps | NOT STARTED | |
 | 8 | Polish | NOT STARTED | |
 | 9 | Deployment (9.1 after Phase 3, 9.2 on the last day) | 9.1 APPROVED (merged); 9.2 on the last day | pull request [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) |
@@ -30,37 +30,48 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 
 ## Current phase task list
 
-Phase 5 deliverables and acceptance criteria are in PLAN.md, "Phase 5". The task lists of Phases 2 to 4 and of step 9.1 are in the history of this file (`git log -p docs/PROGRESS.md`).
+Phase 6 deliverables and acceptance criteria are in PLAN.md, "Phase 6". The task lists of Phases 2 to 5 and of step 9.1 are in the history of this file (`git log -p docs/PROGRESS.md`).
 
-- [x] 5.0 The user's go for Phase 5, in this session (23 Nov). Branch `phase-5-filters` cut from `main` at `fb2aa02`. This file corrected: Phase 4 is merged as pull request #3; the live site shows it (checked after the merge: legend and counts as on the branch, no failed request, empty console)
-- [x] 5.1 Plan approved by the user in plan mode (23 Nov, 23:12) and recorded in PLAN.md, "Phase 5". Approved with it: no `mode` in the URL (a link with a match shows that match); filters always hold (a filter that excludes the open match closes it); the fate filter works on journeys of humans and bots; the URL is rewritten in place, 300 ms after the last change; numbers in a link are rounded; no new dependency; one review by two agents held to 40 tool calls each
-- [x] 5.2 lib: `link.ts` (encode, decode, check against the manifest), `filters.ts` (matches on the chosen days, counts for the tabs, wording of the empty note), the draw list takes allowed matches and fates. 318 tests; 11 of 11 one-line faults in the new code are noticed
-- [x] 5.3 Store: `days`, `fates`, `toggleDay`, `toggleFate`, `clearFilters`; `loadManifest(link)` opens the view a link asks for and keeps the link for a retry; a filter that rules the open match out closes it; a focus from a link is checked when the journeys arrive. `shown.ts`: the draw list follows the filters, and `selectLink` gives the view as a link. 326 tests
-- [x] 5.4 `state/linkSync.ts` (the address follows the view, rewritten in place 300 ms after the last change; `currentAddress` for the copy button) and the components `Filters`, `CopyLink`, `EmptyNote`; counts on `MapTabs`; the day filter in `MatchList`. `npm run check` (326 tests) and the build pass; not yet looked at in the preview
-- [x] 5.5 Checked in the preview at 1280 x 800 (23:20), no console error:
-  - Day chip "14 Feb": the tabs read 24, 8 and 5, the list holds 24 matches, the legend "24 matches, 44 journeys", the address `?days=February_14`; with the fate "killed by storm" as well: "1 match, 1 journey"
-  - Lockdown with the fate "killed by player": the note "No journey on Lockdown has the fate “killed by player”." with "Clear filters", which brings back 171 matches and 295 journeys
-  - A link with a match, a focused journey, loot switched on, a view and a day, given in another order, opens exactly that view and is rewritten in the canonical order; a link with an unknown map, match, day and a broken view keeps only its fate
-  - "Copy link": the preview pane refuses clipboard access, so only the refusal message could be seen there ("Copy the address from the address bar"); the address it would copy equals the address bar's
-- [x] 5.6 Independent review by two agents, each held to 40 tool calls (51 used together). No blocker; 6 findings to fix and 7 small ones, several raised by both. Fixed in `ac23e1b`; what changed and what was left is PLAN.md's last section. Raw result: `.local/phase5-review-result.raw`
-- [x] 5.7 PLAN.md, BRIEF.md and the README describe Phase 5 as built; phase-end checks pass (23:35): `npm run check` (345 tests), `npm run build`, `make test` (237 tests)
-- [x] 5.8 The review's fixes checked once more (23 Nov, 23:46):
-  - Of eight one-line faults put into the fixed lines the tests noticed six. Two tests added in `53a0d7d` (a view at fit is no view; the journeys of a map that is not open leave the focus alone, also when they arrive first); both faults are noticed now
-  - In the preview at 1280 x 800, no console message: with the fate "killed by storm" the list holds 17 matches on Ambrose Valley, as the manifest has, and the legend reads "17 matches, 17 journeys"; a link to a match that the fate rules out (`a476eb57`) opens all matches; the tabs are named "Ambrose Valley, 566 matches"; "Clear filters" leaves the keyboard focus on "Days (UTC)", and from the note over the map on the map; a switch turned off and on leaves the address bare; `view=-1e9,1e12,9999` is dropped
-  - Two faults of the list's fix were seen there and fixed in `d44647d`: an empty list said "No match id contains “”.", and one match left read "All 1 matches". Now "No match on Lockdown passes the filters." and "All matches (1)"
-  - Checks at 23:46: `npm run check` (347 tests), `npm run build`, `make test` (237 tests)
-- [x] 5.9 On the user's yes (23 Nov, 23:52): the branch is pushed and pull request [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4) is open. Its description gives the evidence for each acceptance criterion, what differs from the plan and what was not verified. CI runs on the pull request and is read there
+- [x] 6.0 The user's go for Phase 6, in this session (24 Nov, 00:00). Branch `phase-6-timeline` cut from `main` at `89dfde3`. This file corrected: Phase 5 is merged as pull request #4; the live site shows it (checked after the merge: day and fate filters, counts on the tabs, the view in the address, "All matches (566)" and "566 matches, 836 journeys", every request answered, empty console). Not seen there either: the clipboard write of "Copy link", which the preview pane refuses
+- [x] 6.1 Plan approved by the user in plan mode (24 Nov, 00:09) and recorded in PLAN.md, "Phase 6". Approved with it: the whole match is the resting state and Play at the end starts from 0:00; `t` is in the address only when the time is not the end, and a link opens paused; Space on the map and on the slider, the arrow keys keep moving the map there; speeds 1x to 60x, 10x at first; a single match only, so Should 5 and Could 2 are not built in this phase; no React update per frame at all; the frame-time reading comes from the page itself; five real journeys and one made-up one-row journey in the fixture; no new dependency and no change to the data files; one review by two agents held to 40 tool calls each
+- [x] 6.1a The user's five changes to the plan (pasted note, 24 Nov), recorded in PLAN.md: `t` is written with `replaceState`, never `pushState`; a frame counts for at most 100 ms and playback pauses when the tab is hidden; the frame-time reading also covers a second match (`fbbc5d02` is itself the one with the most journeys, 16, so the second is `d0a38c30` on Lockdown, which has the most rows: 1,216 in 15 journeys); the Play button gets the title "Play/Pause (Space when the map or timeline is focused)" and the slider's keys go where key help exists; DATA_NOTES.md records A6 and the journey of one row as assumptions. At the phase's end the closing message carries a short manual test script
+- [x] 6.2 Pipeline (24 Nov, 00:35): `pipeline/playback.py` with `head_at`, the rule of DATA_FORMAT.md as code, tested against values worked out by hand. `make data` leaves `web/public/data/` as it was and writes `web/src/lib/__fixtures__/playback.json` (4,876 bytes): five real journeys, the shortest that show each case, and one made-up journey of one row, with 100 heads in all. DATA_NOTES.md: A6 now says the playback rule in full, and A9 is the journey of one row (no path in the data has one: the shortest has 2 rows). `make test`: 252 tests
+- [x] 6.3 lib (24 Nov, 00:35): `web/src/lib/playback.ts`. `headAt` gives every head of the fixture exactly, with no rounding; the heads of a draw list at a time; how many of a marker's events have happened by a time; the clock's step, which counts at most 100 ms of real time for a frame; the speeds; the slider's keys. `npm run check`: 364 tests
+- [x] 6.4 The clock and the link (24 Nov, 00:39): `web/src/state/playback.ts`, a plain Zustand store with `time`, `end`, `playing` and `speed`. It runs on `requestAnimationFrame` only while playing, follows the open match (523 s, 780 s and 878 s for the three named matches), opens a match whole and paused, takes the time of a link once, counts at most 100 ms for a late frame and pauses when the tab is hidden. `t` is in `lib/link.ts` (after `match`, to a tenth of a second, kept only with its match and below its span) and in the address: written with `replaceState` when the time comes to rest, never while the match plays. The app does not start the clock yet; that comes with the timeline bar. `npm run check`: 391 tests
+- [x] 6.5 Marker times and picking (24 Nov, 00:42): in `lib/drawList.ts` a marker keeps the time of each of its events (`times`, which replaces `last`); `lib/pick.ts` finds a marker only from its first event on, and a path only as far as it is drawn. The tooltip gets the count of the events that have happened and the time of the last of them
+- [x] 6.6 The layer draws the moment (24 Nov, 00:42): `layers/journeysLayer.ts` listens to the clock. Before the end of a match it draws every path as far as its head has come, the heads where the journeys are, and the markers of what has happened with their counts; what is under a resting pointer is looked up again when the time moves. The whole match and all matches keep their cached paths. Tested in lib: the head of a journey is on its death marker from the second of the death. Not looked at in the preview yet: nothing starts the clock before step 6.7. `npm run check`: 394 tests
+- [x] 6.7 The timeline bar (24 Nov, 00:44): `components/Timeline.tsx` in a third grid row under the map: Play and Pause with the title "Play/Pause (Space when the map or timeline is focused)", the time (`2:05 / 8:43`), the slider with a mark for every kind and second in which something happened, and the speed. The slider and the time are written straight into the page; React renders the bar only when play, pause, speed, the match or the journeys drawn change. Space on the map (`lib/mapKeys.ts`, `mapSurface.ts`); the slider's keys in its title and in a description for assistive technology (the tool has no visible key help); the slider's look in `styles.css`. `App.tsx` starts the clock. `npm run check`: 396 tests; build: 87.68 kB of JavaScript gzipped. Not looked at in the preview yet
+- [x] 6.8 Checked in the preview (24 Nov, 00:46 and 00:54; pane at 1280 x 800, the second time in a fresh tab):
+  - `?match=fbbc5d02`: the bar is 56 px high under the map (grid rows 48, 696 and 56 px; the sidebar spans both). Play has the title "Play/Pause (Space when the map or timeline is focused)"; the time reads "8:43 / 8:43"; the slider runs from 0 to 523 with 19 marks; speeds 1x to 60x, 10x chosen
+  - Scrubbing: the journeys layer paints 835 pixels at 0:00 (the heads at their starts), 34,928 at 1:57 and 67,118 for the whole match. The first death of the match (`fbbc5d02-5787de75`, at 118 s): no death colour at its spot at 117 s, death colour there at 118 s. The tooltip at that spot says "Death: killed by bot ... at 1:58" at 118 s and for the whole match; at 117 s it finds only the path that passes there ("at 1:25")
+  - The slider's keys, from 118 s: right 123, Shift+left 122, Page Up 182, Page Down 122, Home 0, End 523, left 518. A dragged value of 77.6 becomes 78 s, and a press on the slider pauses
+  - Space plays and pauses on the slider and on the map itself, where the focus stays; on a zoom button it does not. 27 s of the match pass in 3.2 s at 10x. The address stays `?match=fbbc5d02&t=118` while it plays and reads `&t=127` after the pause (the time was 126.997 and is rounded)
+  - The slider's end is 523 for `fbbc5d02`, 780 for `a476eb57` and 878 for `5a081fe4`; with all matches the bar says "Open a match to play it back."
+  - A reload at `?match=fbbc5d02&t=120.5` opens paused at "2:00 / 8:43" with the slider at 120.5, keeps the address and draws that moment: 34,002 pixels, about half of the whole match
+  - The console of the fresh tab holds no error and no warning: two lines of Vite, and React's hint about its developer tools. The errors seen the first time were Vite's hot reload after this session's branch switches
+  - **The frame-time reading**, playing at 20x for 10 s, taken from the page itself:
+
+    | Match | Journeys | Time per draw: median, 95th, largest | React commits while playing | Time between frames: median, 95th |
+    |---|---|---|---|---|
+    | `fbbc5d02`, which has the most journeys | 16 | 0.2, 0.3 and 0.7 ms (225 draws) | none; one at Play, one at Pause | 33.3 and 34.2 ms |
+    | `d0a38c30` on Lockdown, which has the most rows | 15 | 0.2, 0.3 and 0.4 ms (161 draws) | none; one at Play, one at Pause | 33.3 and 34.3 ms |
+
+    The app's work per frame is far under 16 ms, and React renders nothing while a match plays. The time between frames is the pane's and not the app's: the browser pane shows about 30 frames a second and stood still for up to a second several times (21 and 20 frames longer than 34 ms). So "frame time under 16 ms" is shown for the work and not for the pacing; a reading in a browser window at 60 Hz is still missing. The stalls showed the 100 ms limit at work: at 20x the matches reached 147 s and 110 s instead of 200 s, and neither jumped
+- [x] 6.9 Independent review by two agents, each held to 40 tool calls (49 used together; 24 Nov, 12:32 to 13:11). No blocker; 4 findings to fix and 12 small ones. In the browser the app's heads equal a computation written afresh from rule 4 for 1,094,028 heads of all 1,242 journeys, and all 13,247 markers appear in their second. Fixed in `f6d9424`; what changed and what was left is PLAN.md's last section. Raw result: `.local/phase6-review-result.raw`. The fixes were looked at in the preview (13:21): a head between two rows gives its tooltip and ring and takes the focus on a click; 12 marks stand on the track and 7 deaths hang below it; a held Space toggles once; what is spoken stays "0:17 of 8:43" while it plays and reads "0:19 of 8:43" after the pause; the console is empty. Not seen as pixels: the track's new colour
+- [x] 6.10 PLAN.md, BRIEF.md, DATA_FORMAT.md, ARCHITECTURE.md and the README describe Phase 6 as built. Phase-end checks pass (13:21): `npm run check` (410 tests), `npm run build` (87.91 kB of JavaScript gzipped), `make test` (253 tests)
+- [x] 6.11 On the user's yes (24 Nov, 13:27): the branch is pushed and pull request [#5](https://github.com/YesudasZ/lila-player-journeys/pull/5) is open. Its description gives the evidence for each acceptance criterion, what differs from the plan, what was not verified, and the manual test script. CI runs on the pull request and is read there
 
 ## Exactly where I stopped
 
-- Branch `phase-5-filters`, cut from `main` at `fb2aa02`, is pushed; pull request [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4) into `main` is open. `main` equals `origin/main`.
-- Everything of Phase 5 is committed and pushed. At 23:46: `npm run check` (347 tests), `npm run build` and `make test` (237 tests) pass. The review's fixes were looked at in the preview (step 5.8).
-- Waiting for the user's review and merge of pull request #4. "Copy link" still needs one click on the pull request's Vercel preview: the preview pane refuses clipboard access, so only its refusal message was seen.
-- **NEXT:** changes asked for in the review go onto this branch. After the user's merge and go: `git switch main`, `git pull --ff-only`, look at the live site, then Phase 6 on a new branch (a fresh session keeps the usage low; the user decides).
+- Branch `phase-6-timeline`, cut from `main` at `89dfde3`, is pushed; pull request [#5](https://github.com/YesudasZ/lila-player-journeys/pull/5) into `main` is open. `main` equals `origin/main`.
+- Everything of Phase 6 is committed and pushed. At 13:21 on 24 Nov: `npm run check` (410 tests), `npm run build` and `make test` (253 tests) pass.
+- The branch `fix-phase-5-approved-changes` is parked (see "Known issues / TODO later"): it is not part of this phase.
+- Waiting for the user's review and merge of pull request #5. Still for the user, or for me in the user's Chrome on request: the frame-time reading at 60 Hz, and one real drag of the slider.
+- **NEXT:** changes asked for in the review go onto this branch. After the user's merge and go: `git switch main`, `git pull --ff-only`, look at the live site, then Phase 7 (heatmaps) on a new branch, in a fresh session: this one holds over 700,000 tokens, and reading them again after an hour's pause cost 13% of a usage window.
 
 ## Decisions and assumptions made
 
-Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row numbers in brackets, assumptions as A1 to A8).
+Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row numbers in brackets, assumptions as A1 to A9).
 
 2026-11-22:
 - Project folder `~/projects/lila-player-journeys`; GitHub repo public from the start; commits use the GitHub no-reply address, set in this repo only (user's choices).
@@ -153,6 +164,34 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 - An empty match list says why: the filters left no match on the map, or no id contains what was typed. The button above the list reads "All matches (566)", so that a single match left is not "All 1 matches".
 - The note over the map is part of the map view and appears once the minimap is there; until then the match list and the legend say that nothing is left. In the hidden preview pane Lockdown's image took more than 4 s, so a check of the note has to wait until "Loading Lockdown…" is gone.
 
+2026-11-24, after Phase 5:
+- Pull request #4 was merged with a merge commit, like #1 to #3; `main` is at `89dfde3`. Open question 6 stands.
+- The user chose again to do the next phase in the same session ("Do this task here"), with the 5-hour window at 66% and three hours before its reset.
+- The merged branches `phase-3-app-shell`, `chore-first-deployment`, `phase-4-journeys` and `phase-5-filters` still exist locally and on GitHub. They are deleted only on the user's word.
+
+2026-11-24, Phase 6 plan (approved in plan mode):
+- The whole match is the resting state; `t` is in the address only before the end. Starting every match at 0:00 would open it as an empty map.
+- The arrow keys stay with the map while it has the focus; the slider has its own. PLAN.md said "space, arrows" without saying where.
+- The clock is a plain Zustand store of its own (`state/playback.ts`), so that the 60 updates a second reach only the map layer and the slider.
+- No path in the data has a single row (0 of 1,242), so that case of the fixture is made up and marked so.
+- Planned and built without planning agents; one review at the end by two agents with a fixed budget. Ultracode is on in the session; the usage rule decided.
+
+2026-11-24, the user's correction to the order:
+- The note the Phase 5 plan had been approved with (six changes) reached the session after the merge of Phase 5. I built it first, on a branch of its own; then the user said to skip that branch and to put the six items into Phase 8. The built work is kept on the local branch `fix-phase-5-approved-changes` and is not part of Phase 6.
+- Until Phase 8 the address is always rewritten in place, `t` included, and Back and Forward leave the tool.
+
+2026-11-24, while building Phase 6:
+- Should 5 (all-matches playback) and Could 2 (density strip) are not built; the draw list already holds what they would need (the times of every marker).
+- A double-click on the map still zooms without changing the focus; with playback nothing about it changed.
+- The first frame after Play counts for no time: it only sets the moment to count from, so the clock needs no clock of its own to start.
+- The commits `5b2fb2a` and `fcbf93b` of this branch fail `make test`: a line of the new test file was longer than 140 characters, which the hygiene test saw only once the file was tracked. Fixed in `1b963f5`. From now on `make test` runs after `git add`.
+
+2026-11-24, from the Phase 6 review (each is in PLAN.md's last section and waits for the user's review):
+- What a moment shows is decided in `lib/playback.ts` (`momentAt`), not in the canvas layer; picking takes the heads, so a moving head can be pointed at and clicked.
+- The map is drawn in the clock's own frame, so the map and the slider show one time.
+- A held Space toggles once. Deaths are marked below the slider's track. What assistive technology is told about the time is written when the time comes to rest.
+- Left: the paused time is not kept per map; a match that is opened starts whole.
+
 ## Open questions for the user
 
 1. Should `docs/PROGRESS.md`, `CLAUDE.md` and `.claude/` stay in the repo at submission? They show how the work was run with Claude Code, which the brief allows; they are also working notes in a public repo.
@@ -168,16 +207,20 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 |---|---|---|
 | `unzip _inbox/player_data.zip -d data/raw` | restores the raw data | 2026-11-22 |
 | `make setup` | creates `.venv`, installs pinned dependencies | 2026-11-22, in a fresh clone |
-| `make test` | 237 tests, no raw data needed; creates `.venv` on first use | 2026-11-23 23:46 |
-| `cd web && npm run check` | type check, ESLint with no warning allowed, 347 Vitest tests | 2026-11-23 23:46 |
-| `cd web && npm run build` | production build into `web/dist/` (not committed); JavaScript 85.48 kB gzipped | 2026-11-23 23:46 |
+| `make test` | 253 tests, no raw data needed; creates `.venv` on first use. Run it after `git add`: the hygiene tests see tracked files only | 2026-11-24 13:21 |
+| `cd web && npm run check` | type check, ESLint with no warning allowed, 410 Vitest tests | 2026-11-24 13:21 |
+| `cd web && npm run build` | production build into `web/dist/` (not committed); JavaScript 87.91 kB gzipped | 2026-11-24 13:21 |
 | `cd web && npm run dev` | the app on http://localhost:5173 | 2026-11-23 17:41 |
 | `make profile` | measures the raw data → `docs/profile/` (235 metrics) | 2026-11-23 13:10 |
-| `make data` | builds `web/public/data/` and the projection fixtures; writes nothing unless every check passes, the profile report included; 3 s | 2026-11-23 13:16 |
+| `make data` | builds `web/public/data/` and the two test fixtures (projection, playback); writes nothing unless every check passes, the profile report included; 3 s | 2026-11-24 00:35 |
 | `make overlay` | proof images → `docs/img/`, about 30 s | 2026-11-23 13:10 |
 
 ## Known issues / TODO later
 
+- **Usage, 24 Nov:** the weekly limit for this model stood at 74% at 13:12, with Phases 7 to 11 still to do before 26 Nov; it resets on 28 Nov. The review of Phase 6 used about 30% of a 5-hour window. Start each remaining phase in a fresh session, and keep reviews bounded.
+- In the dev server, after a hot update of `web/src/state/playback.ts` or of what imports it, the timeline bar can show "Open a match to play it back." although a match is open: reload the page before reading the preview. A build has no hot updates.
+- The frame-time reading of Phase 6 was taken in the browser pane, which shows about 30 frames a second and stalls now and then. It shows the work per frame (0.7 ms at most for a draw, no React commit while playing), not that frames come every 16 ms. A reading at 60 Hz, in Chrome's Performance panel as PLAN.md names it, is still to take: by the user, or in the user's Chrome if they ask for it.
+- **For Phase 8, set aside by the user on 24 Nov:** the six changes the Phase 5 plan was approved with. (1) `pushState` for discrete changes (map, match, focus, days, fates, switches), `replaceState` for moving, zooming and `t`. (2) A notice when a filter hides the open match. (3) A test that the 8-character match id prefixes are unique. (4) Filter chips as `<button>` with `aria-pressed` and focus styles, which they are since Phase 5. (5) The journey id's format ("-anon", "botNNNN") in a comment and in DATA_NOTES.md. (6) The folder-day assumption (`e325a53a` belongs to February_10) in DATA_NOTES.md. All but (4) were already built and tested when they were set aside: they wait on the local branch `fix-phase-5-approved-changes` (`9a2f0a4`, `8e13ce5`; not pushed). Phase 8 takes them from there. The branch is deleted only on the user's word.
 - Commits stay local until the user approves each push.
 - CI: all three checks passed on pull request #1, the app job and the `@v7` actions included. The run on `main` after the merge has not been read.
 - Screenshots for pull requests and for the walkthrough: the preview pane's screenshots are not files the repo can hold. Phase 10 needs a way to write them (Playwright, a development dependency: ask first).

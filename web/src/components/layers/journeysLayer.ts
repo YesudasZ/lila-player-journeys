@@ -3,14 +3,18 @@
  *
  * Paths are built once per draw list, in image pixels, and drawn under the transform of the view,
  * so panning and zooming rebuild nothing. Heads and markers are drawn at their size on screen.
+ * While a match plays, or the time slider stands before its end, the layer draws the moment the
+ * clock is at: every path as far as its head has come, and the markers of what has happened.
  * What is drawn and what is picked comes from web/src/lib; this file only draws and listens.
  */
 import type { DrawList, DrawnJourney, MarkerKind } from "../../lib/drawList.ts";
 import type { Journey } from "../../lib/journeys.ts";
 import { HEAD_RADIUS, MARKER_SHAPES, STROKES } from "../../lib/markerShapes.ts";
 import { pickMarker, pickPath, type PickedRow } from "../../lib/pick.ts";
+import { momentAt, type Head, type Moment } from "../../lib/playback.ts";
 import type { Point, Size } from "../../lib/projection.ts";
 import { imageToScreen, scaleOf, screenToImage } from "../../lib/view.ts";
+import { playback } from "../../state/playback.ts";
 import { selectDrawList } from "../../state/shown.ts";
 import { useAppStore } from "../../state/store.ts";
 import type { Frame, Layer } from "../mapSurface.ts";
@@ -34,8 +38,8 @@ export interface Hover {
   viewport: Size;
   journey: Journey;
   row: number;
-  /** The marker, with the last of the rows it stands for, or null when the pointer is on a path. */
-  marker: { kind: MarkerKind; count: number; last: number } | null;
+  /** The marker, with how many of its events have happened and the time of the last of those, or null when the pointer is on a path. */
+  marker: { kind: MarkerKind; count: number; until: number } | null;
 }
 
 interface Parts {
@@ -53,8 +57,11 @@ interface JourneysLayer {
   point: (at: Point | null, frame: Frame) => void;
   click: (at: Point, frame: Frame) => void;
   unclick: () => void;
-  /** Call `redraw` with one of the two layers whenever it has to be drawn again. Returns what stops the watching. */
-  watch: (redraw: (layer: Layer) => void) => () => void;
+  /**
+   * Call `redraw` with one of the two layers whenever it has to be drawn again, and `drawNow` when that
+   * has to happen in the frame that is under way. Returns what stops the watching.
+   */
+  watch: (redraw: (layer: Layer) => void, drawNow: (layer: Layer) => void) => () => void;
 }
 
 /** One journey's path as a shape in image pixels; null when it has a single row, which its head shows. */
@@ -64,6 +71,23 @@ function pathOf({ x, y, pathLength }: DrawnJourney): Path2D | null {
   path.moveTo(x[0], y[0]);
   for (let row = 1; row < pathLength; row += 1) path.lineTo(x[row], y[row]);
   return path;
+}
+
+/** One journey's path as far as its head has come, ending at the head; null while it is not on the map or still stands on its first row. */
+function pathTo({ x, y }: DrawnJourney, head: Head | null): Path2D | null {
+  if (!head || (head.row === 0 && head.x === x[0] && head.y === y[0])) return null;
+  const path = new Path2D();
+  path.moveTo(x[0], y[0]);
+  for (let row = 1; row <= head.row; row += 1) path.lineTo(x[row], y[row]);
+  path.lineTo(head.x, head.y);
+  return path;
+}
+
+/** The moment that is drawn, as the clock stands; null when everything is shown (see `momentAt`). */
+function momentNow(list: DrawList): Moment | null {
+  const { time, end } = playback.getState();
+  const { manifest } = useAppStore.getState();
+  return manifest.status === "ready" ? momentAt(list, time, end, manifest.value.sample_step_seconds) : null;
 }
 
 export function createJourneysLayer({ canvas, ringCanvas, onHover }: Parts): JourneysLayer {
@@ -86,6 +110,7 @@ export function createJourneysLayer({ canvas, ringCanvas, onHover }: Parts): Jou
   let hover: (PickedRow & { marker: number | null; list: DrawList }) | null = null;
   let told: string | null = null; // what the tooltip was last told, so that nothing is said twice
   let beforeClick: string | null = null; // the focus before the last click, to give back when that click was half of a double-click
+  let pointed: { at: Point | null; frame: Frame } | null = null; // where the pointer last was, to look again when the time moves
   let redraw: (layer: Layer) => void = () => {};
 
   const listNow = () => selectDrawList(useAppStore.getState());
@@ -136,7 +161,9 @@ export function createJourneysLayer({ canvas, ringCanvas, onHover }: Parts): Jou
     if (!list) return;
     const started = performance.now();
     if (shapes?.list !== list) shapes = { list, paths: list.journeys.map(pathOf) };
-    const { paths } = shapes;
+    const moment = momentNow(list);
+    // The whole match keeps its paths from one draw to the next; a moment of it has other paths with every frame.
+    const paths = moment ? list.journeys.map((drawn, index) => pathTo(drawn, moment.heads[index])) : shapes.paths;
     const { focus } = useAppStore.getState();
     const focused = focus === null ? -1 : list.journeys.findIndex((drawn) => drawn.journey.id === focus);
     const rest = focused === -1 ? 1 : DIMMED;
@@ -175,14 +202,16 @@ export function createJourneysLayer({ canvas, ringCanvas, onHover }: Parts): Jou
     context.setTransform(ratio, 0, 0, ratio, 0, 0);
     const inView = (x: number, y: number) => x > -OFF_SCREEN && y > -OFF_SCREEN && x < stage.viewport.width + OFF_SCREEN && y < stage.viewport.height + OFF_SCREEN;
 
-    /** The heads of all journeys, or of one: a circle for a human, a square for a bot, at the end of the path. */
+    /** The heads of all journeys, or of one: a circle for a human, a square for a bot, at the end of the path or where the journey is at the moment that is drawn. */
     const heads = (only: number | null) => {
       for (const actor of ["human", "bot"] as const) {
         context.beginPath();
         for (const [index, drawn] of list.journeys.entries()) {
           if (drawn.journey.actor !== actor || (only !== null && index !== only)) continue;
-          const x = drawn.x[drawn.pathLength - 1] * scale + corner.x;
-          const y = drawn.y[drawn.pathLength - 1] * scale + corner.y;
+          const at = moment ? moment.heads[index] : { x: drawn.x[drawn.pathLength - 1], y: drawn.y[drawn.pathLength - 1] };
+          if (!at) continue; // not on the map yet
+          const x = at.x * scale + corner.x;
+          const y = at.y * scale + corner.y;
           if (!inView(x, y)) continue;
           if (actor === "human") {
             context.moveTo(x + head, y);
@@ -210,8 +239,10 @@ export function createJourneysLayer({ canvas, ringCanvas, onHover }: Parts): Jou
       context.lineWidth = STROKES.outline * 2;
       context.strokeStyle = colours.outline;
       context.fillStyle = colours.text;
-      for (const marker of list.markers) {
+      for (const [which, marker] of list.markers.entries()) {
         if (only !== null && marker.journey !== only) continue;
+        const count = moment ? moment.counts[which] : marker.count;
+        if (count === 0) continue; // it has not happened yet
         const drawn = list.journeys[marker.journey];
         const x = drawn.x[marker.row] * scale + corner.x;
         const y = drawn.y[marker.row] * scale + corner.y;
@@ -219,10 +250,10 @@ export function createJourneysLayer({ canvas, ringCanvas, onHover }: Parts): Jou
         const stamp = stampOf(marker.kind, look.size, ratio);
         const side = stamp.width / ratio;
         context.drawImage(stamp, Math.round((x - side / 2) * ratio) / ratio, Math.round((y - side / 2) * ratio) / ratio, side, side);
-        if (!list.single || marker.count < 2) continue;
+        if (!list.single || count < 2) continue;
         const radius = MARKER_SHAPES[marker.kind].radius;
-        context.strokeText(`${marker.count}`, x + radius + 3, y - radius);
-        context.fillText(`${marker.count}`, x + radius + 3, y - radius);
+        context.strokeText(`${count}`, x + radius + 3, y - radius);
+        context.fillText(`${count}`, x + radius + 3, y - radius);
       }
     };
 
@@ -265,9 +296,10 @@ export function createJourneysLayer({ canvas, ringCanvas, onHover }: Parts): Jou
   function pick(at: Point, frame: Frame, list: DrawList): (PickedRow & { marker: number | null }) | null {
     const scale = scaleOf(frame.view, frame.stage);
     const onImage = screenToImage(at, frame.view, frame.stage);
-    const marker = pickMarker(onImage, MARKER_REACH / scale, list);
+    const moment = momentNow(list); // only what is drawn at this moment can be pointed at
+    const marker = pickMarker(onImage, MARKER_REACH / scale, list, moment?.time);
     if (marker !== null) return { marker, journey: list.markers[marker].journey, row: list.markers[marker].row };
-    const path = pickPath(onImage, PATH_REACH / scale, list);
+    const path = pickPath(onImage, PATH_REACH / scale, list, moment?.heads);
     return path && { marker: null, ...path };
   }
 
@@ -280,14 +312,17 @@ export function createJourneysLayer({ canvas, ringCanvas, onHover }: Parts): Jou
     const { list } = hover;
     const drawn = list.journeys[hover.journey];
     const at = imageToScreen({ x: drawn.x[hover.row], y: drawn.y[hover.row] }, frame.view, frame.stage);
-    const saying = `${drawn.journey.id} ${hover.row} ${hover.marker ?? "path"} ${Math.round(at.x)} ${Math.round(at.y)}`;
+    const marker = hover.marker === null ? null : list.markers[hover.marker];
+    const moment = marker && momentNow(list);
+    const count = marker && hover.marker !== null ? Math.max(moment ? moment.counts[hover.marker] : marker.count, 1) : 0; // of a marker's events, those that have happened
+    const saying = `${drawn.journey.id} ${hover.row} ${hover.marker ?? "path"} ${count} ${Math.round(at.x)} ${Math.round(at.y)}`;
     if (saying === told) return;
     told = saying;
-    const marker = hover.marker === null ? null : list.markers[hover.marker];
-    onHover({ at, viewport: frame.stage.viewport, journey: drawn.journey, row: hover.row, marker: marker && { kind: marker.kind, count: marker.count, last: marker.last } });
+    onHover({ at, viewport: frame.stage.viewport, journey: drawn.journey, row: hover.row, marker: marker && { kind: marker.kind, count, until: marker.times[count - 1] } });
   }
 
   function point(at: Point | null, frame: Frame) {
+    pointed = { at, frame };
     const list = listNow();
     const found = at && list ? pick(at, frame, list) : null;
     const next = found && list ? { ...found, list } : null;
@@ -310,7 +345,7 @@ export function createJourneysLayer({ canvas, ringCanvas, onHover }: Parts): Jou
     useAppStore.getState().setFocus(beforeClick);
   }
 
-  function watch(notify: (layer: Layer) => void): () => void {
+  function watch(notify: (layer: Layer) => void, drawNow: (layer: Layer) => void): () => void {
     redraw = notify;
     let before = { list: listNow(), focus: useAppStore.getState().focus };
     const stop = useAppStore.subscribe((state) => {
@@ -324,8 +359,17 @@ export function createJourneysLayer({ canvas, ringCanvas, onHover }: Parts): Jou
       before = now;
       notify(layer);
     });
+    // The time of playback: the journeys are drawn at it, and what is under a resting pointer may have appeared or gone.
+    const stopClock = playback.subscribe((clock, earlier) => {
+      if (clock.time === earlier.time && clock.end === earlier.end) return;
+      // A playing clock moves the time inside an animation frame of its own. The map is drawn in that frame, so that it shows the time the slider shows.
+      if (clock.playing && earlier.playing) drawNow(layer);
+      else notify(layer);
+      if (pointed) point(pointed.at, pointed.frame);
+    });
     return () => {
       stop();
+      stopClock();
       redraw = () => {};
     };
   }

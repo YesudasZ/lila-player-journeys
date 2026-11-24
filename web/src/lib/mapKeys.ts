@@ -6,21 +6,24 @@ export const KEY_PAN_STEP = 64;
 export const BUTTON_ZOOM_STEP = 1.5;
 
 /** `dx` and `dy` are how far the map itself moves, in CSS pixels, as in a drag. */
-export type MapKeyAction = { kind: "pan"; dx: number; dy: number } | { kind: "zoom"; factor: number } | { kind: "fit" } | { kind: "clear" };
+export type MapKeyAction = { kind: "pan"; dx: number; dy: number } | { kind: "zoom"; factor: number } | { kind: "fit" } | { kind: "clear" } | { kind: "play" };
 
 interface Pressed {
   key: string;
   ctrlKey: boolean;
   metaKey: boolean;
   altKey: boolean;
+  /** True for the repeats of a key that is held down. */
+  repeat?: boolean;
 }
 
 /**
  * The action of a key press, or null when the key is not the map's. An arrow brings in what lies
- * that way, so the map moves the other way. Esc clears the focus on a journey. With Ctrl, Cmd or
+ * that way, so the map moves the other way. Esc clears the focus on a journey, and Space plays or
+ * pauses the open match. With Ctrl, Cmd or
  * Alt held the key belongs to the browser: its own zoom and its shortcuts stay.
  */
-export function mapKeyAction({ key, ctrlKey, metaKey, altKey }: Pressed): MapKeyAction | null {
+export function mapKeyAction({ key, ctrlKey, metaKey, altKey, repeat }: Pressed): MapKeyAction | null {
   if (ctrlKey || metaKey || altKey) return null;
   switch (key) {
     case "ArrowLeft":
@@ -41,6 +44,8 @@ export function mapKeyAction({ key, ctrlKey, metaKey, altKey }: Pressed): MapKey
       return { kind: "fit" };
     case "Escape":
       return { kind: "clear" };
+    case " ":
+      return repeat ? null : { kind: "play" }; // held down, it plays or pauses once
     default:
       return null;
   }

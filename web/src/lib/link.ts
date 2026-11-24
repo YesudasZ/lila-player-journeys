@@ -1,6 +1,6 @@
 /**
  * A view as a link. The address holds everything that says what is shown: the map, the days, the
- * open match, the focused journey, the switches set by hand, the fates and the open map's view.
+ * open match and the time its playback stands at, the focused journey, the switches set by hand, the fates and the open map's view.
  * Every part is left out at its default, so the bare address is the default view. Pure.
  */
 import { LAYER_KEYS, type LayerKey, type Shown } from "./drawList.ts";
@@ -14,6 +14,8 @@ export interface Link {
   days: string[];
   /** The open match; null shows all matches. */
   match: string | null;
+  /** Seconds into the open match at which playback stands; null is its end, where the whole match is shown. */
+  t: number | null;
   /** The id of the focused journey, if there is one. */
   journey: string | null;
   /** The switches set by hand. */
@@ -24,7 +26,7 @@ export interface Link {
   view: View | null;
 }
 
-export const DEFAULT_LINK: Link = { map: null, days: [], match: null, journey: null, choices: {}, fates: [], view: null };
+export const DEFAULT_LINK: Link = { map: null, days: [], match: null, t: null, journey: null, choices: {}, fates: [], view: null };
 
 const tenth = (value: number): number => Math.round(value * 10) / 10;
 const thousandth = (value: number): number => Math.round(value * 1000) / 1000;
@@ -35,6 +37,11 @@ const possible = (view: View, image: { width: number; height: number }): boolean
   view.zoom > 1 && view.zoom <= MOST_ZOOM && view.x >= 0 && view.x <= image.width && view.y >= 0 && view.y <= image.height;
 
 const listOf = (value: string | null): string[] => (value === null || value === "" ? [] : value.split(","));
+
+/** A time as a link holds it: to a tenth of a second. */
+export function roundedTime(time: number): number {
+  return tenth(time);
+}
 
 /** A view as a link holds it: the point to a tenth of an image pixel, the zoom to a thousandth. */
 export function roundedView(view: View): View {
@@ -50,6 +57,7 @@ export function encodeLink(link: Link): string {
   if (link.map !== null) parts.push(["map", link.map]);
   if (link.days.length > 0) parts.push(["days", link.days.join(",")]);
   if (link.match !== null) parts.push(["match", link.match]);
+  if (link.t !== null) parts.push(["t", `${roundedTime(link.t)}`]);
   if (link.journey !== null) parts.push(["journey", link.journey]);
   const shown = LAYER_KEYS.filter((layer) => link.choices[layer] === true);
   const hidden = LAYER_KEYS.filter((layer) => link.choices[layer] === false);
@@ -76,10 +84,13 @@ export function decodeLink(query: string): Link {
   const parts = listOf(params.get("view"));
   const numbers = parts.map(Number);
   const view = parts.length === 3 && parts.every((part) => part.trim() !== "") && numbers.every(Number.isFinite) ? { x: numbers[0], y: numbers[1], zoom: numbers[2] } : null;
+  const typed = params.get("t");
+  const time = typed !== null && typed.trim() !== "" && Number.isFinite(Number(typed)) ? Number(typed) : null;
   return {
     map: params.get("map"),
     days: listOf(params.get("days")),
     match: params.get("match"),
+    t: time,
     journey: params.get("journey"),
     choices,
     fates: listOf(params.get("fate")),
@@ -99,10 +110,12 @@ export function checkedLink(link: Link, manifest: Manifest): Link {
   const days = manifest.days.map((day) => day.id).filter((id) => link.days.includes(id));
   const fates = manifest.fates.filter((fate) => link.fates.includes(fate));
   const match = manifest.matches.find((entry) => entry.id === link.match && entry.map === map.id && (days.length === 0 || days.includes(entry.day)));
+  const time = link.t === null ? null : roundedTime(link.t);
   return {
     map: map === first ? null : map.id,
     days,
     match: match?.id ?? null,
+    t: match && time !== null && time >= 0 && time < match.span ? time : null, // a time belongs to its match, and its end is said by leaving it out
     journey: link.journey,
     choices: link.choices,
     fates,

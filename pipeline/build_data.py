@@ -9,7 +9,8 @@ Reads the raw telemetry, checks it, applies the four cleaning rules and writes:
     minimaps/<Map>.webp    the minimap, downscaled
     cleaning_report.json   rows in, rows removed per rule, rows left
 
-It also writes reference points for the app's projection tests (--fixtures).
+It also writes two fixtures for the app's tests (--fixtures): reference points for the projection,
+and journeys with their head at many times for playback.
 docs/DATA_FORMAT.md describes every field. Nothing is written until all
 checks have passed: no full player id in any file, no map bundle over the size
 limit and, with --profile, the same counts as the profiler's report.
@@ -33,6 +34,7 @@ from PIL import Image
 from pipeline.clean import Cleaned, clean
 from pipeline.dataset import (
     COLUMNS,
+    DEATH_EVENTS,
     EPOCH_SECONDS,
     EVENT_GROUPS,
     EVENTS,
@@ -50,6 +52,7 @@ from pipeline.encode import ELEVATION_STEPS_PER_UNIT, UV_STEPS, decode_elevation
 from pipeline.journeys import FATES, MATCH_COUNTS, check_journeys, journey_table, match_table
 from pipeline.maps import MAPS, README_EXAMPLE, uv_to_pixel, uv_to_world, world_to_uv
 from pipeline.minimap import artwork_box, load_minimap
+from pipeline.playback import playback_fixture
 from pipeline.profile.cleaning import EVENTS_COUNTED_PER_ACTOR
 
 MINIMAP_WIDTH = 2048
@@ -57,6 +60,7 @@ WEBP_QUALITY = 82
 MAX_BUNDLE_GZIP_BYTES = 700_000
 PARTIAL_DAYS = frozenset({"February_14"})  # the dataset README: collection was still running on this day
 EVENT_CODE = {event: code for code, event in enumerate(EVENTS)}
+DEATH_CODES = frozenset(EVENT_CODE[event] for event in DEATH_EVENTS)  # the codes that end a path
 
 Json = dict[str, Any]  # a JSON object on its way to a file
 
@@ -176,7 +180,7 @@ def shipped_minimaps(raw_root: Path) -> dict[str, Minimap]:
     return minimaps
 
 
-def bundle_text(map_id: str, rows: pd.DataFrame, journeys: pd.DataFrame, match_start: pd.Series) -> str:
+def bundle_records(map_id: str, rows: pd.DataFrame, journeys: pd.DataFrame, match_start: pd.Series) -> list[Json]:
     """Every journey of one map: who it is, how it ended, and its rows as integer arrays.
 
     Humans come before bots within a match, and bots in the order of their number.
@@ -203,7 +207,7 @@ def bundle_text(map_id: str, rows: pd.DataFrame, journeys: pd.DataFrame, match_s
                 "e": part["event"].map(EVENT_CODE).tolist(),
             }
         )
-    return _lines({"map": map_id}, "journeys", records)
+    return records
 
 
 def manifest_text(journeys: pd.DataFrame, matches: pd.DataFrame, minimaps: dict[str, Minimap]) -> str:
@@ -327,6 +331,13 @@ def projection_fixtures(rows: pd.DataFrame, minimaps: dict[str, Minimap]) -> Jso
     }
 
 
+def playback_text(records: dict[str, list[Json]]) -> str:
+    """The fixture for the app's playback tests, from the journeys of every map: one case per line."""
+    every_journey = (journey for listed in records.values() for journey in listed)
+    fixture = playback_fixture(every_journey, DEATH_CODES, SAMPLE_STEP_SECONDS)
+    return _lines({key: value for key, value in fixture.items() if key != "cases"}, "cases", fixture["cases"])
+
+
 def counts_to_reconcile(report: Json) -> dict[tuple[str, str], float]:
     """The build's counts, keyed by the profiler metric (topic, key) that measures the same thing."""
     removed, journeys = report["removed"], report["journeys"]
@@ -402,7 +413,8 @@ def build(raw_root: Path, out_dir: Path, fixtures_dir: Path, profile: Path | Non
 
     minimaps = shipped_minimaps(raw_root)
     images = {out_dir / "minimaps" / f"{map_id}.webp": minimap.webp for map_id, minimap in minimaps.items()}
-    bundles = {map_id: bundle_text(map_id, rows, journeys, matches["start"]) for map_id in MAPS}
+    records = {map_id: bundle_records(map_id, rows, journeys, matches["start"]) for map_id in MAPS}
+    bundles = {map_id: _lines({"map": map_id}, "journeys", listed) for map_id, listed in records.items()}
     bundle_bytes = {}
     for map_id, text in bundles.items():
         encoded = text.encode()
@@ -411,6 +423,7 @@ def build(raw_root: Path, out_dir: Path, fixtures_dir: Path, profile: Path | Non
     texts |= {out_dir / "maps" / f"{map_id}.json": text for map_id, text in bundles.items()}
     texts[out_dir / "cleaning_report.json"] = json.dumps(report, indent=2) + "\n"
     texts[fixtures_dir / "projection.json"] = json.dumps(projection_fixtures(rows, minimaps), indent=2) + "\n"
+    texts[fixtures_dir / "playback.json"] = playback_text(records)
 
     check_output(texts, bundle_bytes)
     if expected is not None:
@@ -427,7 +440,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--raw", type=Path, default=Path("data/raw/player_data"), help="the unzipped player_data folder")
     parser.add_argument("--out", type=Path, default=Path("web/public/data"), help="folder for the app's data files")
-    parser.add_argument("--fixtures", type=Path, default=Path("web/src/lib/__fixtures__"), help="folder for the projection test fixtures")
+    parser.add_argument("--fixtures", type=Path, default=Path("web/src/lib/__fixtures__"), help="folder for the app's test fixtures")
     parser.add_argument("--profile", type=Path, help="profile_report.json to reconcile the counts with")
     args = parser.parse_args()
 

@@ -18,6 +18,7 @@ from PIL import Image
 
 from pipeline.build_data import MAX_BUNDLE_GZIP_BYTES, differences_from_profile
 from pipeline.maps import MAPS, uv_to_pixel, world_to_uv
+from pipeline.playback import head_at, path_length
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "web" / "public" / "data"
@@ -253,3 +254,48 @@ def test_numbers_quoted_in_the_data_format_document(manifest, journeys):
         if died is not None:
             names_after_death += [manifest["events"][code] for code in journey["e"][died + 1 :]]
     assert names_after_death == ["BotKill", "BotKill"]
+
+
+PLAYBACK_FIXTURE = ROOT / "web" / "src" / "lib" / "__fixtures__" / "playback.json"
+PLAYBACK_CASES = {
+    "a 5 s step": "0954f788-688cb2e4",
+    "a long gap": "8bb25783-anon",
+    "a death long after the last sample": "9b982ee6-73616084",
+    "two rows in the same second": "5ac6c303-99a00bf9",
+    "not on the map at 0:00": "7aab5be6-bot1420",
+    "a journey with one row": "made-up-one-row",
+}
+
+
+def death_codes(manifest):
+    return set(manifest["event_groups"]["death"]) | set(manifest["event_groups"]["storm_death"])
+
+
+def test_playback_fixture_holds_the_accepted_cases_with_the_rows_the_bundles_have(manifest, journeys):
+    fixture = read(PLAYBACK_FIXTURE)
+    assert fixture["sample_step_seconds"] == manifest["sample_step_seconds"]
+    assert {case["case"]: case["id"] for case in fixture["cases"]} == PLAYBACK_CASES
+    assert [case["case"] for case in fixture["cases"] if case["made_up"]] == ["a journey with one row"]
+    shipped = {journey["id"]: journey for journey in journeys}
+    for case in fixture["cases"]:
+        if case["made_up"]:
+            continue
+        journey = shipped[case["id"]]
+        assert (case["t"], case["u"], case["v"]) == (journey["t"], journey["u"], journey["v"]), case["id"]
+        assert case["path_length"] == path_length(journey["e"], death_codes(manifest)), case["id"]
+
+
+def test_playback_fixture_heads_are_those_of_the_reference_function():
+    fixture = read(PLAYBACK_FIXTURE)
+    for case in fixture["cases"]:
+        heads = case["heads"]
+        assert len(heads) >= 4 and heads[0]["head"] is None and heads[-1]["head"] is not None, case["id"]
+        for head in heads:
+            expected = head_at(case["t"], case["u"], case["v"], case["path_length"], head["at"], fixture["sample_step_seconds"])
+            assert head["head"] == (None if expected is None else list(expected)), (case["id"], head["at"])
+
+
+def test_no_path_in_the_data_has_a_single_row(manifest, journeys):
+    """Why the fixture's journey with one row is made up (docs/DATA_NOTES.md, A9)."""
+    lengths = [path_length(journey["e"], death_codes(manifest)) for journey in journeys]
+    assert (min(lengths), max(lengths)) == (2, 218)

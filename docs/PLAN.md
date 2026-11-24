@@ -229,21 +229,45 @@ web/src/components/            Filters, CopyLink, EmptyNote; MatchList, MapTabs,
 
 ## Phase 6: Timeline and playback (1.5 h)
 
-**Goal:** watch a match unfold smoothly.
+**Goal:** watch a match unfold smoothly. The detailed plan below was approved on 24 Nov 2026; it is built on the branch `phase-6-timeline`.
 
 **Deliverables**
-- A `requestAnimationFrame` clock outside React; React receives throttled updates for the read-out only.
-- Position at a time (assumption A6; rule 4 of [DATA_FORMAT.md](DATA_FORMAT.md)): the head moves along the journey's path, whose points are all its rows up to the death row. It moves in a straight line across a gap of up to 5 s; across a longer gap it holds still and moves during the last 5 s; after the last point it stays put. The pipeline gets the reference implementation, a small pure function, and writes a fixture of journeys with the expected head positions; the TypeScript function is tested against that fixture.
-- Play and pause, speeds 1x to 60x, scrubber with event ticks, keyboard shortcuts (space, arrows). Markers appear as time passes. `t` joins the URL.
-- Should 5: all-matches playback. Could 2: density strip.
+- A bar under the map, in the map's column: Play and Pause, the time (`2:05 / 8:43`), a slider, and the speed (1x, 2x, 5x, 10x, 20x, 60x; 10x at first, which plays a median match of 380 s in 38 s).
+- The whole match is the resting state: opening a match shows everything, as before, with the timeline at its end. Play at the end starts again from 0:00.
+- While the time is before the end, each path is drawn up to the time and its head moves along it. A journey is not on the map before its first row. A marker appears at the second of its event; a marker that stands for several events counts those that have happened. Only what is drawn can be pointed at.
+- Position at a time (assumption A6; rule 4 of [DATA_FORMAT.md](DATA_FORMAT.md)): the head moves along the journey's path, whose points are all its rows up to the death row. It moves in a straight line across a gap of up to 5 s; across a longer gap it holds still and moves during the last 5 s; after the last point it stays put; of two rows in the same second the later one counts. The pipeline has the reference implementation, a small pure function (`pipeline/playback.py`), and writes a fixture of journeys with the expected heads; the TypeScript function is tested against every one of them.
+- At the slider's track, one mark per kind and second in which something happened to the journeys that are drawn, in the colours of the map, following the legend's switches: kills and loot stand on the track, deaths hang below it. The thumb is the time needle.
+- The clock lives outside React, in a plain Zustand store (`time`, `end`, `playing`, `speed`). It runs on `requestAnimationFrame` only while playing and follows the open match: a new match resets it to the end, paused. A frame never counts for more than 100 ms of real time, and playback pauses when the tab is hidden, so coming back to the tab never jumps ahead. Nothing in React renders per frame: the slider and the time are written straight into the page, as the map's read-out is, and the map is drawn in the clock's own frame, so each frame shows one time.
+- Keys: Space plays and pauses while the focus is on the map or on the slider. On the map the arrow keys keep moving the map, as reviewed in Phase 3. On the slider, left and right step 5 s (one recorded step), with Shift 1 s, Page Up and Page Down 60 s, Home and End jump to the start and the end. Dragging the slider pauses. The Play button's title reads "Play/Pause (Space when the map or timeline is focused)"; the slider's keys are in its title and in the key help that assistive technology reads, since the tool has no visible key help.
+- `t` joins the address, after `match`, to a tenth of a second, and only when the time is not the end. A link opens paused; speed is not part of a link. The address is rewritten after a pause or a seek, never while playing, and always in place (`replaceState`, never `pushState`). History entries for the user's steps are a Phase 8 item; until then Back and Forward leave the tool.
+- Single match only: in the all-matches view the bar says "Open a match to play it back." Should 5 (all-matches playback) and Could 2 (density strip) are not built in this phase: by the scope ladder Should 1 and 2, which belong to Phase 7, come first.
+
+**Files**
+
+```
+pipeline/playback.py                         head_at, the reference; the fixture's cases
+pipeline/build_data.py                       writes web/src/lib/__fixtures__/playback.json with the projection fixture
+web/src/lib/playback.ts                      headAt, the heads of a draw list at a time, a marker's count at a time, the clock's step, the slider's ticks and keys
+web/src/lib/drawList.ts                      a marker keeps the times of its events
+web/src/lib/pick.ts                          picks only what has happened by the time
+web/src/lib/link.ts                          t
+web/src/lib/mapKeys.ts                       Space
+web/src/state/playback.ts                    the clock
+web/src/state/linkSync.ts, shown.ts          t in the address
+web/src/components/Timeline.tsx              the bar
+web/src/components/layers/journeysLayer.ts   draws the moment
+web/src/components/                          mapSurface, MapView and App change a little; the slider's look is in styles.css
+```
 
 **Acceptance**
-- Unit tests of position-at-time, from the pipeline's fixture: a 5 s step, a long gap, a death long after the last sample, two rows in the same second, a journey with one row.
-- The scrubber's end equals the manifest's observed span for the three named matches.
-- No React render per frame. Frame time under 16 ms while playing `fbbc5d02` at 20x for 10 s, measured in Chrome's Performance panel without throttling; the reading is written into PROGRESS.md.
+- Unit tests of position-at-time, from the pipeline's fixture: a 5 s step, a long gap, a death long after the last sample, two rows in the same second, a journey that is not on the map at 0:00, and a journey with one row. The first five are real journeys, the shortest that show each case; the last is made up and marked so, since no path in the data has a single row (0 of 1,242).
+- The scrubber's end equals the manifest's observed span for the three named matches: 523 s for `fbbc5d02`, 780 s for `a476eb57`, 878 s for `5a081fe4`.
+- No React render per frame. Frame time under 16 ms while playing `fbbc5d02` at 20x for 10 s, and the same for `d0a38c30` on Lockdown: `fbbc5d02` is itself the match with the most journeys (16), `d0a38c30` has the most rows (1,216, in 15 journeys). The reading is taken from the page itself (the time between frames, the time per draw and a count of React commits), not in Chrome's Performance panel, and is written into PROGRESS.md.
 - Scrubbing to a death shows the death marker at the head of that path.
+- The clock's step is clamped to 100 ms of real time, and playback pauses when the tab is hidden (unit tests).
+- [DATA_NOTES.md](DATA_NOTES.md) records the long-gap rule (A6) and the journey of one row as assumptions, for ARCHITECTURE.md.
 
-**Verify locally:** play `fbbc5d02` at 1x and 60x; scrub hard.
+**Verify locally:** play `fbbc5d02` at 1x and 60x; scrub hard; pause in the middle and reload.
 
 ## Phase 7: Heatmaps (1.5 h)
 
@@ -267,6 +291,16 @@ web/src/components/            Filters, CopyLink, EmptyNote; MatchList, MapTabs,
 **Deliverables:** an "About the data" panel in plain language (what the README gets wrong, what the tool does about it, what "anonymous" and "no death recorded" mean); loading and error states; visible focus and labels on every sidebar, top-bar and timeline control; a notice on small screens that the tool is built for desktop; a pass over all UI text. From the Phase 3 review: the panel says that the read-out's `x` and `z` are the ground plane and `y` is height; the map's keys are shown where a sighted keyboard user finds them (today they are in the buttons' tooltips and in the text for screen readers); decide whether pinch on a touch screen and Safari's trackpad pinch are supported or named as limits in the desktop notice. From the Phase 4 review: the events of a focused journey as text in the sidebar, so that what a tooltip says can also be reached by keyboard.
 
 **Acceptance:** Lighthouse performance at least 90 on the hosted URL (desktop preset); no console errors; sidebar, top bar and timeline fully usable by keyboard, including choosing a journey from the list.
+
+**Carried over from Phase 5** (the changes its plan was approved with; the note reached the session on 24 Nov, after the merge, and the user set them aside for this phase so that Phase 6 could go on):
+- History: `pushState` for discrete changes (map, match, focus, days, fates, switches), `replaceState` for moving, zooming and `t`, so that Back and Forward walk through the views.
+- A notice when a filter hides the open match.
+- A test that the 8-character match id prefixes are unique.
+- Filter chips as `<button>` with `aria-pressed` and focus styles. They are so since Phase 5; to be confirmed here.
+- The journey id's format ("-anon", "botNNNN") in a comment and in DATA_NOTES.md.
+- The folder-day assumption (`e325a53a` belongs to February_10) in DATA_NOTES.md.
+
+The first, second, third, fifth and sixth were already built and tested when the user set them aside. They wait on the local branch `fix-phase-5-approved-changes` (commits `9a2f0a4` and `8e13ce5`, cut from `phase-6-timeline` at `728ea77`; not pushed, no pull request). Phase 8 takes them from there instead of building them again; the journey id's format still has to go into DATA_NOTES.md.
 
 ## Phase 9: Deployment (0.5 h, in two steps)
 
@@ -452,3 +486,57 @@ After the fixes I checked them once more:
 | The button above the list read "All 566 matches" | "All matches (566)" | With one match left it read "All 1 matches" |
 
 Left as it is: a reload within 300 ms of a change loses that change (the price of not rewriting the address on every frame); the wording of the note follows the fate's own text ("has the fate “killed by player”") rather than the plan's first sentence, which PLAN.md now quotes as built.
+
+## Changed while building Phase 6 (24 Nov 2026), for your review
+
+The independent review is still to come; what it changes gets a section of its own.
+
+| Plan | Built | Why |
+|---|---|---|
+| The time reads `02:05 / 08:43` | `2:05 / 8:43` | It is written as the tooltip writes a time, which has no leading zero |
+| One tick per event above the slider's track | One mark per kind and second in which something happened | The 58 loot events of one journey would be a block. `fbbc5d02` has 19 marks |
+| A dragged time is kept to a tenth of a second | A dragged time is a whole second; the keys, a pause and a link keep tenths | Events are recorded in whole seconds, so a dragged time lands where something can have happened |
+| A marker keeps the times of its events in place of `last` | It keeps `count` as well | `count` is the length of `times`; the legend, the layer and the tests read it |
+| The clock starts counting with Play | The first frame after Play counts for no time and only sets the moment to count from | The clock then needs no second clock to start by, and neither do its tests |
+| Frame time under 16 ms, read from the page | Shown for the work per frame: a draw takes 0.7 ms at most and React commits nothing while a match plays. The time between frames was 33 ms | The browser pane shows about 30 frames a second, whatever the page does. A reading at 60 Hz is still to take |
+| The slider's keys shown where key help exists | They are in the slider's title and in a description for assistive technology | The tool has no visible key help |
+| Back and Forward step between matches and filters, not between pauses | Back and Forward leave the tool, as since Phase 5; `t` is written in place like everything else | The history entries for the user's steps are set aside for Phase 8, where the built work waits (see "Phase 8") |
+
+What the fault check found: of thirty one-line faults put into the new code, the tests noticed 27. Two were real gaps and have a test each now (Play pressed twice must not start a second clock; a tab that stays shown must not pause). The third changes nothing that can be observed.
+
+## Changed after the Phase 6 review (24 Nov 2026), for your review
+
+Two independent reviewers checked Phase 6, each held to 40 tool calls (49 used together): one in a real browser against the data, one on the code, the accessibility of the timeline and the strength of the tests. No blocker; 4 findings to fix and 12 small ones.
+
+What held, as the reviewers measured it:
+
+- The app's head positions equal a computation written afresh from rule 4, in Python, for 1,094,028 heads of all 1,242 journeys on a grid of 0.5 s, and for 170,291 heads of five matches on a grid of 0.1 s: the same journeys on the map, the same rows, positions within 0.005 px.
+- All 13,247 markers appear in the second of their first event, with the right count at every time.
+- On the canvas every head and every marker that has happened is painted at the predicted pixel, and none that is still to come; a path is painted up to its head and no further.
+- The slider's end equals the manifest's span: 523, 780 and 878. No match has a span under 13 s, and the shortest plays and stops cleanly at 60x.
+- The address is not rewritten while a match plays (0 calls in 3 s), once 302 ms after the pause, and `pushState` is never called. Links with `t` survive a reload; a time past the span, before the start or not a number is dropped.
+- The console of a fresh tab has no error and no warning.
+
+| Was | Now | Why |
+|---|---|---|
+| The rules of a drawn moment (which markers, which counts, how far a path can be pointed at) were lines of the canvas layer | One pure function, `momentAt` in `lib/playback.ts`, with tests; the layer draws what it says | Three one-line faults in the layer passed all tests |
+| A head between two rows, and the line just behind it, could not be pointed at or clicked, and a click there dropped the focus | Picking takes the heads: the stretch a head is on answers with the row the head has left | Over a whole match the head was further than the pointer's reach from the line that could be picked in 14% of the samples |
+| The slider and the time showed the clock's time, the map the time of the frame before | The map is drawn in the clock's own frame | At 60x the map was 0.96 s of the match behind the slider in every frame |
+| The slider's key help said "5 seconds" as a literal | It is built from the manifest's sample step, by `sliderKeysHelp` | Working rule 7: the app repeats nothing that the manifest holds |
+| A Space held down flipped play and pause with every key repeat | It plays or pauses once; held arrows go on stepping | It ended in whichever state the last repeat hit |
+| A pause from inside a frame left a frame waiting | The clock asks for the next frame only while it still plays | A trap for the next listener; nothing did it yet |
+| All marks stood on the track, a kill's over a death's of the same second | Deaths hang below the track; kills and loot stand on it | 77 of 716 death marks share their second with a kill mark |
+| What assistive technology is told about the time changed with every second of the match | It is written when the time comes to rest | At 10x a screen reader would be told ten times a second |
+| The track had the border colour: 1.3 to 1 against the bar | The colour of muted text: 6.7 to 1 | The track shows how far the slider reaches |
+| The heads of a draw list were tested on a match without a row after a death | Tested on `de7378ae`, where a kill is recorded 5 s after the death | Passing every row instead of the path went unnoticed |
+| Rule 4 of DATA_FORMAT.md did not say what two rows in one second do | It does: the later one counts | Both implementations did it; the contract did not say so |
+| No test for a clock that is started late, for a blank `t`, for a death exactly one step after the last sample | One each | Three of the reviewer's faults passed there |
+
+The tests had noticed one of the reviewer's twelve one-line faults. They notice eight now, and ten more of mine: 18 of 18 in the code that tests can reach. The four that still pass are lines of components that only a browser reaches: the layer drawing the moment it is given (two faults), a press on the slider pausing, and Space on one of the map's buttons. Each was checked in the preview, by the reviewer with real key presses and clicks.
+
+Left as it is:
+
+- Coming back to a map opens its match whole again: the paused time is not kept per map. The rule stays that a match starts whole, whichever way it is opened.
+- The frame-time reading at 60 Hz is still missing. The browser pane shows about 30 frames a second, and the reviewer found it slower still.
+- The reviewer's tool did not complete a real drag of the slider with the pointer. A real click on the track and a value set by script do what they should.
+- In the dev server only: after a hot update of the clock's modules the bar says "Open a match to play it back." until the page is reloaded.

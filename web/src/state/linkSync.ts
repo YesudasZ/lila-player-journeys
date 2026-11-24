@@ -4,15 +4,16 @@
  * address shows the same view.
  */
 import { encodeLink } from "../lib/link.ts";
+import { linkTime, playback } from "./playback.ts";
 import { selectLink } from "./shown.ts";
 import { useAppStore } from "./store.ts";
 
 /** Milliseconds after the last change. Panning changes the view many times a second, and browsers limit how often an address may be rewritten. */
 const WRITE_AFTER = 300;
 
-/** The query of the view as the state stands; until the manifest is there, the one the page was opened with. */
+/** The query of the view as the state and the clock stand; until the manifest is there, the one the page was opened with. */
 function currentQuery(): string {
-  const link = selectLink(useAppStore.getState());
+  const link = selectLink(useAppStore.getState(), linkTime(playback.getState()));
   return link ? encodeLink(link) : location.search;
 }
 
@@ -22,21 +23,29 @@ export function currentAddress(): string {
 }
 
 /**
- * Keep the address in step with the view. It is rewritten in place, without a new entry in the
- * history: Back and Forward leave the tool, they do not step through views. Returns what stops it.
+ * Keep the address in step with the view. It is rewritten in place (`replaceState`), without a new
+ * entry in the history: Back and Forward leave the tool, they step neither through views nor
+ * through the pauses of playback. While a match plays the address is left alone; the time is
+ * written when it comes to rest, after a pause or a seek. Returns what stops it.
  */
 export function startLinkSync(): () => void {
   let timer = 0;
   const write = () => {
+    if (playback.getState().playing) return; // the pause that ends the playing writes what has changed meanwhile
     const query = currentQuery();
     if (query !== location.search) history.replaceState(history.state, "", `${location.pathname}${query}${location.hash}`);
   };
-  const stop = useAppStore.subscribe(() => {
+  const later = () => {
     window.clearTimeout(timer);
     timer = window.setTimeout(write, WRITE_AFTER);
+  };
+  const stopApp = useAppStore.subscribe(later);
+  const stopClock = playback.subscribe((state) => {
+    if (!state.playing) later(); // while it plays, nothing would be written: no need to ask sixty times a second
   });
   return () => {
-    stop();
+    stopApp();
+    stopClock();
     window.clearTimeout(timer);
   };
 }

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { BUTTON_ZOOM_STEP } from "../lib/mapKeys.ts";
 import type { Manifest, MapEntry } from "../lib/manifest.ts";
 import type { ZoomLimits } from "../lib/view.ts";
+import { togglePlay } from "../state/playback.ts";
 import { useAppStore } from "../state/store.ts";
 import { createJourneysLayer, type Hover } from "./layers/journeysLayer.ts";
 import { createMinimapLayer } from "./layers/minimapLayer.ts";
@@ -48,8 +49,9 @@ export function MapView({ map, image, manifest }: { map: MapEntry; image: HTMLIm
       onEscape: () => {
         useAppStore.getState().setFocus(null);
       },
+      onPlay: togglePlay,
     });
-    const stopWatching = drawn.watch(mapSurface.invalidate);
+    const stopWatching = drawn.watch(mapSurface.invalidate, mapSurface.drawNow);
     mounted.current = mapSurface;
     return () => {
       stopWatching();
@@ -84,7 +86,7 @@ export function MapView({ map, image, manifest }: { map: MapEntry; image: HTMLIm
       </div>
       <p id={KEYS_ID} className="sr-only">
         Drag to move. Scroll to zoom, double-click to zoom in. Click a path or a marker to focus its journey. Keyboard: arrow keys move, plus and minus
-        zoom, zero fits the map to the window, Escape clears the focus.
+        zoom, zero fits the map to the window, Escape clears the focus, Space plays and pauses the open match.
       </p>
       <MapTooltip hover={hover} map={map} manifest={manifest} />
       <EmptyNote map={map} manifest={manifest} />
