@@ -4,6 +4,7 @@
  * Every part is left out at its default, so the bare address is the default view. Pure.
  */
 import { LAYER_KEYS, type LayerKey, type Shown } from "./drawList.ts";
+import { HEAT_KINDS, type HeatKind } from "./heat.ts";
 import type { Manifest } from "./manifest.ts";
 import type { View } from "./view.ts";
 
@@ -22,15 +23,18 @@ export interface Link {
   choices: Partial<Shown>;
   /** The chosen fates; none means all. */
   fates: string[];
+  /** The heat layer that is on; null when none is. */
+  heat: HeatKind | null;
   /** The open map's view; null is the fitted map. */
   view: View | null;
 }
 
-export const DEFAULT_LINK: Link = { map: null, days: [], match: null, t: null, journey: null, choices: {}, fates: [], view: null };
+export const DEFAULT_LINK: Link = { map: null, days: [], match: null, t: null, journey: null, choices: {}, fates: [], heat: null, view: null };
 
 const tenth = (value: number): number => Math.round(value * 10) / 10;
 const thousandth = (value: number): number => Math.round(value * 1000) / 1000;
 const isLayer = (text: string): text is LayerKey => (LAYER_KEYS as readonly string[]).includes(text);
+const isHeat = (text: string | null): text is HeatKind => (HEAT_KINDS as readonly (string | null)[]).includes(text);
 /** A view from a link is kept when it can be one: closer than fit, not absurdly close, and centred on the image. */
 const MOST_ZOOM = 64;
 const possible = (view: View, image: { width: number; height: number }): boolean =>
@@ -64,6 +68,7 @@ export function encodeLink(link: Link): string {
   if (shown.length > 0) parts.push(["show", shown.join(",")]);
   if (hidden.length > 0) parts.push(["hide", hidden.join(",")]);
   if (link.fates.length > 0) parts.push(["fate", link.fates.join(",")]);
+  if (link.heat !== null) parts.push(["heat", link.heat]);
   if (link.view) {
     const { x, y, zoom } = roundedView(link.view);
     parts.push(["view", `${x},${y},${zoom}`]);
@@ -85,6 +90,7 @@ export function decodeLink(query: string): Link {
   const numbers = parts.map(Number);
   const view = parts.length === 3 && parts.every((part) => part.trim() !== "") && numbers.every(Number.isFinite) ? { x: numbers[0], y: numbers[1], zoom: numbers[2] } : null;
   const typed = params.get("t");
+  const heat = params.get("heat");
   const time = typed !== null && typed.trim() !== "" && Number.isFinite(Number(typed)) ? Number(typed) : null;
   return {
     map: params.get("map"),
@@ -94,6 +100,7 @@ export function decodeLink(query: string): Link {
     journey: params.get("journey"),
     choices,
     fates: listOf(params.get("fate")),
+    heat: isHeat(heat) ? heat : null,
     view,
   };
 }
@@ -119,6 +126,7 @@ export function checkedLink(link: Link, manifest: Manifest): Link {
     journey: link.journey,
     choices: link.choices,
     fates,
+    heat: link.heat,
     view: link.view && possible(link.view, map.minimap) ? roundedView(link.view) : null,
   };
 }

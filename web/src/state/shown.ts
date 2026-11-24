@@ -5,6 +5,7 @@
  */
 import { LAYER_KEYS, buildDrawList, eventKinds, shownLayers, type DrawList } from "../lib/drawList.ts";
 import { allowedMatches } from "../lib/filters.ts";
+import { buildHeat, cellsAcross, type Heat, type HeatKind } from "../lib/heat.ts";
 import { roundedView, type Link } from "../lib/link.ts";
 import type { MapEntry } from "../lib/manifest.ts";
 import type { AppState } from "./store.ts";
@@ -41,6 +42,24 @@ export function selectDrawList(state: AppState): DrawList | null {
   return list;
 }
 
+let lastHeat: { list: DrawList; kind: HeatKind; heat: Heat } | null = null;
+
+/**
+ * The heat layer that is on, counted from the journeys that are drawn; null when none is on or the
+ * journeys have not arrived. It is counted once per draw list and kind, so the map and the legend
+ * read the same grid.
+ */
+export function selectHeat(state: AppState): Heat | null {
+  const list = selectDrawList(state);
+  const map = selectMapEntry(state);
+  if (!list || !map || state.heat === null || state.manifest.status !== "ready") return null;
+  if (lastHeat?.list === list && lastHeat.kind === state.heat) return lastHeat.heat;
+  const manifest = state.manifest.value;
+  const heat = buildHeat(list, state.heat, manifest, cellsAcross(map), manifest.encoding.uv_steps);
+  lastHeat = { list, kind: state.heat, heat };
+  return heat;
+}
+
 /**
  * The view as a link, as the state stands; null until the manifest is there. What `checkedLink`
  * gives back for it is the same link. `time` is where playback stands, which the clock knows and
@@ -58,6 +77,7 @@ export function selectLink(state: AppState, time: number | null = null): Link | 
     journey: state.focus,
     choices: state.choices,
     fates: state.fates,
+    heat: state.heat,
     view: view ? roundedView(view) : null,
   };
 }

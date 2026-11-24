@@ -18,7 +18,7 @@ export function JourneyList({ matchId }: { matchId: string }) {
   const tabStop = journeys.some((journey) => journey.id === focus) ? focus : journeys[0].id;
 
   return (
-    <section aria-labelledby="journeys-heading" className="flex max-h-[36%] min-h-0 flex-col border-t border-border">
+    <section aria-labelledby="journeys-heading" className="flex max-h-[36%] min-h-24 flex-col border-t border-border">
       <h2 id="journeys-heading" className="px-4 pt-3 pb-1 font-heading text-[13px] font-semibold tracking-wide">
         Journeys of <span className="font-mono font-medium">{matchId}</span>
       </h2>

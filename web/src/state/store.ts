@@ -7,6 +7,7 @@ import { fetchManifest } from "../data/fetchManifest.ts";
 import { loadImage } from "../data/loadImage.ts";
 import type { LayerKey, Shown } from "../lib/drawList.ts";
 import { matchesWithFates, onChosenDays } from "../lib/filters.ts";
+import type { HeatKind } from "../lib/heat.ts";
 import type { Journey } from "../lib/journeys.ts";
 import { DEFAULT_LINK, checkedLink, type Link } from "../lib/link.ts";
 import type { Manifest, MapEntry } from "../lib/manifest.ts";
@@ -43,6 +44,8 @@ export interface AppState {
   days: string[];
   /** The chosen fates, in the order of the manifest. None means all. */
   fates: string[];
+  /** The heat layer that is on; null when none is. */
+  heat: HeatKind | null;
   /** The link the page was opened with, kept for a retry of the manifest. */
   asked: Link;
 
@@ -72,6 +75,8 @@ export interface AppState {
   clearFilters: () => void;
   /** Set the view of a map; null goes back to fit. */
   setView: (mapId: string, view: View | null) => void;
+  /** Switch a heat layer on, which switches any other off; null switches the heat off. */
+  setHeat: (kind: HeatKind | null) => void;
 }
 
 /** The fetch of the manifest that is under way, so that asking twice loads once. */
@@ -126,6 +131,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
   focus: null,
   days: [],
   fates: [],
+  heat: null,
   asked: DEFAULT_LINK,
 
   loadManifest: (link) => {
@@ -143,6 +149,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
           mapId: open.id,
           days: view.days,
           fates: view.fates,
+          heat: view.heat,
           matches: view.match === null ? {} : { [open.id]: view.match },
           focus: view.journey,
           choices: view.choices,
@@ -250,5 +257,9 @@ export const useAppStore = create<AppState>()((set, get) => ({
       if (unchanged) return state; // nobody is told about a view that did not change
       return { views: view ? { ...without(state.views, mapId), [mapId]: view } : without(state.views, mapId) };
     });
+  },
+
+  setHeat: (kind) => {
+    set({ heat: kind });
   },
 }));

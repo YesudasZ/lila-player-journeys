@@ -5,6 +5,7 @@ import type { Manifest, MapEntry } from "../lib/manifest.ts";
 import type { ZoomLimits } from "../lib/view.ts";
 import { togglePlay } from "../state/playback.ts";
 import { useAppStore } from "../state/store.ts";
+import { createHeatLayer } from "./layers/heatLayer.ts";
 import { createJourneysLayer, type Hover } from "./layers/journeysLayer.ts";
 import { createMinimapLayer } from "./layers/minimapLayer.ts";
 import { MapReadout } from "./MapReadout.tsx";
@@ -21,6 +22,7 @@ export function MapView({ map, image, manifest }: { map: MapEntry; image: HTMLIm
   const areaRef = useRef<HTMLDivElement>(null);
   const surfaceRef = useRef<HTMLDivElement>(null);
   const minimapRef = useRef<HTMLCanvasElement>(null);
+  const heatRef = useRef<HTMLCanvasElement>(null);
   const journeysRef = useRef<HTMLCanvasElement>(null);
   const ringRef = useRef<HTMLCanvasElement>(null);
   const xRef = useRef<HTMLSpanElement>(null);
@@ -32,15 +34,16 @@ export function MapView({ map, image, manifest }: { map: MapEntry; image: HTMLIm
   const [hover, setHover] = useState<Hover | null>(null);
 
   useEffect(() => {
-    const [area, surface, minimap, journeys, ring] = [areaRef.current, surfaceRef.current, minimapRef.current, journeysRef.current, ringRef.current];
+    const [area, surface, minimap, heat, journeys, ring] = [areaRef.current, surfaceRef.current, minimapRef.current, heatRef.current, journeysRef.current, ringRef.current];
     const [x, z, bar, label] = [xRef.current, zRef.current, barRef.current, labelRef.current];
-    if (!area || !surface || !minimap || !journeys || !ring || !x || !z || !bar || !label) return;
+    if (!area || !surface || !minimap || !heat || !journeys || !ring || !x || !z || !bar || !label) return;
     const drawn = createJourneysLayer({ canvas: journeys, ringCanvas: ring, onHover: setHover });
+    const heated = createHeatLayer(heat);
     const mapSurface = mountMapSurface({
       area,
       surface,
       map,
-      layers: [createMinimapLayer(minimap, image), drawn.layer, drawn.ring],
+      layers: [createMinimapLayer(minimap, image), heated.layer, drawn.layer, drawn.ring],
       readout: { x, z, bar, label },
       onLimits: setLimits,
       onPointer: drawn.point,
@@ -52,9 +55,11 @@ export function MapView({ map, image, manifest }: { map: MapEntry; image: HTMLIm
       onPlay: togglePlay,
     });
     const stopWatching = drawn.watch(mapSurface.invalidate, mapSurface.drawNow);
+    const stopHeat = heated.watch(mapSurface.invalidate);
     mounted.current = mapSurface;
     return () => {
       stopWatching();
+      stopHeat();
       mapSurface.destroy();
       mounted.current = null;
     };
@@ -74,8 +79,9 @@ export function MapView({ map, image, manifest }: { map: MapEntry; image: HTMLIm
         data-hovering={hover ? "" : undefined}
         className="group absolute inset-0 cursor-crosshair touch-none outline-none select-none data-hovering:cursor-pointer data-dragging:cursor-grabbing"
       >
-        {/* The layers, from the bottom: the minimap, the journeys, the ring around what is under the pointer. They share one view. */}
+        {/* The layers, from the bottom: the minimap, the heat, the journeys, the ring around what is under the pointer. They share one view. */}
         <canvas ref={minimapRef} className="absolute inset-0 size-full" />
+        <canvas ref={heatRef} className="absolute inset-0 size-full" />
         <canvas ref={journeysRef} className="absolute inset-0 size-full" />
         <canvas ref={ringRef} className="absolute inset-0 size-full" />
         {/*

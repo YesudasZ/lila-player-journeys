@@ -33,7 +33,7 @@ export function MatchList({ manifest, map }: { manifest: Manifest; map: MapEntry
   const days = useMemo(() => new Map(manifest.days.map((day) => [day.id, dayLabel(day.date)])), [manifest.days]);
 
   return (
-    <section aria-labelledby="matches-heading" className="flex min-h-48 flex-1 flex-col">
+    <section aria-labelledby="matches-heading" className="flex min-h-32 flex-1 flex-col">
       <div className="px-4 pt-3 pb-2">
         <h2 id="matches-heading" className="font-heading text-[13px] font-semibold tracking-wide">
           Matches

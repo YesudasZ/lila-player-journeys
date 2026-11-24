@@ -115,7 +115,7 @@ Measured unless marked as an assumption (A1 to A9 in DATA_NOTES.md).
 | border | `#2A2C35` | dividers |
 | text / text-muted | `#F2F1EC` / `#9A9CA8` | text / labels |
 | accent | `#E23C8C` | magenta: active tab, play button, focus ring |
-| accent-2 | `#2EC4B6` | teal: secondary highlights, links |
+| accent-2 | `#2EC4B6` | teal: secondary highlights, links, the traffic heat layer |
 | highlight | `#F4E27A` | selected player, time needle |
 | human | `#56B4E9` | solid path, round head |
 | bot | `#E69F00` | dashed path, square head |

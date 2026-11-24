@@ -14,6 +14,7 @@ const FULL: Link = {
   journey: "0273e16e-94d042cb",
   choices: { loot: true, bots: false, kill: false },
   fates: ["killed_by_storm", "no_death_recorded"],
+  heat: "kill",
   view: { x: 1024.5, y: 980.2, zoom: 2.5 },
 };
 
@@ -26,7 +27,7 @@ describe("a view as a link", () => {
   it("holds every part, in one order, and reads back as the same view", () => {
     const query = encodeLink(FULL);
     expect(query).toBe(
-      "?map=GrandRift&days=February_10,February_12&match=0273e16e&t=12.5&journey=0273e16e-94d042cb&show=loot&hide=bots,kill&fate=killed_by_storm,no_death_recorded&view=1024.5,980.2,2.5",
+      "?map=GrandRift&days=February_10,February_12&match=0273e16e&t=12.5&journey=0273e16e-94d042cb&show=loot&hide=bots,kill&fate=killed_by_storm,no_death_recorded&heat=kill&view=1024.5,980.2,2.5",
     );
     expect(decodeLink(query)).toEqual(FULL);
     expect(encodeLink(decodeLink(query))).toBe(query);
@@ -211,5 +212,17 @@ describe("the time of playback in a link", () => {
     ["with a match that is dropped", "?map=Lockdown&match=fbbc5d02&t=5", { ...DEFAULT_LINK, map: "Lockdown" }],
   ])("is dropped %s", (_, query, expected) => {
     expect(checked(query)).toEqual(expected);
+  });
+});
+
+describe("the heat layer in a link", () => {
+  it("is written after the fates and read back", () => {
+    expect(encodeLink({ ...DEFAULT_LINK, heat: "movement", fates: ["killed"] })).toBe("?fate=killed&heat=movement");
+    expect(decodeLink("?heat=death").heat).toBe("death");
+    expect(checkedLink(decodeLink("?heat=loot&map=Lockdown"), manifest)).toEqual({ ...DEFAULT_LINK, map: "Lockdown", heat: "loot" });
+  });
+
+  it.each(["?heat=storm", "?heat=", "?heat=Kill", "?heat=kill,death", ""])("is none for %j", (query) => {
+    expect(decodeLink(query).heat).toBeNull();
   });
 });
