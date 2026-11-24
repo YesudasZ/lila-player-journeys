@@ -1,10 +1,10 @@
 # Progress Log
 
-Last updated: 2026-11-24 14:33 IST
+Last updated: 2026-11-24 17:57 IST
 
 ## Current phase
 
-Phase 8, Polish. Status: **DONE (awaiting my review)** on the branch `phase-8-polish`; its last code commit is `708e4b7`. No pull request yet: it is opened on the user's yes.
+Phase 8, Polish. Status: **DONE (awaiting my review)** on the branch `phase-8-polish`; its last code commit is `708e4b7`. Pull request [#7](https://github.com/YesudasZ/lila-player-journeys/pull/7), opened on 24 Nov at 17:57 IST on the user's yes.
 
 Phases 1 to 7 and step 9.1 are merged: pull requests [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) (Phase 3), [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) (step 9.1), [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3) (Phase 4), [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4) (Phase 5), [#5](https://github.com/YesudasZ/lila-player-journeys/pull/5) (Phase 6) and [#6](https://github.com/YesudasZ/lila-player-journeys/pull/6) (Phase 7) were reviewed and merged by the user, the last one on 24 Nov at 13:50 IST. The tool is live at https://lila-player-journeys-psi.vercel.app and shows Phase 7; production on Vercel follows `main`.
 
@@ -21,7 +21,7 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 | 5 | Filters and URL state | APPROVED (merged) | pull request [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4) |
 | 6 | Timeline and playback | APPROVED (merged) | pull request [#5](https://github.com/YesudasZ/lila-player-journeys/pull/5) |
 | 7 | Heatmaps | APPROVED (merged) | pull request [#6](https://github.com/YesudasZ/lila-player-journeys/pull/6) |
-| 8 | Polish | DONE (awaiting my review) | branch `phase-8-polish`, `708e4b7` |
+| 8 | Polish | DONE (awaiting my review) | pull request [#7](https://github.com/YesudasZ/lila-player-journeys/pull/7) |
 | 9 | Deployment (9.1 after Phase 3, 9.2 on the last day) | 9.1 APPROVED (merged); 9.2 on the last day | pull request [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) |
 | 10 | Insights and docs | NOT STARTED | |
 | 11 | Final QA | NOT STARTED | |
@@ -40,13 +40,13 @@ Phase 8 deliverables are in PLAN.md, "Phase 8". The task lists of Phases 2 to 7 
 - [x] 8.5 The panel and the notice. `AboutPanel.tsx`: the button "Data and keys" in the top bar opens the browser's own dialog, "About the data and the keys". After the user's scope note it is short: four sections and 14 entries (the data and where it differs from its README; the map and the heat layers; keys; limits). Its text is made in `lib/about.ts` from the manifest (796 matches on 3 maps, 5 days, 798 and 444 journeys, 743 matches with a single journey, 52 with bots, 17 journeys without an account id, a position every 5 s), from the heat layers' own wording (`HEAT_MEANING`, now exported from `lib/heat.ts`) and from the key help of the code that takes the keys (`MAP_HELP` in `lib/mapKeys.ts`, which the map's description for assistive technology now uses too, and `sliderKeysHelp`). Two legend sentences were reworded so that they also stand alone in the panel. `App.tsx`: a line above the grid in a window narrower than 900 px. `MapTabs.tsx`: the tabs scroll sideways in a narrow window, so "Copy link" and "Data and keys" stay in view. Evidence: 14 one-line faults in `lib/about.ts` before the panel was shortened and 14 after, all noticed. In the preview at 1280 x 800 with real clicks and keys (on the longer panel; the dialog itself did not change): it opens centred over a dimmed page with the focus on "Close"; six times Down scrolls it 240 px and the map does not move; Tab stays inside; Escape closes it and the focus is back on the button; Enter opens it again; a click beside it closes it. The shortened panel was read back from the page: four headings, 14 terms, 988 px tall in a dialog of 678 px, so it still scrolls at that window height. The notice shows at 800 and 899 px and not at 900; at 800 px both buttons are inside the window
 - [x] 8.6 Preview and keyboard pass. Real Tab presses at 1280 x 800, with a match open, a journey focused and a heat layer on, made before step 8.4 was taken out: the map tab, "Copy link", "Data and keys", the 4 heat buttons, the 5 days, the 5 fates, "All matches", the search box, the match list (one stop), the journey list (one stop), the list of events (since removed), the 6 switches of the legend, the map, the 3 zoom buttons, Play, the time slider, the speed. That was 35 stops, each of them `:focus-visible`; it is 34 without the list. Every control has a name: the switches by their labels, the slider "Time in the match", the speed "Speed", Play by its `aria-label`; no button is without one; the page says `lang="en"`. The three maps with the Kills layer on: 192 kills of 42 matches on Grand Rift, 425 of 122 on Lockdown, the remembered match on Ambrose Valley, one history entry per tab, no console error. After the list was removed the sidebar fits a window of 800 px again (752 of 752 px), and a fresh page load had no failed request. One change came out of the pass: a step that changes nothing in the address adds no entry (`04ffb7d`). One-line faults over the whole phase: 86 in five runs, all noticed
 - [x] 8.7 Docs and phase-end checks. PLAN.md ("Phase 8": the user's scope, the phase as built with the evidence for each criterion; "Changed while building Phase 8"), BRIEF.md (R8), README.md, ARCHITECTURE.md (two trade-offs). `make test` 254 tests, `npm run check` 476 tests, build 91.57 kB of JavaScript gzipped. Status "DONE (awaiting my review)"; the last code commit is `708e4b7`
-- [ ] 8.8 On the user's yes: push the branch, open the pull request, record it here, read the first CI run. Then stop for the review with a short manual test script
+- [x] 8.8 Pushed on the user's yes (24 Nov, 17:57) and opened as pull request [#7](https://github.com/YesudasZ/lila-player-journeys/pull/7), "Phase 8: polish": what the phase delivers, the evidence for each criterion, what differs from the plan, what was cut, what was not verified, how to verify; no attribution line. Its first CI run is read once after this commit is pushed
 
 ## Exactly where I stopped
 
-- Branch `phase-8-polish`, 9 commits ahead of `main` (`94bf1fb`) before this one; local only, nothing pushed. `main` equals `origin/main`.
-- Phase 8 is done and waits for the user's review. The user's scope note for the phase (history and notice, ids and notes, a short panel and the notice in a narrow window; the events list cut; no review agents) reached the session while the phase was being built. The branch follows it: the events list, already built, was taken out again with a revert (`7ddddbc`), and the panel was shortened (`708e4b7`).
-- **NEXT:** on the user's yes, push the branch and open the pull request into `main` (what the phase delivers, the evidence for each criterion, what differs from the plan, what was not verified, how to verify; no attribution line), record it here, and read the first CI run once. Then stop for the review. When the user sends the results of Lighthouse, the reading at 60 Hz, the drag of the slider and the click on "Copy link", record them here and in the pull request.
+- Branch `phase-8-polish` is pushed, and pull request [#7](https://github.com/YesudasZ/lila-player-journeys/pull/7) into `main` is open. `main` equals `origin/main` (`94bf1fb`).
+- Phase 8 is done and waits for the user's review on GitHub. Changes asked for in the review go onto the same branch.
+- **NEXT:** nothing until the user speaks. When the user sends the results of Lighthouse, the reading at 60 Hz, the drag of the slider and the click on "Copy link": record them here and in the pull request. After the merge: `git switch main`, `git pull --ff-only`, check the live site, and cut the next branch only on the user's go, in a fresh session.
 
 ## Decisions and assumptions made
 
