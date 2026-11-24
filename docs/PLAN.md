@@ -557,3 +557,24 @@ Left as it is:
 - The frame-time reading at 60 Hz is still missing. The browser pane shows about 30 frames a second, and the reviewer found it slower still.
 - The reviewer's tool did not complete a real drag of the slider with the pointer. A real click on the track and a value set by script do what they should.
 - In the dev server only: after a hot update of the clock's modules the bar says "Open a match to play it back." until the page is reloaded.
+
+## Changed while building Phase 7 (24 Nov 2026), for your review
+
+No review agents ran in this phase, as approved. In their place:
+
+- **Sums against the data.** Before smoothing each grid sums to the rows that fed it, for every kind on every map. Over the three maps the layers count 72,643 movement samples, 2,406 kills, 739 deaths of which 39 in the storm, and 12,829 loot events: the manifest's totals, event by event. In the preview the legends of the three maps add up to the same: deaths 504 + 52 + 183, storm deaths 17 + 5 + 17.
+- **Faults.** Twenty one-line faults were put into the new code, one at a time. The tests noticed all twenty.
+- **Preview.** Every layer on Ambrose Valley, deaths and loot on Grand Rift, traffic and deaths on Lockdown. Without bots the traffic layer reads "BotPosition 0"; on 14 Feb it counts 24 matches; with the fate "killed by storm" the deaths are 17, all in the storm. A reload keeps the layer, switching it off leaves nothing painted, and the console has no error. The dim is 40%: alpha 102 of 255 on 1.47 million pixels of the map. Counting Ambrose Valley with all matches takes 1.7 ms at the median.
+
+| Plan | Built | Why |
+|---|---|---|
+| A Vitest benchmark for the 50 ms criterion | A test that takes the median of 15 runs and expects less than 50 ms | This version of Vitest has no `bench()` |
+| The legend gives the rows, the matches and the largest cell | It also lists the rows of each event by its name in the data, for example "Kill 0 · BotKill 1,789" | It answers from the data whether Kills includes kills of bots: every kill that is left is one |
+| The sidebar's sections stay in view | The sidebar scrolls when it is taller than the window; the match list may shrink to 128 px and the list of journeys keeps at least 96 px | With a heat legend and a match open the sections need 838 px, more than a window of 800 px has |
+
+Left as it is:
+
+- The layer's painting has no unit test, as no canvas code has; what it paints was read back as pixels in the preview.
+- The colour is drawn from the smoothed counts, while the legend's fullest cell is the count before smoothing.
+- The kill hot spots were not compared with `docs/img/overlay_*.jpg` one by one; one match was looked at.
+- Lockdown's map had not appeared 10 s after a reload in the hidden preview pane, so its heat was seen after a switch of tabs, not after the reload. The legend was right both times.

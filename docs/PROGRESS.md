@@ -1,10 +1,10 @@
 # Progress Log
 
-Last updated: 2026-11-24 13:42 IST
+Last updated: 2026-11-24 13:47 IST
 
 ## Current phase
 
-Phase 7, Heatmaps. Status: **IN PROGRESS** on the branch `phase-7-heatmaps` (plan approved; no pull request yet).
+Phase 7, Heatmaps. Status: **DONE (awaiting my review)** on the branch `phase-7-heatmaps`, last code commit `9808ba7`. Not pushed yet: the push and the pull request wait for the user's yes.
 
 Phases 1 to 6 and step 9.1 are merged: pull requests [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) (Phase 3), [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) (step 9.1), [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3) (Phase 4), [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4) (Phase 5) and [#5](https://github.com/YesudasZ/lila-player-journeys/pull/5) (Phase 6) were reviewed and merged by the user, the last one on 24 Nov at 13:27 IST. The tool is live at https://lila-player-journeys-psi.vercel.app and shows Phase 6; production on Vercel follows `main`.
 
@@ -20,7 +20,7 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 | 4 | Journeys, humans versus bots, markers | APPROVED (merged) | pull request [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3) |
 | 5 | Filters and URL state | APPROVED (merged) | pull request [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4) |
 | 6 | Timeline and playback | APPROVED (merged) | pull request [#5](https://github.com/YesudasZ/lila-player-journeys/pull/5) |
-| 7 | Heatmaps | IN PROGRESS | branch `phase-7-heatmaps` |
+| 7 | Heatmaps | DONE (awaiting my review) | branch `phase-7-heatmaps`, `9808ba7`; pull request not opened yet |
 | 8 | Polish | NOT STARTED | |
 | 9 | Deployment (9.1 after Phase 3, 9.2 on the last day) | 9.1 APPROVED (merged); 9.2 on the last day | pull request [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) |
 | 10 | Insights and docs | NOT STARTED | |
@@ -38,15 +38,24 @@ Phase 7 deliverables and acceptance criteria are in PLAN.md, "Phase 7". The task
 - [x] 7.2 lib (24 Nov): `web/src/lib/heat.ts`. Cells of 10 x 10 world units (90, 58 and 100 across the three maps); counting, one smoothing pass that loses nothing, the strength of a cell on a square-root scale, a token colour as numbers, the legend's sentence and the list of events. Deaths are the groups `death` and `storm_death`. Tests: each grid sums to the rows that fed it, for every kind on every map; over the three maps the sums are the manifest's totals, event by event (movement 72,643, kills 2,406, deaths 739 of which 39 in the storm, loot 12,829). Vitest 5.1.1 has no `bench()`, so the 50 ms criterion is a test that takes the median of 15 runs
 - [x] 7.3 Store, selector and link (24 Nov): `heat` and `setHeat`; `selectHeat` counts once per draw list and kind; `heat` in the link after the fates, an unknown kind read as none
 - [x] 7.4 The layer and the control (24 Nov, 13:42): `layers/heatLayer.ts` dims the minimap by 40% and draws the grid as a small image scaled into the map's rectangle; `HeatControl.tsx` at the top of the sidebar, above the filters, with the legend. `npm run check`: 449 tests; build: 89.56 kB of JavaScript gzipped. Not looked at in the preview yet
-- [ ] 7.5 Checked in the preview; one-line faults; the benchmark's reading
-- [ ] 7.6 Docs and phase-end checks; status "DONE (awaiting my review)"
+- [x] 7.5 Checked in the preview (24 Nov, 13:45 and 13:47; pane at 1280 x 800), no console error:
+  - Ambrose Valley, all matches: Traffic "48,436 movement samples of 566 matches; the fullest cell holds 330" (Position 35,871, BotPosition 12,565); Kills 1,789 of 441 matches (Kill 0, BotKill 1,789); Deaths 504 of 338 matches, incl. 17 storm deaths (Killed 2, BotKilled 485, KilledByStorm 17); Loot 9,902 of 539 matches
+  - Grand Rift: 52 deaths of 33 matches, incl. 5 storm deaths, on 58 x 58 cells; 880 loot events. Lockdown: 18,496 movement samples of 171 matches on 100 x 100 cells; 183 deaths, incl. 17 storm deaths. Over the three maps the deaths are 739 and the storm deaths 39, as the manifest has
+  - Without bots: "BotPosition 0". On 14 Feb: 24 matches. With the fate "killed by storm": 17 deaths, all in the storm. One match (`fbbc5d02`): 5 kills, address `?match=fbbc5d02&heat=kill`. Off: nothing painted, no text, no `heat` in the address. A reload at `?map=Lockdown&heat=death` keeps the layer
+  - The dim is 40%: alpha 102 of 255 on 1.47 million pixels of the map. The fullest kill cell reads (221, 210, 62), the kill yellow
+  - The Heat control is the first section of the sidebar. With a heat legend open the sidebar fits a window of 800 px; with a match open as well it needs 838 px and scrolls, and the last row of the legend can be reached
+  - **The timing:** counting Ambrose Valley with all matches (836 journeys) takes 1.7 ms at the median of 15 runs, 4.1 ms at the slowest, in the browser of the development machine
+  - Twenty one-line faults put into the new code: the tests noticed all twenty
+- [x] 7.6 PLAN.md, BRIEF.md, DATA_NOTES.md, ARCHITECTURE.md and the README describe Phase 7 as built. Phase-end checks pass (13:47): `npm run check` (449 tests), `npm run build` (89.57 kB of JavaScript gzipped), `make test` (253 tests)
 - [ ] 7.7 On the user's yes: push the branch, open the pull request, record it here, read the first CI run. Then stop for the review with a short manual test script
 
 ## Exactly where I stopped
 
 - Branch `phase-7-heatmaps`, cut from `main` at `78197e9`; local only, nothing pushed. `main` equals `origin/main`.
-- Steps 7.2 to 7.4 are committed: the heat grid, its state and link, the layer and the control. None of it has been looked at in the preview yet.
-- **NEXT:** step 7.5: in the preview, each layer on each map; the legend's numbers against DATA_NOTES.md's table; a day filter, a fate filter and the bots switch; one match; a reload with `heat=`; the console. The journeys canvas is now the third canvas of the map, the heat the second. Take the timing of `buildHeat` for Ambrose Valley there. Then one-line faults, then 7.6.
+- Everything of Phase 7 is committed. At 13:47 on 24 Nov: `npm run check` (449 tests), `npm run build` and `make test` (253 tests) pass.
+- The branch `fix-phase-5-approved-changes` is parked (see "Known issues / TODO later"): it is not part of this phase.
+- Waiting for the user's yes to push the branch and open the pull request.
+- **NEXT:** on yes: `git push -u origin phase-7-heatmaps`; `gh pr create` into `main` (what the phase delivers, the evidence for each acceptance criterion, what differs from the plan, what was not verified, how to verify; no attribution line; no screenshots, and why); record the pull request here in one docs commit and push it; read the first CI run. Then stop. After the user's merge and go: `git switch main`, `git pull --ff-only`, look at the live site, then Phase 8 (polish, with the changes parked on `fix-phase-5-approved-changes`) on a new branch, in a fresh session.
 
 ## Decisions and assumptions made
 
@@ -176,6 +185,14 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 - The user chose again to do the next phase in the same session ("Do this task here"), against the recommendation: the conversation held about 800,000 tokens, and this model's weekly limit stood at 76% with Phases 7 to 11 ahead.
 - Still unverified from Phase 6, for Phase 8 or the final QA: frames arriving every 16 ms (Chrome's Performance panel), a real pointer drag of the time slider, the clipboard write of "Copy link".
 
+2026-11-24, Phase 7 (the plan, the user's five changes, and what was decided while building):
+- One heat layer at a time, none at first; fed by the journeys that are drawn; cells of 10 x 10 world units; the heat does not follow playback.
+- Deaths include storm deaths, and the legend says how many (the user's choice). The legend also lists the rows of each event by its name in the data, which is how it says that every kill left after cleaning is a kill of a bot.
+- The Heat control is the first section of the sidebar, and the minimap is dimmed by 40% under a heat layer (the user's choices).
+- The "no recorded path" layer is not built: it needs a mask of the playable area. ARCHITECTURE.md has it as a trade-off.
+- No review agents; grid sums, twenty one-line faults and the preview instead. Vitest 5.1.1 has no `bench()`, so the 50 ms criterion is a timed test.
+- The sidebar scrolls when it is taller than the window.
+
 ## Open questions for the user
 
 1. Should `docs/PROGRESS.md`, `CLAUDE.md` and `.claude/` stay in the repo at submission? They show how the work was run with Claude Code, which the brief allows; they are also working notes in a public repo.
@@ -191,9 +208,9 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 |---|---|---|
 | `unzip _inbox/player_data.zip -d data/raw` | restores the raw data | 2026-11-22 |
 | `make setup` | creates `.venv`, installs pinned dependencies | 2026-11-22, in a fresh clone |
-| `make test` | 253 tests, no raw data needed; creates `.venv` on first use. Run it after `git add`: the hygiene tests see tracked files only | 2026-11-24 13:21 |
-| `cd web && npm run check` | type check, ESLint with no warning allowed, 410 Vitest tests | 2026-11-24 13:21 |
-| `cd web && npm run build` | production build into `web/dist/` (not committed); JavaScript 87.91 kB gzipped | 2026-11-24 13:21 |
+| `make test` | 253 tests, no raw data needed; creates `.venv` on first use. Run it after `git add`: the hygiene tests see tracked files only | 2026-11-24 13:47 |
+| `cd web && npm run check` | type check, ESLint with no warning allowed, 449 Vitest tests | 2026-11-24 13:47 |
+| `cd web && npm run build` | production build into `web/dist/` (not committed); JavaScript 89.57 kB gzipped | 2026-11-24 13:47 |
 | `cd web && npm run dev` | the app on http://localhost:5173 | 2026-11-23 17:41 |
 | `make profile` | measures the raw data → `docs/profile/` (235 metrics) | 2026-11-23 13:10 |
 | `make data` | builds `web/public/data/` and the two test fixtures (projection, playback); writes nothing unless every check passes, the profile report included; 3 s | 2026-11-24 00:35 |
