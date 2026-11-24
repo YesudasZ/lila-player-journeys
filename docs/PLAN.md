@@ -319,6 +319,17 @@ web/src/components/HeatControl.tsx        the buttons and the legend; Sidebar an
 
 The first, second, third, fifth and sixth were already built and tested when the user set them aside. They wait on the local branch `fix-phase-5-approved-changes` (commits `9a2f0a4` and `8e13ce5`, cut from `phase-6-timeline` at `728ea77`; not pushed, no pull request). Phase 8 takes them from there instead of building them again; the journey id's format still has to go into DATA_NOTES.md.
 
+**The plan as approved (24 Nov 2026), built on the branch `phase-8-polish`.** This model's weekly usage limit stood at 80% with Phases 8 to 11 ahead, so the phase is lean and says what it cuts.
+
+1. The Phase 5 changes come first: history entries for the user's steps (`pushState`); in-place rewrites (`replaceState`) for moving, zooming, the time of playback and what a link or arriving data corrects; Back and Forward open the view of the entry they land on, with its time of playback, paused. Choosing a heat layer is a step too. The notice "Match hidden by your filters — showing all matches". Tests that match and journey ids are unique. The journey id's format in a comment and in DATA_NOTES.md, and the day-folder assumption there (as A10: A9 is the journey of one row).
+2. The events of the focused journey as text in the sidebar, so that what a tooltip says can be reached by keyboard.
+3. "About the data and the keys", one panel opened from the top bar: what the data is and where it differs from its README, what "no account id" and "no death recorded" mean, that `x` and `z` are the ground plane and `y` is height, what each heat layer counts, the keys of the map and of the time slider, and the limits (a desktop browser, no pinch zoom). A notice on screens narrower than 900 px that the tool is built for desktop.
+4. Cut: pinch zoom on touch screens and on Safari's trackpad, which cannot be tried in the preview and is named as a limit; a pass over every UI text.
+5. Left to the user, since the browser pane cannot do them: Lighthouse on the hosted URL (at least 90 for performance, desktop preset), the frame-time reading at 60 Hz, one real drag of the time slider, one click on "Copy link".
+6. No review agents: one-line faults against the tests, a keyboard pass and a look in the preview. No new dependency, no change to the data files.
+
+If the usage runs short, the order above is the priority: 1 is done first, 2 and 3 are cut from the bottom.
+
 ## Phase 9: Deployment (0.5 h, in two steps)
 
 - **9.1, right after the Phase 3 pull request is merged** (before that, `main` has no `web/` folder to build). You create the Vercel project from the GitHub repo with root directory `web` (one-time, in the browser). Production follows `main`, so only merged phases are live; every later pull request gets its own preview link. The URL goes into the repo's About field and, through a one-line pull request, to the top of the README. **Done on 23 Nov:** https://lila-player-journeys-psi.vercel.app. Vercel offered the whole repo as a multi-service project, the Python pipeline next to the app; the `web` folder was imported as a single project with the Vite preset instead. The plain project name was taken, hence the `-psi` in the address.

@@ -1,10 +1,10 @@
 # Progress Log
 
-Last updated: 2026-11-24 13:54 IST
+Last updated: 2026-11-24 13:56 IST
 
 ## Current phase
 
-Phase 8, Polish. Status: **IN PROGRESS** on the branch `phase-8-polish` (the plan is not approved yet; no pull request yet).
+Phase 8, Polish. Status: **IN PROGRESS** on the branch `phase-8-polish` (plan approved; no pull request yet).
 
 Phases 1 to 7 and step 9.1 are merged: pull requests [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) (Phase 3), [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) (step 9.1), [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3) (Phase 4), [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4) (Phase 5), [#5](https://github.com/YesudasZ/lila-player-journeys/pull/5) (Phase 6) and [#6](https://github.com/YesudasZ/lila-player-journeys/pull/6) (Phase 7) were reviewed and merged by the user, the last one on 24 Nov at 13:50 IST. The tool is live at https://lila-player-journeys-psi.vercel.app and shows Phase 7; production on Vercel follows `main`.
 
@@ -33,13 +33,20 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 Phase 8 deliverables are in PLAN.md, "Phase 8". The task lists of Phases 2 to 7 and of step 9.1 are in the history of this file (`git log -p docs/PROGRESS.md`).
 
 - [x] 8.0 The user's go for Phase 8, in this session (24 Nov, 13:54). Branch `phase-8-polish` cut from `main` at `94bf1fb`. This file corrected: Phase 7 is merged as pull request #6, and CI ended green on its last commit; the live site shows it (checked after the merge at 13:55: `?heat=kill` has Heat as the first section of the sidebar and "1,789 kills of 441 matches"; Deaths reads "504 deaths of 338 matches, incl. 17 storm deaths" and puts `heat=death` into the address; switching it off clears the layer and the address; no request failed, empty console)
-- [ ] 8.1 Plan Phase 8 in plan mode; on the user's approval, record it in PLAN.md
+- [x] 8.1 Plan approved by the user in plan mode (24 Nov, 13:56) and recorded in PLAN.md, "Phase 8" ("The plan as approved"). In short: the Phase 5 changes first; a heat layer is a step too, and Back restores the time of playback; the events of the focused journey as text; an "About the data and the keys" panel and a notice below 900 px; pinch zoom is cut and named as a limit; Lighthouse, the 60 Hz reading, a real drag of the slider and "Copy link" are left to the user; no review agents; no new dependency
+- [ ] 8.2 History and notice. Store: `steps` (counted in selectMap, selectMatch, setShown, setFocus, toggleDay, toggleFate, clearFilters and setHeat), `closedByFilters`, `applyLink` (also sets `heat`), `restoreFocus`, `dismissNotice`. `state/playback.ts`: `restoreTime`. `state/linkSync.ts`: a step pushes at once after giving the entry it leaves its last view and time; everything else rewrites in place after 300 ms and not while a match plays; `popstate` calls `applyLink` and `restoreTime`. `FilterNotice.tsx` over the map with `EmptyNote`. `journeysLayer.unclick` uses `restoreFocus`. Take the code and the tests from `git show fix-phase-5-approved-changes:<file>` and adapt them
+- [ ] 8.3 Tests that match and journey ids are unique (pytest and Vitest, from the parked branch); the journey id's format in `lib/link.ts` and in DATA_NOTES.md; the day-folder assumption as A10; "A1 to A10" in CLAUDE.md and in this file
+- [ ] 8.4 The events of the focused journey as text in `JourneyList.tsx`
+- [ ] 8.5 `AboutPanel.tsx` opened from the top bar; the notice below 900 px in `App.tsx`
+- [ ] 8.6 Preview and keyboard pass; one-line faults
+- [ ] 8.7 Docs and phase-end checks; status "DONE (awaiting my review)"
+- [ ] 8.8 On the user's yes: push the branch, open the pull request, record it here, read the first CI run. Then stop for the review with a short manual test script
 
 ## Exactly where I stopped
 
 - Branch `phase-8-polish`, cut from `main` at `94bf1fb`; local only, nothing pushed. `main` equals `origin/main`.
-- Phase 8 has no code yet. Its plan is being written in plan mode and waits for the user's approval.
-- **NEXT:** on approval: record the plan in PLAN.md ("Phase 8") and in the task list above, then build in small commits. The six changes the Phase 5 plan was approved with are on `fix-phase-5-approved-changes` (`9a2f0a4`, `8e13ce5`), cut before Phases 6 and 7: `store.ts`, `linkSync.ts` and their tests have moved on since.
+- Phase 8 has no code yet. Its plan is approved and recorded in PLAN.md.
+- **NEXT:** step 8.2, as its entry above says. One trap, found while planning: the clock's follower runs before the address code on every change of the app's state, and a step that opens another match resets the clock first. So the address code has to remember where the clock rested (updated when the clock changes without its end changing, and after each step) and use that time for the entry a step leaves; otherwise that entry loses its `t`. Tests: paused at a time in one match, then another match opened: the first entry keeps `&t=`, and Back opens it at that time, paused.
 
 ## Decisions and assumptions made
 
