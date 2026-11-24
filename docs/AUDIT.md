@@ -7,7 +7,52 @@ Read-only audit, 24 Nov 2026. Nothing was fixed. Local branch `chore-audit`, not
 - **Method:** Claude in Chrome on a fresh tab. Page state was read from the DOM and from the canvas pixels by scripts; clicks and keys were real where a row says so. Expected numbers were counted from the committed data files with a separate script, not taken from the app.
 - **Result key:** PASS, PARTIAL, FAIL. "Observation" marks something that works but may deserve a look.
 
-<!-- SUMMARY -->
+## Summary
+
+**The tool itself passes every check that could be run.** All nine core requirements (A1 to A9), nine of ten edge cases and all three performance checks pass, and every count the tool shows equals a separate count from the data files. **The repo is not ready to submit yet, for one reason: pull request #8 is not merged**, so `main` has no INSIGHTS.md and still shows the old README and a draft ARCHITECTURE.md.
+
+### The brief's checklist before submitting
+
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| C1 | Tool is live at the hosted URL | PASS | A1: loads without login, no console message, no failed request |
+| C2 | Player paths render correctly on the minimap | PASS | A3: all three maps match the proof images by eye; paths follow roads and the bridge |
+| C3 | Humans can be told apart from bots visually | PASS | A4: solid blue with round heads against dashed orange with square heads; the legend shows the same |
+| C4 | Kill, death, loot and storm events are marked | PASS | A5: four shapes; each tooltip names the event, who, the time and the place |
+| C5 | Filtering by map, date and match works | PASS | A6: every count equals the data files for each filter state |
+| C6 | Timeline or playback shows match progression | PASS | A7, B10, C1: speeds as labelled, the first death appears at 1:58 on the end of its path, 59.8 frames a second |
+| C7 | Heatmaps show kill zones, death zones and traffic | PASS | A8: 12 pairs of map and layer, all numbers equal the data files |
+| C8 | Architecture doc covers the coordinate mapping approach | PASS on the branch; PARTIAL on `main` | D3: `main` has the mapping section, but under a "Draft" banner that is no longer true |
+| C9 | Three insights with supporting evidence | **FAIL on `main`**; PASS on the branch | D4: INSIGHTS.md exists only in pull request #8 |
+| C10 | Walkthrough covers all major features | **FAIL on `main`**; PASS on the branch, without the video | D2: nine steps with links and screenshots in pull request #8; the video file is missing |
+
+### What failed or passed only in part, by severity
+
+| Severity | Finding | Suggested fix | Effort |
+|---|---|---|---|
+| **Blocker** | Pull request #8 is not merged: `main` has no INSIGHTS.md, a README that says "Work in progress" with no walkthrough, and an ARCHITECTURE.md that says the app is still to be built (D1 to D4, C9, C10) | Review and merge pull request #8, then look at the repo's front page once | 5 min |
+| Should fix | The README links to `docs/media/walkthrough.mp4`, which does not exist (D2) | Record the walkthrough and add the file, or take the sentence out | 20 to 30 min, or 2 min |
+| Should fix | The repo's About description ends in "Work in progress." (D1) | `gh repo edit --description` with the final wording | 1 min |
+| Should fix | `docs/BRIEF.md` still marks C2 to C10 as not started and S1 to S5 as in progress | Set each row with a link to its evidence; this file can serve as the evidence | 15 min |
+| Nice to have | The repo page shows "Contributors 2"; GitHub's API lists one (D1) | A stale count from rewritten commits: ask GitHub Support, or leave it; the README says AI tools were used | 5 min to ask |
+| Nice to have | A reload while a match plays goes back to the time of the last pause or seek, not to the moment playing (B6) | Write the time into the address every few seconds while playing, or when the page is hidden | 30 to 45 min with tests |
+| Nice to have | With Humans or Bots switched off, the legend's first line and that row's count still say what the filters leave, not what is drawn (A6) | Let the first line follow the switches, or say "of the filters" | 20 to 30 min |
+| Nice to have | INSIGHTS.md quotes 796 matches and 781 journeys, which `make insights` does not print as such (D4) | Print the two totals in the script | 10 min |
+| Accepted | ARCHITECTURE.md prints on three A4 pages, not one (D3) | The author chose to keep its length; a hard cut would drop the tables | none |
+| By design | A burst of choices fills the browser's 50 history entries, since each choice is an entry (B7) | None needed at a hand's speed | none |
+
+### What the browser tools could not verify: please test by hand
+
+1. **Switching the browser tab while a match plays** (B6): it should pause and not have jumped ahead on return. The tools kept both tabs visible.
+2. **A hand on the mouse:** hovering markers, dragging the time slider, dragging the map, zooming with the wheel and by double-click. The audit used scripted pointer events, the zoom buttons and links with a view.
+3. **A real window narrower than 900 px, and a phone** (B8): measured in an 880 px frame instead, because the tool could not resize the window.
+4. **The extra Tab stop after the speed control** (B9): an unnamed element that is not in the app's markup, probably the browser tool's overlay. Tab through once without the tool.
+5. **Lighthouse** on the hosted URL (C3): the tools cannot run it.
+6. **A private window and other browsers:** only Chrome on this Mac was used. The logged-out view of the repo was a plain request, not a browser.
+7. **The mapping's accuracy beyond the eye** (A3): the 1 to 2% of map width that assumption A8 leaves open.
+8. **`make test` and a data rebuild from the zip in a fresh clone** (D6): the clone test covered the app only.
+
+Screenshots were looked at but not saved as files; the evidence in the tables is numbers and texts read from the page.
 
 ## Batch A: the brief's core requirements
 
@@ -55,3 +100,19 @@ Measured in the author's Chrome on this machine: the tab visible and focused, de
 | C3 | Initial load time and the size of the largest assets | First load in a fresh tab | Reported, no threshold given | First byte 159 ms, DOM ready 300 ms, load event 547 ms; the first map's journeys arrived at 486 ms and its minimap at 528 ms. Over the wire: `AmbroseValley.json` 488 kB (1.50 MB unpacked), `Lockdown.webp` 193 kB, `AmbroseValley.webp` 177 kB, `Lockdown.json` 166 kB, `GrandRift.webp` 166 kB, the app's JavaScript 93 kB (290 kB), `GrandRift.json` 55 kB. 13 requests | PASS | On this machine's connection. Lighthouse was not run: the tools cannot run it |
 
 Console and network in batch C: no console message, no failed request.
+
+## Batch D: deliverables in the repo
+
+`main` is what a reviewer sees today. Pull request #8 holds the README, INSIGHTS.md and ARCHITECTURE.md of Phase 10 and was open during the audit, so each row says what `main` has and what the branch `phase-10-docs` has.
+
+| ID | Requirement | Steps | Expected | Actual | Result | Evidence |
+|---|---|---|---|---|---|---|
+| D1 | The repo is public and opens without login; the one link contains everything | `gh repo view`; a plain request without login; the repo page in Chrome (logged in) | Public, readable logged-out, every deliverable inside | Public. A request without login returned 200 with a "Sign in" link, so the page is readable logged-out. About: the homepage is the live URL; the description still ends in "Work in progress." The API lists one contributor, `YesudasZ`, but the repo page shows "Contributors 2". **On `main`: no INSIGHTS.md, and no walkthrough video on either branch** | PARTIAL | `raw.githubusercontent.com/…/main/INSIGHTS.md`: 404; on `phase-10-docs`: 200 |
+| D2 | README: live URL at the top, tech stack, setup, env vars "none", data rebuild, tests, walkthrough with working links and images, video | Read both versions; fetch every image; open every link into the tool | All of it, on the default branch | **`main`: fails.** Its README still opens with "Work in progress", has no walkthrough and no screenshots. **Branch:** live URL in line 3; sections Tech stack, Run the app, Rebuild the data, Tests, Project structure, Walkthrough, How it was built; "Env vars: none"; `npm ci && npm run dev`; the zip in `_inbox/` and `make data`; nine walkthrough steps; 8 screenshots, all served (200); all 11 links into the tool open the view their step describes. **The video link `docs/media/walkthrough.mp4` is a 404** | FAIL on `main`; PARTIAL on the branch | Link checks: Lockdown on 10 Feb "61 matches, 94 journeys"; `fbbc5d02` "1 match, 16 journeys"; `t=118` "1:58 / 8:43"; the storm fate "17 matches, 17 journeys"; the four heat sentences; the zoomed link keeps `view=1058,1559,4` |
+| D3 | ARCHITECTURE.md: stack and why, data flow, coordinate mapping walked through, assumptions, trade-offs table; length against the brief's "one page" | Read both versions; print GitHub's view of the branch version to PDF | The five topics on one page | **`main`: the old draft**, under a banner that says "Draft … The browser app is built in the next phases", which is no longer true. It does have the mapping section. **Branch:** Stack and why, Data flow, Coordinate mapping (formula, the three maps' constants, UV storage, the Y flip, proof), Assumptions (7 rows), Trade-offs (8 rows). It prints on three A4 pages from GitHub's view, not one; the author chose to keep its length | FAIL on `main`; PARTIAL on the branch (length) | 929 words counting table marks; `docs/PLAN.md` records the choice |
+| D4 | INSIGHTS.md: exactly three insights, each with what caught the eye, evidence, actions and metrics, why a Level Designer should care; every number matches a fresh run of `analysis/insights.py`; every link shows the claimed view | Read the branch version; run `make insights` and compare every number; run its tests; open the 8 links | Three complete insights, no number off | **`main`: the file does not exist.** **Branch:** three insights, each with the four parts; 4 images, all served. All 39 decimals and all whole numbers are printed by the script, except 796 and 781 in the introduction, which are the manifest's totals (781 is the sum of three printed lines). 9 tests pass. The 8 links open what the text says: 17 storm deaths of 17 matches on Lockdown and on Ambrose Valley; 1,789 kills of 441 matches; 9,902 loot events of 539 matches; the zoomed kill cell; Traffic on each map with the three marker switches off | FAIL on `main`; PASS on the branch | `pytest pipeline/tests/test_insights.py`: 9 passed |
+| D5 | No raw data, PDF, zip, secrets or `.env` committed, also in the history | File names ever added in any branch; the largest blobs; author and committer emails; secret-like words; full UUIDs | Nothing of the kind | No parquet, zip, PDF, `.env` or key file was ever added. Largest blob: `AmbroseValley.json`, 1.4 MB. Emails: only the GitHub no-reply address and GitHub's own for merges. No secret-like word outside the lock file. Six full UUIDs exist, all in `pipeline/tests/helpers.py`; **none** equals any of the 1,041 player or match ids of the raw files, so they are made-up test ids | PASS | Compared with the raw files' names locally, printing counts only |
+| D6 | Fresh-clone test: clone, `cd web && npm ci && npm run build`, and `npm run check` | Shallow clone of `main` into a temporary folder; Node 22.23.4 | It installs, builds and passes | 159 files, no raw data. `npm ci`: 0 vulnerabilities. Build: `index-CKbSPsBA.js`, 91.57 kB gzipped, the very file production serves. `npm run check`: type check, ESLint, 17 test files, 476 tests passed | PASS | Not run in the clone: `make test` and a data rebuild from the zip |
+| D7 | All CI checks on `main` are green | `gh run list` for `main`; the status of its head; the checks of pull request #8 | Green | The last four CI runs on `main` succeeded (`603c5ef`, `94bf1fb`, `78197e9`, `89dfde3`); Vercel reports success for `603c5ef`. Pull request #8, at `6383733`: all five checks green, mergeable. Pull requests #1 to #7 are merged | PASS | |
+
+Console and network in batch D: nothing to report from the tool; GitHub's own pages were not checked for console messages.

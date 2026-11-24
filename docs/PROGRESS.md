@@ -45,6 +45,7 @@ Step 9.2 and Phase 10 are done together; the user's brief for them is in PLAN.md
 - Branch `phase-10-docs` is pushed, and pull request [#8](https://github.com/YesudasZ/lila-player-journeys/pull/8) into `main` is open. `main` equals `origin/main` (`603c5ef`).
 - Step 9.2 and Phase 10 are done and wait for the user's review on GitHub. Changes asked for in the review go onto the same branch.
 - **Decided by the user on 24 Nov:** ARCHITECTURE.md stays as it is. From GitHub's view it prints on three A4 pages (measured with Playwright's `pdf` command on the pushed page), not on one as PLAN.md's criterion says. One printed page would hold about a third of it, and the sections and tables the brief lists matter more.
+- **Audit, 24 Nov (read-only, nothing fixed):** `docs/AUDIT.md` on the local branch `chore-audit`, cut from `phase-10-docs` and not pushed. Batches A to D are complete. The tool passes every check that could be run; the one blocker is that pull request #8 is not merged, so `main` lacks INSIGHTS.md, the new README and the new ARCHITECTURE.md. The user decides the fixes from the summary at the top of that file.
 - **NEXT:** nothing until the user speaks. The user records `docs/media/walkthrough.mp4` and adds it to this branch. After the merge: `git switch main`, `git pull --ff-only`, check the live site, and start Phase 11 (final QA) only on the user's go, in a fresh session.
 
 ## Decisions and assumptions made
