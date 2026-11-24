@@ -253,11 +253,26 @@ describe("the time of playback in the address", () => {
     expect(written.at(-1)).toBe("replace /?match=fbbc5d02&t=300&view=1000,900,2");
     vi.advanceTimersByTime(10_000);
     expect(written).toHaveLength(4); // paused: nothing more
+    expect(vi.getTimerCount()).toBe(0); // and no timer keeps running
 
     seek(523); // the end, where the whole match is shown
     vi.advanceTimersByTime(300);
     expect(written.at(-1)).toBe("replace /?match=fbbc5d02&view=1000,900,2");
     expect(written.every((entry) => entry.startsWith("replace "))).toBe(true); // playing, a pause or a seek never adds an entry
+    stop();
+  });
+
+  it("keeps its rhythm of 2 s while the frames of playback keep coming", async () => {
+    followClock();
+    await loadFrom("?match=fbbc5d02");
+    vi.useFakeTimers();
+    const stop = sync();
+    playback.setState({ playing: true, time: 100 });
+    for (let frame = 1; frame <= 60; frame += 1) {
+      vi.advanceTimersByTime(100); // a frame every 100 ms, 6 s in all
+      playback.setState({ time: 100 + frame });
+    }
+    expect(written).toEqual(["replace /?match=fbbc5d02&t=119", "replace /?match=fbbc5d02&t=139", "replace /?match=fbbc5d02&t=159"]);
     stop();
   });
 
