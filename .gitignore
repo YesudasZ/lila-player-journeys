@@ -11,7 +11,7 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
-# Node (web app arrives in Phase 3)
+# Node
 node_modules/
 dist/
 *.tsbuildinfo
@@ -22,13 +22,22 @@ playwright-report/
 blob-report/
 playwright/.cache/
 
-# Environment and local tool settings
+# Environment
 .env
 .env.*
-.claude/settings.local.json
 
 # Machine-specific session notes (scratch paths, raw agent output)
 .local/
 
 # OS noise
 .DS_Store
+
+# Working files kept on the author's machine, not part of the submission:
+# Claude Code's settings and project notes, the plan, the progress log, the brief's checklist, the first audit
+.claude/
+CLAUDE.md
+docs/PLAN.md
+docs/PROGRESS.md
+docs/BRIEF.md
+docs/AUDIT.md
+*-pr-body.md
