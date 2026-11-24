@@ -1,4 +1,5 @@
 """The statistics behind INSIGHTS.md: the helpers on small cases, and the totals against the manifest and the tool."""
+import re
 from pathlib import Path
 
 import numpy as np
@@ -9,6 +10,7 @@ from analysis.insights import (
     cells_for_half,
     crossed,
     findings,
+    lines,
     load,
     map_data,
     near,
@@ -87,3 +89,53 @@ def test_the_totals_are_the_manifests_and_the_tools():
 
 def test_the_cells_are_the_cells_of_the_apps_heat_layers():
     assert f"export const CELL_UNITS = {CELL_UNITS};" in (ROOT / "web" / "src" / "lib" / "heat.ts").read_text()
+
+
+MAPS = ("Ambrose Valley", "Grand Rift", "Lockdown")
+
+
+def test_the_numbers_insights_md_quotes():
+    numbers = findings(*load())
+
+    def of(title, key):
+        return [numbers[TITLES[title]][name][key] for name in MAPS]
+
+    # 1. The storm.
+    assert of("A", "journeys") == [554, 57, 170]
+    assert of("B", "storm_deaths") == [17, 5, 17]
+    assert of("B", "pct_of_identified_journeys") == [3.1, 8.8, 10.0]
+    assert of("B", "identified_journeys_still_recorded_at_the_earliest_storm_death") == [90, 8, 35]
+    assert of("B", "pct_of_those_that_die_in_the_storm") == [18.9, 62.5, 48.6]
+    assert [ended["no_death_recorded"] for ended in of("B", "how_those_journeys_ended")] == [66, 3, 18]
+    assert of("B", "median_seconds_since_the_victims_last_loot") == [75, 96, 132]
+    assert of("B", "first_second") == [669, 683, 655]
+    assert of("B", "by_quarter")[2] == {"NW": 1, "NE": 7, "SW": 4, "SE": 5}
+    # 2. Kills and loot.
+    assert of("D", "kills_by_humans") == [1669, 179, 388]
+    assert of("D", "pct_of_kills_within_one_cell_of_loot") == [99.3, 96.1, 94.8]
+    assert of("D", "pct_of_the_cells_humans_cross_that_are_within_one_cell_of_loot") == [66.7, 58.8, 56.7]
+    assert of("D", "cells_that_hold_half_of_the_loot") == [68, 36, 70]
+    assert of("D", "pct_of_kills_in_those_cells_or_next_to_them") == [45.0, 48.0, 36.1]
+    assert of("D", "pct_of_the_cells_humans_cross_that_are_those_cells_or_next_to_them") == [12.1, 21.0, 16.6]
+    assert of("D", "rank_correlation_of_loot_and_kills_over_the_cells_humans_cross") == [0.55, 0.35, 0.33]
+    assert of("C", "cells_that_hold_half_of_those_kills") == [125, 27, 74]
+    assert of("C", "which_is_pct_of_the_cells_humans_cross") == [4.1, 2.6, 3.2]
+    top = of("C", "fullest_cell")[0]
+    assert (top["kills_by_humans"], top["x"], top["z"]) == (29, 95, -258)
+    assert top["link"].endswith("?map=AmbroseValley&heat=kill&view=1058,1559,4")
+    # 3. Traffic.
+    assert of("E", "journeys") == [836, 111, 295]
+    assert of("E", "cells_some_journey_crosses") == [3103, 1099, 2560]
+    assert of("E", "pct_of_all_crossings_in_the_busiest_tenth_of_the_crossed_cells") == [30.1, 25.9, 27.8]
+    assert of("E", "pct_of_those_crossed_by_fewer_than_one_journey_in_a_hundred") == [27.9, 9.3, 19.1]
+    quarters = of("E", "pct_of_all_crossings_by_quarter")
+    assert [f"{max(share, key=share.get)} {max(share.values())}" for share in quarters] == ["SW 30.0", "NW 37.5", "NE 32.6"]
+    assert [f"{min(share, key=share.get)} {min(share.values())}" for share in quarters] == ["NE 19.2", "SE 16.9", "SE 17.6"]
+    assert of("E", "pct_no_journey_crosses") == [45.9, 46.1, 64.6]
+
+
+def test_every_decimal_in_insights_md_is_a_number_the_script_prints():
+    printed = "\n".join(lines(findings(*load())))
+    quoted = set(re.findall(r"(?<![\w.,])\d+\.\d+(?![\w.])", (ROOT / "INSIGHTS.md").read_text()))
+    assert len(quoted) > 30
+    assert sorted(number for number in quoted if f": {number}\n" not in printed + "\n") == []

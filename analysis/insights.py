@@ -20,6 +20,7 @@ CELL_UNITS = 10  # the side of a cell in world units, as in the app's heat layer
 KINDS = ("movement", "kill", "death", "storm_death", "loot")  # the manifest's event groups, in the order of the codes below
 MOVEMENT, KILL, DEATH, STORM, LOOT = range(len(KINDS))
 EARLY_SECONDS = 120  # a death in the first two minutes of a match counts as early
+QUARTERS = ("NW", "NE", "SW", "SE")  # the quarters of a map's artwork
 
 
 @dataclass(frozen=True)
@@ -196,7 +197,9 @@ def storm(data: MapData, earliest: int) -> dict[str, Any]:
     """B. Deaths in the storm: how many, when, in which quarter of the map, and how long after the last loot."""
     rows = np.flatnonzero((data.kind == STORM) & data.identified[data.owner])
     last_second = data.t[data.start[1:] - 1]
-    lasting = int((data.identified & (last_second >= earliest)).sum())
+    late = data.identified & (last_second >= earliest)
+    lasting = int(late.sum())
+    ends = [journey["fate"] for journey, is_late in zip(data.journeys, late) if is_late]
     since_loot = []
     for row in rows:
         own = slice(data.start[data.owner[row]], row)
@@ -210,6 +213,7 @@ def storm(data: MapData, earliest: int) -> dict[str, Any]:
         "pct_of_identified_journeys": pct(len(rows), data.identified.sum()),
         "identified_journeys_still_recorded_at_the_earliest_storm_death": lasting,
         "pct_of_those_that_die_in_the_storm": pct(len(rows), lasting),
+        "how_those_journeys_ended": {fate: ends.count(fate) for fate in sorted(set(ends))},
     }
     if len(rows):
         seconds = data.t[rows]
@@ -255,9 +259,17 @@ def loot_and_kills(data: MapData, humans_cross: np.ndarray) -> dict[str, Any]:
     walked = humans_cross > 0
     loot_near, kills_near = near(loot, data.cells) > 0, near(kills, data.cells) > 0
     together = round(float(np.corrcoef(ranks(loot[walked]), ranks(kills[walked]))[0, 1]), 2)
+    hot = np.zeros(len(loot), dtype=bool)  # the fewest cells that hold half of the loot
+    hot[np.argsort(-loot, kind="stable")[: cells_for_half(loot)]] = True
+    around = near(hot.astype(int), data.cells) > 0
     return {
         "loot_events_of_humans": int(loot.sum()),
         "kills_by_humans": int(kills.sum()),
+        "cells_that_hold_half_of_the_loot": int(hot.sum()),
+        "which_is_pct_of_the_cells_humans_cross": pct(hot.sum(), walked.sum()),
+        "pct_of_kills_in_those_cells": pct(kills[hot].sum(), kills.sum()),
+        "pct_of_kills_in_those_cells_or_next_to_them": pct(kills[around].sum(), kills.sum()),
+        "pct_of_the_cells_humans_cross_that_are_those_cells_or_next_to_them": pct((around & walked).sum(), walked.sum()),
         "pct_of_kills_within_one_cell_of_loot": pct(kills[loot_near].sum(), kills.sum()),
         "pct_of_the_cells_humans_cross_that_are_within_one_cell_of_loot": pct((loot_near & walked).sum(), walked.sum()),
         "pct_of_loot_within_one_cell_of_a_kill": pct(loot[kills_near].sum(), loot.sum()),
@@ -272,16 +284,26 @@ def unused(data: MapData, all_cross: np.ndarray) -> dict[str, Any]:
     art = on_artwork(data)
     used = np.sort(all_cross[all_cross > 0])[::-1]
     tenth = -(-len(used) // 10)
+    middle = (np.arange(data.cells) + 0.5) / data.cells
+    quarter = quadrant(data, np.tile(middle, data.cells), np.repeat(middle, data.cells))
+    empty = (all_cross == 0) & art
+    by_quarter = {name: pct((empty & (quarter == name)).sum(), (art & (quarter == name)).sum()) for name in QUARTERS}
+    some = all_cross > 0
+    thin = some & (all_cross < len(data.journeys) / 100)  # crossed, but by fewer than one journey in a hundred
     return {
         "journeys": len(data.journeys),
         "cells_on_the_artwork": int(art.sum()),
         "cells_no_journey_crosses": int(((all_cross == 0) & art).sum()),
         "pct_no_journey_crosses": pct(((all_cross == 0) & art).sum(), art.sum()),
-        "pct_crossed_by_one_or_two_journeys": pct(((all_cross > 0) & (all_cross <= 2) & art).sum(), art.sum()),
+        "pct_no_journey_crosses_by_quarter": by_quarter,
+        "cells_some_journey_crosses": int(some.sum()),
+        "pct_of_those_crossed_by_fewer_than_one_journey_in_a_hundred": pct(thin.sum(), some.sum()),
+        "pct_of_all_crossings_by_quarter": {name: pct(all_cross[quarter == name].sum(), all_cross.sum()) for name in QUARTERS},
+        "pct_of_the_thinly_crossed_cells_by_quarter": {name: pct((thin & (quarter == name)).sum(), thin.sum()) for name in QUARTERS},
         "cells_crossed_outside_the_artwork": int(((all_cross > 0) & ~art).sum()),
         "pct_of_all_crossings_in_the_busiest_tenth_of_the_crossed_cells": pct(used[:tenth].sum(), used.sum()),
         "busiest_cell": fullest(data, all_cross, "journeys_crossing", "heat=movement"),
-        "link": link(data, "heat=movement"),
+        "link": link(data, "heat=movement&hide=kill,death,storm_death"),
     }
 
 
