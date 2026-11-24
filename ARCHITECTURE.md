@@ -63,6 +63,8 @@ The full list, with the evidence for each, is in `docs/DATA_NOTES.md`.
 | One bundle per map | One file per match | 93% of matches are a single journey; the all-matches view would need hundreds of requests | Opening one match loads its whole map |
 | The clock of playback outside React, in a store of its own | The time in React state | The time changes with every frame; only the canvas layer and the slider listen to it, and React renders nothing while a match plays | State in two places: what is shown, and when |
 | No layer for the areas that players ignore | A layer that marks every cell no path crosses | It needs a mask of the playable area, or roofs, rocks and water would count as ignored | Unused areas are read from the empty cells of the traffic layer |
+| A history entry for each thing the user chooses; moving, zooming and the time of playback rewrite the entry in place | An entry for every change, or none | Back undoes a choice without walking through every drag and pause | The store has to say what a choice is: it counts them |
+| No list of a journey's events as text | A list in the sidebar | Tooltips cover it, and the sidebar stays short | What a tooltip says about a single event can be reached with a pointer only |
 | Heatmaps binned in the browser | Precomputed grids | They follow every filter | Binning work on each change |
 | Canvas 2D | SVG, or WebGL with deck.gl | Enough for this much data, no heavy dependency | Hit-testing and zoom are written by hand |
 | The README's map constants | A fitted calibration | They are the studio's own transform | A point can sit up to about 10 world units off near one edge of a map |

@@ -330,6 +330,28 @@ The first, second, third, fifth and sixth were already built and tested when the
 
 If the usage runs short, the order above is the priority: 1 is done first, 2 and 3 are cut from the bottom.
 
+**The scope as the user set it (24 Nov 2026, in a note that reached the session while the phase was being built).** Parts 1 and 3 of the plan above; part 2 is cut. The panel is to be short and plain: the data against its README, what each heat layer counts, the ground plane, the keys, desktop only. The user runs Lighthouse, the reading at 60 Hz, the drag of the slider and the click on "Copy link", and sends the results.
+
+**As built (24 Nov 2026).**
+
+| Part | Built |
+|---|---|
+| History | A step of the user (a map, a match, a focus, a day, a fate, a switch, a heat layer) adds an entry (`pushState`), at once, after the entry it leaves has been given its last view and time. Moving, zooming, the time of playback, and what a link or arriving data corrects rewrite the entry in place (`replaceState`) after 300 ms. Back and Forward open the view of the entry they land on, at its time of playback, paused |
+| Notice | "Match hidden by your filters — showing all matches" over the map for 6 s, or until something else is chosen, when a day or fate filter closes the open match |
+| Ids and notes | Tests on both sides that the 796 match ids and the 1,242 journey ids are unique and that a journey id has one of three forms; the forms in a comment and in DATA_NOTES.md; the day-folder rule as assumption A10 |
+| Panel | "Data and keys" in the top bar opens the browser's own dialog: four sections and 14 entries, its numbers from the manifest, the heat layers' sentences from their legend, the key help from the code that takes the keys |
+| Narrow window | A line above the tool below 900 px; the map tabs scroll sideways there, so the top bar's two buttons stay in view |
+| Events of the focused journey as text | **Not built — tooltips cover it** (the user's scope). For the trade-offs in ARCHITECTURE.md: what a tooltip says about a single event can be reached with a pointer only |
+
+| Acceptance criterion | Evidence |
+|---|---|
+| Lighthouse performance at least 90 on the hosted URL (desktop preset) | Not run in the session: the user runs it and sends the result |
+| No console errors | None in the preview on the three maps, with a heat layer, an open match, a focused journey and the panel open. Two errors seen once came from the dev server's hot reload when a source file was removed under it; the page load after it had no failed request |
+| Sidebar, top bar and timeline fully usable by keyboard, including choosing a journey from the list | Real Tab presses went through every control in the order of the page, each with a visible focus (the stops are listed in PROGRESS.md, step 8.6); a journey was chosen from the list with Enter; the panel was opened with Enter, scrolled with the arrow keys and closed with Escape, and the focus was back on its button |
+| The changes carried over from Phase 5 | All six are in: steps 8.2 and 8.3 for five of them; the fourth (chips as buttons with `aria-pressed` and a visible focus) was confirmed in the keyboard pass |
+
+Checks: 476 Vitest tests, 254 pytest tests, type check and ESLint clean, build 91.57 kB of JavaScript gzipped. 86 one-line faults were put into the new code in five runs (41 for the history code; 11, of which 10 were for the step that was cut; 14 and again 14 for the panel's text, before and after it was shortened; 6 for the last change to the address code). Every one was noticed.
+
 ## Phase 9: Deployment (0.5 h, in two steps)
 
 - **9.1, right after the Phase 3 pull request is merged** (before that, `main` has no `web/` folder to build). You create the Vercel project from the GitHub repo with root directory `web` (one-time, in the browser). Production follows `main`, so only merged phases are live; every later pull request gets its own preview link. The URL goes into the repo's About field and, through a one-line pull request, to the top of the README. **Done on 23 Nov:** https://lila-player-journeys-psi.vercel.app. Vercel offered the whole repo as a multi-service project, the Python pipeline next to the app; the `web` folder was imported as a single project with the Vite preset instead. The plain project name was taken, hence the `-psi` in the address.
@@ -589,3 +611,26 @@ Left as it is:
 - The colour is drawn from the smoothed counts, while the legend's fullest cell is the count before smoothing.
 - The kill hot spots were not compared with `docs/img/overlay_*.jpg` one by one; one match was looked at.
 - Lockdown's map had not appeared 10 s after a reload in the hidden preview pane, so its heat was seen after a switch of tabs, not after the reload. The legend was right both times.
+
+## Changed while building Phase 8 (24 Nov 2026), for your review
+
+| Plan | Built | Why |
+|---|---|---|
+| `popstate` calls `applyLink` and a new `restoreTime` | No `restoreTime`: `applyLink` keeps the link as `asked`, and the clock's follower gives the time of every newly asked link to its match, paused | It is how the link the page was opened with already got its time: one path, checked in one place |
+| (not in the plan) | A link's time goes to the match of that link only | Started late, the follower could give a link's time to a match that was opened by hand |
+| (not in the plan) | A write to the history that the browser refuses is caught and logged as a warning | Safari allows 100 writes in 30 s and throws. Thrown inside the store's listener, it would stop the step that caused it |
+| A step adds an entry | A step that changes nothing in the address, as a click on the empty map, adds no entry and writes nothing by itself | There is nothing to step back to |
+| The address is left alone while a match plays (Phase 6) | The passing of time is still not written. A step taken while a match plays is written at once, with the moment | A step has to become an entry when it is taken |
+| The events of the focused journey as text | Not built — tooltips cover it. It was built first (`f2b9919`) and taken out again (`7ddddbc`) when the user's scope note reached the session; reverting `7ddddbc` would bring it back | The user's scope for the phase |
+| A panel with the data, its terms, the heat layers, the keys, the address and the limits | Shorter: the data against its README, the ground plane, what each heat layer counts, the keys, desktop only. 14 entries instead of 20 | The user's scope for the phase |
+| (not in the plan) | Two sentences of the heat legend reworded: "Each movement sample is counted…", "Each loot event is counted…" | The panel shows them without the numbers before them, where "Each is counted" said too little |
+| (not in the plan) | The map tabs scroll sideways in a narrow window | With a second button in the top bar, "Data and keys" was cut off at 800 px |
+| (not in the plan) | The map's key help is one text (`MAP_HELP` in `lib/mapKeys.ts`), for the map's description and for the panel | No second wording |
+
+Left as it is:
+
+- A double-click whose first click changes the focus leaves one history entry; Back then undoes its zoom.
+- Back and Forward do not show the notice about a closed match.
+- A move of the map that was not yet written when Back was pressed is dropped: it belonged to the entry that was left.
+- The panel needs 988 px at a window height of 800 and scrolls there, with the keys too.
+- Not verified in the session, as agreed: Lighthouse, the frame-time reading at 60 Hz, a real drag of the time slider, a click on "Copy link". Pinch zoom is not built, and the panel says so. No pass over every UI text was made.
