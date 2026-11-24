@@ -8,7 +8,51 @@ The full QA before submission, run on 24 Nov 2026 as the user's QA brief asks: t
 - **Evidence:** screenshots in [docs/qa/](qa/); numbers and texts as read from the page.
 - **Result key:** PASS, PARTIAL, FAIL. "Observation" marks something that works but deserves a note.
 
-<!-- SUMMARY -->
+## Summary
+
+**The tool passes the brief.** Every core requirement works on production and every number it shows equals a separate count from the data files. PageSpeed Insights scores it 90 / 100 / 100 / 100 on desktop and 95 / 100 / 100 / 100 on mobile; playback runs at 59.8 frames a second. Nothing is a blocker. Six items should be fixed before submitting; they are planned below and fixed on the branch `qa-fixes`.
+
+### The brief's checklist before submitting
+
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| C1 | Tool is live at the hosted URL | PASS | A1: loads without login, 0 failed requests, no console message; serves `main` (Step 0) |
+| C2 | Player paths render correctly on the minimap | PASS | A3: all three maps match the proof images; [a3-*.jpg](qa/) |
+| C3 | Humans can be told apart from bots visually | PASS | A4: solid blue lines with round heads against dashed orange lines with square heads |
+| C4 | Kill, death, loot and storm events are marked | PASS | A5, C2: four shapes; tooltips name the event, who, the time and the place, also on a real hover |
+| C5 | Filtering by map, date and match works | PASS | A6: every count equals the data files; the legend's first line is a should-fix item (A6) |
+| C6 | Timeline or playback shows match progression | PASS | A7, C2, C6: all six speeds as labelled, real keys and drag, the first death at 1:58 at its path's end, 59.8 frames a second |
+| C7 | Heatmaps show kill zones, death zones and traffic | PASS | A8: 12 pairs of map and layer, all numbers equal the data files |
+| C8 | Architecture doc covers the coordinate mapping approach | PASS | D3 |
+| C9 | Three insights with supporting evidence | PASS | D4: four parts each; every decimal re-computed; every link opens its view |
+| C10 | Walkthrough covers all major features | PASS | D2: nine steps with working links and screenshots; the video is waiting on the user |
+
+### What failed or passed only in part, and the plan
+
+| Severity | ID | Finding | Planned fix |
+|---|---|---|---|
+| Blocker | | None | |
+| Should fix | D2 | The README's "Rebuild the data" fails in a fresh clone: `unzip … -d data/raw` cannot create `data/raw` | `mkdir -p data/raw` before the `unzip`, in the README and wherever the command is written |
+| Should fix | B6b | A reload while a match plays goes back to the last pause or seek (30 s earlier in the test) | Write `t` into the address in place every 2 s while a match plays |
+| Should fix | A6 | With Humans or Bots switched off, the legend's first line still counts the hidden journeys and their matches | The first line counts what is drawn |
+| Should fix | D5 | docs/BRIEF.md still marks C2 to C10 as not started and S1 to S5 as in progress | Set every row, citing this report |
+| Should fix | D6 | The repo's About description ends in "Work in progress." | `gh repo edit --description`, after asking the user |
+| Should fix | D4 | INSIGHTS.md quotes 796 matches and 781 journeys, which `make insights` does not print as such | The script prints the totals |
+| Nice to have | C4 | On a phone (375 px) the two top-bar buttons lie off-screen and the map is 55 px wide | None planned: desktop-only is the documented scope, and the notice says so |
+| Nice to have | C5 | Desktop performance is exactly at 90 (Total Blocking Time 260 ms) | None planned; the score varies by a few points between runs |
+| Nice to have | D1 | The repo page shows "Contributors 2"; GitHub's API lists one | None possible from the repo: a cached box on GitHub's side |
+
+### Waiting on the user
+
+- `docs/media/walkthrough.mp4`: the README links to it; it is recorded and added by the user.
+- The yes for `gh repo edit` (D6), and for pushing `qa-fixes` and opening its pull request.
+
+### Not testable with the browser tool: please test by hand
+
+1. **C1, a hidden tab while a match plays:** the tool keeps its tabs visible. Play a match, switch to another tab for 10 s, come back: it should be paused at the moment you left. A unit test covers it.
+2. **C4, a real narrow window and a phone:** the tool could not resize the window; the layout was measured in a frame instead.
+3. **C3, Tab without the browser extension:** the 35th Tab stop is the extension's own element; without it the page should have 34 stops and then leave the page.
+4. A private window, and another browser than Chrome.
 
 ## Step 0: state
 
@@ -61,3 +105,21 @@ Console and network in Group B: no console message in any tab, no failed request
 | C6 | Frame rate on the busiest matches at 20x and 60x | `fbbc5d02` (16 journeys) and `d0a38c30` (most rows), 5 s each, time between animation frames | About 60 frames a second | Both matches, both speeds: 59.8 frames a second, median 16.7 ms, 95th percentile 17.4 ms, longest 17.7 ms, no frame over 20 ms, no long task | PASS | Chrome on this Mac, tab visible and focused |
 
 Console and network in Group C: no console message from the tool's pages; no failed request.
+
+## Group D: the repo and the deliverables
+
+Checked on `main` at `abdaf02`, in the browser and in the terminal.
+
+| ID | Requirement | Steps | Expected | Actual | Result | Evidence |
+|---|---|---|---|---|---|---|
+| D1 | The repo is public and readable logged-out | `gh repo view`; a plain request without login; GitHub's contributors API without login; the repo page in Chrome | Public; one link holds everything | Public; the request without login returned 200 with a "Sign in" link and the README's Walkthrough; README.md, INSIGHTS.md and ARCHITECTURE.md are listed. The API lists one contributor, `YesudasZ`; the repo page still shows "Contributors 2" | PASS | The count of 2 is GitHub's cached box (see the audit) |
+| D2 | README: live URL at the top, stack, setup, env vars, data rebuild, tests, walkthrough with working links and images, video | Read it on `main`; fetch its 8 screenshots on GitHub; open its 11 links into the tool; follow "Rebuild the data" literally in a fresh clone | All present and working | Live URL in line 3; sections Tech stack, Run the app, Rebuild the data, Tests, Project structure, Walkthrough, How it was built; "Env vars: none"; nine walkthrough steps; all 8 screenshots served (200) and rendered; all 11 links open the views their steps describe (for example "61 matches, 94 journeys" for Lockdown on 10 Feb, "1:58 / 8:43" for `t=118`). **The step `unzip _inbox/player_data.zip -d data/raw` fails in a fresh clone** ("cannot create extraction directory: data/raw"): `data/` does not exist there and `unzip` makes only one folder level. **The video `docs/media/walkthrough.mp4` is a 404** | FAIL (the data step) | Fresh clone of `abdaf02` |
+| D3 | ARCHITECTURE.md: stack and why, data flow, the coordinate mapping walked through, assumptions, trade-offs | Read it on `main` | All five | Sections Stack and why, Data flow, Coordinate mapping (the formula, the constants of the three maps, UV storage, the Y flip, the proof and the tests), Assumptions (7), Trade-offs (8). It prints on three A4 pages: the length the user chose to keep | PASS | 929 words |
+| D4 | INSIGHTS.md: three insights, four parts each; every number re-computed; every link opens its view | Read it on `main`; run `make insights`; compare every number; run its tests; open its 8 links | Three complete insights; no number off | Three insights, each with "What caught my eye", "Evidence", "What to do, and what would move", "Why a Level Designer should care"; 4 images served. All 39 decimals are printed by the script; of the whole numbers, 796 and 781 in the introduction are not printed by it as such (they are the manifest's totals; 781 is the sum of three printed lines). 9 tests pass. All 8 links show what the text says: 17 storm deaths of 17 matches on Lockdown and on Ambrose Valley, 1,789 kills of 441 matches, 9,902 loot events of 539 matches, the zoomed kill cell, Traffic on each map with the marker switches off | PARTIAL | `make insights`; `pytest pipeline/tests/test_insights.py` |
+| D5 | docs/BRIEF.md statuses up to date | Read the rows on `main` | Each row set, with evidence | R1 to R7 ☑, but R8 and S1 to S5 still ◐, C1 ◐ and C2 to C10 ☐ | FAIL | |
+| D6 | About description | `gh repo view` | Final wording | "… on the game's minimaps. Work in progress." | FAIL | |
+| D7 | No raw data, PDF, zip, secrets or `.env` in git, history included | File names ever added; emails; secret-like words; full UUIDs; the Vercel team name | Nothing of the kind | No parquet, zip, PDF, `.env` or key file was ever added; only the GitHub no-reply addresses; no secret-like word outside the lock file; six full UUIDs, all made-up test ids in `pipeline/tests/helpers.py` (none matches a real id, as the audit showed); the Vercel team name appears in no commit | PASS | |
+| D8 | CI green on `main` | `gh run list`; the checks on `abdaf02` | Green | `abdaf02`, `603c5ef` and `94bf1fb`: success; on `abdaf02` both pipeline jobs (Python 3.12 and 3.14) and the app job | PASS | |
+| D9 | Fresh clone: `npm ci`, `npm run check`, `npm run build`; a venv, `make test`, `make data` from the zip; `web/public/data` regenerated identically | Clone of `main` into a temporary folder; the zip copied into `_inbox/` | Everything passes; `git diff --stat` empty | `npm ci`: 0 vulnerabilities; `npm run check`: 476 tests; build `index-CKbSPsBA.js`, 91.57 kB gzipped, the file production serves. `make test` created the venv and passed 263 tests (Python 3.14.6). After `mkdir -p data/raw` (see D2), `make data` ran in 7.3 s, reported "counts agree with docs/profile/profile_report.json", and `git status` and `git diff --stat` were empty: the data files, the fixtures and the profile were regenerated byte for byte | PASS (with the folder made by hand) | `_inbox/` and `data/raw/` are ignored by git |
+
+Console and network in Group D: no console message from the tool's pages; no failed request.
