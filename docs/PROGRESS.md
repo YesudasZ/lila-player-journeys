@@ -1,10 +1,10 @@
 # Progress Log
 
-Last updated: 2026-11-24 13:47 IST
+Last updated: 2026-11-24 13:49 IST
 
 ## Current phase
 
-Phase 7, Heatmaps. Status: **DONE (awaiting my review)** on the branch `phase-7-heatmaps`, last code commit `9808ba7`. Not pushed yet: the push and the pull request wait for the user's yes.
+Phase 7, Heatmaps. Status: **DONE (awaiting my review)** on the branch `phase-7-heatmaps`, pull request [#6](https://github.com/YesudasZ/lila-player-journeys/pull/6), last code commit `9808ba7`. Pushed; it waits for the user's review and merge.
 
 Phases 1 to 6 and step 9.1 are merged: pull requests [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) (Phase 3), [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) (step 9.1), [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3) (Phase 4), [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4) (Phase 5) and [#5](https://github.com/YesudasZ/lila-player-journeys/pull/5) (Phase 6) were reviewed and merged by the user, the last one on 24 Nov at 13:27 IST. The tool is live at https://lila-player-journeys-psi.vercel.app and shows Phase 6; production on Vercel follows `main`.
 
@@ -20,7 +20,7 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 | 4 | Journeys, humans versus bots, markers | APPROVED (merged) | pull request [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3) |
 | 5 | Filters and URL state | APPROVED (merged) | pull request [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4) |
 | 6 | Timeline and playback | APPROVED (merged) | pull request [#5](https://github.com/YesudasZ/lila-player-journeys/pull/5) |
-| 7 | Heatmaps | DONE (awaiting my review) | branch `phase-7-heatmaps`, `9808ba7`; pull request not opened yet |
+| 7 | Heatmaps | DONE (awaiting my review) | pull request [#6](https://github.com/YesudasZ/lila-player-journeys/pull/6), branch `phase-7-heatmaps`, `9808ba7` |
 | 8 | Polish | NOT STARTED | |
 | 9 | Deployment (9.1 after Phase 3, 9.2 on the last day) | 9.1 APPROVED (merged); 9.2 on the last day | pull request [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) |
 | 10 | Insights and docs | NOT STARTED | |
@@ -47,15 +47,15 @@ Phase 7 deliverables and acceptance criteria are in PLAN.md, "Phase 7". The task
   - **The timing:** counting Ambrose Valley with all matches (836 journeys) takes 1.7 ms at the median of 15 runs, 4.1 ms at the slowest, in the browser of the development machine
   - Twenty one-line faults put into the new code: the tests noticed all twenty
 - [x] 7.6 PLAN.md, BRIEF.md, DATA_NOTES.md, ARCHITECTURE.md and the README describe Phase 7 as built. Phase-end checks pass (13:47): `npm run check` (449 tests), `npm run build` (89.57 kB of JavaScript gzipped), `make test` (253 tests)
-- [ ] 7.7 On the user's yes: push the branch, open the pull request, record it here, read the first CI run. Then stop for the review with a short manual test script
+- [x] 7.7 On the user's yes (24 Nov, 13:49): the branch is pushed and pull request [#6](https://github.com/YesudasZ/lila-player-journeys/pull/6) is open. Its description gives the evidence for each acceptance criterion, what was checked in place of a review, what differs from the plan, what was not verified, and the manual test script. CI runs on the pull request and is read there
 
 ## Exactly where I stopped
 
-- Branch `phase-7-heatmaps`, cut from `main` at `78197e9`; local only, nothing pushed. `main` equals `origin/main`.
-- Everything of Phase 7 is committed. At 13:47 on 24 Nov: `npm run check` (449 tests), `npm run build` and `make test` (253 tests) pass.
+- Branch `phase-7-heatmaps`, cut from `main` at `78197e9`, is pushed; pull request [#6](https://github.com/YesudasZ/lila-player-journeys/pull/6) into `main` is open. `main` equals `origin/main`.
+- Everything of Phase 7 is committed and pushed. At 13:47 on 24 Nov: `npm run check` (449 tests), `npm run build` and `make test` (253 tests) pass.
 - The branch `fix-phase-5-approved-changes` is parked (see "Known issues / TODO later"): it is not part of this phase.
-- Waiting for the user's yes to push the branch and open the pull request.
-- **NEXT:** on yes: `git push -u origin phase-7-heatmaps`; `gh pr create` into `main` (what the phase delivers, the evidence for each acceptance criterion, what differs from the plan, what was not verified, how to verify; no attribution line; no screenshots, and why); record the pull request here in one docs commit and push it; read the first CI run. Then stop. After the user's merge and go: `git switch main`, `git pull --ff-only`, look at the live site, then Phase 8 (polish, with the changes parked on `fix-phase-5-approved-changes`) on a new branch, in a fresh session.
+- Waiting for the user's review and merge of pull request #6.
+- **NEXT:** changes asked for in the review go onto this branch. After the user's merge and go: `git switch main`, `git pull --ff-only`, look at the live site, then Phase 8 (polish, with the changes parked on `fix-phase-5-approved-changes`) on a new branch, in a fresh session: this conversation is at the end of its context, and this model's weekly limit is nearly used.
 
 ## Decisions and assumptions made
 
