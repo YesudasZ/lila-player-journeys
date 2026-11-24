@@ -4,8 +4,8 @@ import { dayLabel, fateLabel } from "../lib/labels.ts";
 import type { Manifest } from "../lib/manifest.ts";
 import { useAppStore } from "../state/store.ts";
 
-/** One choice of a filter: pressed when it is chosen. */
-function Chip({ pressed, onPress, children }: { pressed: boolean; onPress: () => void; children: ReactNode }) {
+/** One choice of a filter or of a layer: pressed when it is chosen. */
+export function Chip({ pressed, onPress, children }: { pressed: boolean; onPress: () => void; children: ReactNode }) {
   return (
     <button
       type="button"

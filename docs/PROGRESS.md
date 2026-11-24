@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-24 13:37 IST
+Last updated: 2026-11-24 13:42 IST
 
 ## Current phase
 
@@ -35,9 +35,9 @@ Phase 7 deliverables and acceptance criteria are in PLAN.md, "Phase 7". The task
 - [x] 7.0 The user's go for Phase 7, in this session (24 Nov, 13:31). Branch `phase-7-heatmaps` cut from `main` at `78197e9`. This file corrected: Phase 6 is merged as pull request #5; the live site shows it (checked after the merge at 13:30: `?match=fbbc5d02&t=118` opens paused at 1:58 with the slider at 118 of 523; Play runs 30 s of the match in 3 s at 10x and leaves the address alone until the pause; 12 marks stand on the track and 7 hang below it; no request failed, empty console)
 - [x] 7.1 Plan approved by the user in plan mode (24 Nov, 13:37) and recorded in PLAN.md, "Phase 7". Approved with it: one heat layer at a time (Traffic, Kills, Deaths, Loot), none at first; fed by the journeys that are drawn; cells of 10 x 10 world units, one token colour per layer, strength on a square-root scale; a legend with the real numbers; `heat` in the address; the "no recorded path" layer, the time-spent layer and an opacity slider are not built; the heat does not follow playback; no review agents in this phase, but grid sums against the manifest, one-line faults and the preview; no new dependency, no change to the data files
 - [x] 7.1a The user's five changes to the plan (pasted note, 24 Nov), recorded in PLAN.md: the Heat control goes to the top of the sidebar, above the filters; the minimap is dimmed by about 40% under a heat layer; the legend and DATA_NOTES.md say exactly what each layer counts and at whose position, and Deaths includes storm deaths ("incl. N storm deaths"); the trade-off about the ignored-areas layer is recorded for ARCHITECTURE.md; no review agents. At the phase's end the closing message carries a short manual test script
-- [ ] 7.2 lib: `heat.ts` (kinds, grid, counting, smoothing, strength, the legend's sentence) with tests and a benchmark
-- [ ] 7.3 Store, selector and link: `heat`, `setHeat`, `selectHeat`, `heat` in the address
-- [ ] 7.4 The heat layer and the sidebar control
+- [x] 7.2 lib (24 Nov): `web/src/lib/heat.ts`. Cells of 10 x 10 world units (90, 58 and 100 across the three maps); counting, one smoothing pass that loses nothing, the strength of a cell on a square-root scale, a token colour as numbers, the legend's sentence and the list of events. Deaths are the groups `death` and `storm_death`. Tests: each grid sums to the rows that fed it, for every kind on every map; over the three maps the sums are the manifest's totals, event by event (movement 72,643, kills 2,406, deaths 739 of which 39 in the storm, loot 12,829). Vitest 5.1.1 has no `bench()`, so the 50 ms criterion is a test that takes the median of 15 runs
+- [x] 7.3 Store, selector and link (24 Nov): `heat` and `setHeat`; `selectHeat` counts once per draw list and kind; `heat` in the link after the fates, an unknown kind read as none
+- [x] 7.4 The layer and the control (24 Nov, 13:42): `layers/heatLayer.ts` dims the minimap by 40% and draws the grid as a small image scaled into the map's rectangle; `HeatControl.tsx` at the top of the sidebar, above the filters, with the legend. `npm run check`: 449 tests; build: 89.56 kB of JavaScript gzipped. Not looked at in the preview yet
 - [ ] 7.5 Checked in the preview; one-line faults; the benchmark's reading
 - [ ] 7.6 Docs and phase-end checks; status "DONE (awaiting my review)"
 - [ ] 7.7 On the user's yes: push the branch, open the pull request, record it here, read the first CI run. Then stop for the review with a short manual test script
@@ -45,8 +45,8 @@ Phase 7 deliverables and acceptance criteria are in PLAN.md, "Phase 7". The task
 ## Exactly where I stopped
 
 - Branch `phase-7-heatmaps`, cut from `main` at `78197e9`; local only, nothing pushed. `main` equals `origin/main`.
-- Phase 7 has no code yet. Its plan is approved and recorded in PLAN.md.
-- **NEXT:** step 7.2: `web/src/lib/heat.ts` with its tests and `heat.bench.ts`. Then 7.3 and 7.4; each commit leaves the checks green.
+- Steps 7.2 to 7.4 are committed: the heat grid, its state and link, the layer and the control. None of it has been looked at in the preview yet.
+- **NEXT:** step 7.5: in the preview, each layer on each map; the legend's numbers against DATA_NOTES.md's table; a day filter, a fate filter and the bots switch; one match; a reload with `heat=`; the console. The journeys canvas is now the third canvas of the map, the heat the second. Take the timing of `buildHeat` for Ambrose Valley there. Then one-line faults, then 7.6.
 
 ## Decisions and assumptions made
 
