@@ -1,5 +1,5 @@
 /** Journeys, fates, times and counts as the words and numbers a person reads. Pure. */
-import type { LayerKey, MarkerKind } from "./drawList.ts";
+import type { DrawList, LayerKey, MarkerKind } from "./drawList.ts";
 import type { Journey } from "./journeys.ts";
 
 /** The legend's name of each thing that is drawn. */
@@ -46,4 +46,9 @@ export function countLabel(count: number): string {
 /** A count with its noun: "1 match", "566 matches". */
 export function counted(count: number, one: string, many: string): string {
   return `${countLabel(count)} ${count === 1 ? one : many}`;
+}
+
+/** The legend's first line: the matches and journeys that are drawn, after the filters and the switches for humans and bots. */
+export function drawnLine({ matches, journeys }: Pick<DrawList, "matches" | "journeys">): string {
+  return `${counted(matches, "match", "matches")}, ${counted(journeys.length, "journey", "journeys")}`;
 }

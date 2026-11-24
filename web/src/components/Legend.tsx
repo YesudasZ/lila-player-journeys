@@ -1,5 +1,5 @@
 import { LAYER_KEYS, shownLayers } from "../lib/drawList.ts";
-import { LAYER_LABELS, countLabel, counted } from "../lib/labels.ts";
+import { LAYER_LABELS, countLabel, drawnLine } from "../lib/labels.ts";
 import type { MapEntry } from "../lib/manifest.ts";
 import { selectDrawList, selectMatchId } from "../state/shown.ts";
 import { useAppStore } from "../state/store.ts";
@@ -7,8 +7,9 @@ import { Sample } from "./Samples.tsx";
 import { LoadError } from "./StatusMessage.tsx";
 
 /**
- * What the map shows: how many matches and journeys, then one row per thing drawn with its sample,
- * its count and a switch. A hidden row keeps its count, so it still says how much it would show.
+ * What the map shows: how many matches and journeys are drawn, then one row per thing drawn with its
+ * sample, its count and a switch. A hidden row keeps its count, so it still says how much it would show;
+ * the first line follows the switches for humans and bots.
  */
 export function Legend({ map }: { map: MapEntry }) {
   const list = useAppStore(selectDrawList);
@@ -37,7 +38,7 @@ export function Legend({ map }: { map: MapEntry }) {
         <>
           <p role="status" className="mt-0.5 text-xs text-text-muted">
             {list
-              ? `${counted(list.matches, "match", "matches")}, ${counted(list.counts.humans + list.counts.bots, "journey", "journeys")}`
+              ? drawnLine(list)
               : `Loading the journeys of ${map.name}…`}
           </p>
           <ul className="mt-2">

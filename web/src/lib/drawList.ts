@@ -80,7 +80,7 @@ export interface DrawList {
    * hidden kind still says how much it would show.
    */
   counts: Record<LayerKey, number>;
-  /** How many matches the open selection holds. */
+  /** How many matches the drawn journeys belong to: the filters and the switches for humans and bots decide. */
   matches: number;
   /** True when one match is open. */
   single: boolean;
@@ -119,10 +119,10 @@ export function buildDrawList(all: readonly Journey[], match: string | null, sho
     if (match !== null && journey.match !== match) continue;
     if (only.matches && !only.matches.has(journey.match)) continue;
     if (only.fates && !only.fates.has(journey.fate)) continue;
-    matches.add(journey.match);
     const actor = journey.actor === "human" ? "humans" : "bots";
     counts[actor] += 1;
     if (!shown[actor]) continue;
+    matches.add(journey.match);
 
     const index = journeys.length;
     journeys.push({ journey, pathLength: pathLength(journey, kinds), ...positions(journey, grid) });

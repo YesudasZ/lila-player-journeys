@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { journeysOf, manifest, mapOf } from "../testing/committed.ts";
-import { buildDrawList, eventKinds, pathLength, shownLayers, type Grid, type MarkerKind, type Shown } from "./drawList.ts";
+import { buildDrawList, eventKinds, pathLength, shownLayers, type Grid, type MarkerKind, type Only, type Shown } from "./drawList.ts";
 import { pickMarker } from "./pick.ts";
 import type { Journey } from "./journeys.ts";
 
@@ -173,6 +173,22 @@ describe("the draw lists of the committed data", () => {
     expect([ambrose.matches, ambrose.journeys.length]).toEqual([566, 836]);
     expect(listOf("GrandRift").counts).toEqual({ humans: 59, bots: 52, kill: 192, death: 47, storm_death: 5, loot: 880 });
     expect(listOf("Lockdown").counts).toEqual({ humans: 171, bots: 124, kill: 425, death: 166, storm_death: 17, loot: 2047 });
+  });
+
+  it("count the matches and journeys that are drawn, after the switches for humans and bots, while the rows keep their counts", () => {
+    const drawn = (hidden: Partial<Shown>, only?: Only) => {
+      const list = buildDrawList(journeysOf("AmbroseValley"), null, { ...ALL, ...hidden }, KINDS, gridOf("AmbroseValley"), only);
+      return [list.matches, list.journeys.length, list.counts.humans, list.counts.bots];
+    };
+    expect(drawn({})).toEqual([566, 836, 568, 268]);
+    expect(drawn({ bots: false })).toEqual([566, 568, 568, 268]); // every match has a human
+    expect(drawn({ humans: false })).toEqual([33, 268, 568, 268]); // only 33 matches have a bot's journey
+    expect(drawn({ humans: false, bots: false })).toEqual([0, 0, 568, 268]);
+    const tenth = { matches: new Set(manifest.matches.filter((match) => match.day === "February_10").map((match) => match.id)), fates: null };
+    expect([drawn({}, tenth), drawn({ humans: false }, tenth)]).toEqual([
+      [199, 314, 199, 115],
+      [14, 115, 199, 115],
+    ]);
   });
 
   it("draw fewer markers than rows where a journey repeats an event at one spot: Ambrose Valley's 9,902 loot rows are 7,940 markers", () => {
