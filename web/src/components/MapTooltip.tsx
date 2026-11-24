@@ -1,6 +1,7 @@
-import { placeOf, timeSpan } from "../lib/journeyEvents.ts";
-import { fateLabel, markerTitle, whoLabel } from "../lib/labels.ts";
+import { clock, fateLabel, markerTitle, whoLabel } from "../lib/labels.ts";
 import type { Manifest, MapEntry } from "../lib/manifest.ts";
+import { codeToElevation, codeToUnit, uvToWorld } from "../lib/projection.ts";
+import { wholeUnits } from "../lib/readout.ts";
 import type { Hover } from "./layers/journeysLayer.ts";
 
 const GAP = 14; // CSS pixels between the thing and its tooltip
@@ -9,15 +10,18 @@ const ROOM_BELOW = 100; // CSS pixels a tooltip needs below the thing; nearer to
 /**
  * What is under the pointer: a marker's event, or a path, then who, the time into the match, and
  * the place in world units. It opens toward the middle of the map, so it is never cut off at an
- * edge. It is hidden from assistive technology, since it can only be reached with a pointer. What it
- * says about an event is also in the sidebar, as text, once the journey of the event is focused
- * (`JourneyEvents`).
+ * edge. It is hidden from assistive technology: it can only be reached with a pointer, and what it
+ * says about a single event has no other way in. A list of a journey's events as text was planned
+ * for Phase 8 and cut from it (see PLAN.md).
  */
 export function MapTooltip({ hover, map, manifest }: { hover: Hover | null; map: MapEntry; manifest: Manifest }) {
   if (!hover) return null;
   const { at, viewport, journey, row, marker } = hover;
+  const { uv_steps: steps, elevation_steps_per_unit: perUnit } = manifest.encoding;
+  const world = uvToWorld(codeToUnit(journey.u[row], steps), codeToUnit(journey.v[row], steps), map);
   const across = at.x > viewport.width / 2 ? `calc(-100% - ${GAP}px)` : `${GAP}px`;
   const down = at.y > viewport.height - ROOM_BELOW ? `calc(-100% - ${GAP}px)` : `${GAP}px`;
+  const until = marker && marker.until > journey.t[row] ? ` to ${clock(marker.until)}` : "";
 
   return (
     <div
@@ -28,7 +32,8 @@ export function MapTooltip({ hover, map, manifest }: { hover: Hover | null; map:
       <div className="font-medium">{marker ? markerTitle(marker.kind, marker.count, journey.fate) : whoLabel(journey)}</div>
       <div className="text-text-muted">{marker ? whoLabel(journey) : fateLabel(journey.fate)}</div>
       <div className="mt-1 font-mono text-text-muted">
-        at {timeSpan(journey.t[row], marker?.until ?? journey.t[row])} · {placeOf(journey, row, map, manifest.encoding)}
+        at {clock(journey.t[row])}
+        {until} · x {wholeUnits(world.x)} z {wholeUnits(world.z)} · elevation {wholeUnits(codeToElevation(journey.y[row], perUnit))}
       </div>
     </div>
   );
