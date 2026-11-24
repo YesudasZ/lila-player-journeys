@@ -23,9 +23,9 @@ Status key: ☐ not started · ◐ in progress · ☑ done and verified.
 | R3 | Tell humans and bots apart visually | Colour and line style and head shape, with a legend | 4 | ☑ solid sky-blue line with a round head, dashed orange line with a square head; they differ in greyscale too; legend with counts and switches |
 | R4 | Show kills, deaths, loot and storm deaths as distinct markers | Shape and colour per event type, tooltip names the event | 4 | ☑ triangle, cross, diamond and ring, each with a dark outline; the tooltip names the event, who, the time into the match, world x and z, and elevation |
 | R5 | Filter by map, date and/or match | All three, plus human/bot and event toggles | 5 | ☑ by map, by day (the UTC day folders) and by match, with a fate filter and switches for humans, bots and each event; the tabs, the match list and the legend follow the filters |
-| R6 | Timeline or playback to watch a match unfold | Play/pause, speeds, scrubber with an event-density strip | 6 | ☐ |
+| R6 | Timeline or playback to watch a match unfold | Play/pause, speeds, scrubber with an event-density strip | 6 | ☑ a timeline under the map plays one match: Play and Pause, speeds 1x to 60x, a slider with a mark for every kind and second in which something happened, keys for the slider and Space on the map, and the moment in the address (`t`). Not built: the density strip and all-matches playback |
 | R7 | Heatmap overlays for kill zones, death zones or high-traffic areas | All three, plus storm deaths and never-visited areas | 7 | ☐ |
-| R8 | Hosted and reachable through a shareable link | Static site on Vercel, deep links for every view | 9 | ◐ hosted at https://lila-player-journeys-psi.vercel.app, production follows `main`; every view has its own address (map, days, match, focused journey, switches, fates, zoomed view) and a Copy link button; playback time and heatmap join it in Phases 6 and 7 |
+| R8 | Hosted and reachable through a shareable link | Static site on Vercel, deep links for every view | 9 | ◐ hosted at https://lila-player-journeys-psi.vercel.app, production follows `main`; every view has its own address (map, days, match, the time of playback, focused journey, switches, fates, zoomed view) and a Copy link button; the heatmap joins it in Phase 7 |
 
 ## Not prescribed (our choice, to be justified in ARCHITECTURE.md)
 

@@ -236,8 +236,8 @@ web/src/components/            Filters, CopyLink, EmptyNote; MatchList, MapTabs,
 - The whole match is the resting state: opening a match shows everything, as before, with the timeline at its end. Play at the end starts again from 0:00.
 - While the time is before the end, each path is drawn up to the time and its head moves along it. A journey is not on the map before its first row. A marker appears at the second of its event; a marker that stands for several events counts those that have happened. Only what is drawn can be pointed at.
 - Position at a time (assumption A6; rule 4 of [DATA_FORMAT.md](DATA_FORMAT.md)): the head moves along the journey's path, whose points are all its rows up to the death row. It moves in a straight line across a gap of up to 5 s; across a longer gap it holds still and moves during the last 5 s; after the last point it stays put; of two rows in the same second the later one counts. The pipeline has the reference implementation, a small pure function (`pipeline/playback.py`), and writes a fixture of journeys with the expected heads; the TypeScript function is tested against every one of them.
-- Above the slider's track, one tick per event of the journeys that are drawn, in the colours of the map, following the legend's switches. The thumb is the time needle.
-- The clock lives outside React, in a plain Zustand store (`time`, `end`, `playing`, `speed`). It runs on `requestAnimationFrame` only while playing and follows the open match: a new match resets it to the end, paused. A frame never counts for more than 100 ms of real time, and playback pauses when the tab is hidden, so coming back to the tab never jumps ahead. Nothing in React renders per frame: the slider and the time are written straight into the page, as the map's read-out is.
+- At the slider's track, one mark per kind and second in which something happened to the journeys that are drawn, in the colours of the map, following the legend's switches: kills and loot stand on the track, deaths hang below it. The thumb is the time needle.
+- The clock lives outside React, in a plain Zustand store (`time`, `end`, `playing`, `speed`). It runs on `requestAnimationFrame` only while playing and follows the open match: a new match resets it to the end, paused. A frame never counts for more than 100 ms of real time, and playback pauses when the tab is hidden, so coming back to the tab never jumps ahead. Nothing in React renders per frame: the slider and the time are written straight into the page, as the map's read-out is, and the map is drawn in the clock's own frame, so each frame shows one time.
 - Keys: Space plays and pauses while the focus is on the map or on the slider. On the map the arrow keys keep moving the map, as reviewed in Phase 3. On the slider, left and right step 5 s (one recorded step), with Shift 1 s, Page Up and Page Down 60 s, Home and End jump to the start and the end. Dragging the slider pauses. The Play button's title reads "Play/Pause (Space when the map or timeline is focused)"; the slider's keys are in its title and in the key help that assistive technology reads, since the tool has no visible key help.
 - `t` joins the address, after `match`, to a tenth of a second, and only when the time is not the end. A link opens paused; speed is not part of a link. The address is rewritten after a pause or a seek, never while playing, and always in place (`replaceState`, never `pushState`). History entries for the user's steps are a Phase 8 item; until then Back and Forward leave the tool.
 - Single match only: in the all-matches view the bar says "Open a match to play it back." Should 5 (all-matches playback) and Could 2 (density strip) are not built in this phase: by the scope ladder Should 1 and 2, which belong to Phase 7, come first.
@@ -503,3 +503,40 @@ The independent review is still to come; what it changes gets a section of its o
 | Back and Forward step between matches and filters, not between pauses | Back and Forward leave the tool, as since Phase 5; `t` is written in place like everything else | The history entries for the user's steps are set aside for Phase 8, where the built work waits (see "Phase 8") |
 
 What the fault check found: of thirty one-line faults put into the new code, the tests noticed 27. Two were real gaps and have a test each now (Play pressed twice must not start a second clock; a tab that stays shown must not pause). The third changes nothing that can be observed.
+
+## Changed after the Phase 6 review (24 Nov 2026), for your review
+
+Two independent reviewers checked Phase 6, each held to 40 tool calls (49 used together): one in a real browser against the data, one on the code, the accessibility of the timeline and the strength of the tests. No blocker; 4 findings to fix and 12 small ones.
+
+What held, as the reviewers measured it:
+
+- The app's head positions equal a computation written afresh from rule 4, in Python, for 1,094,028 heads of all 1,242 journeys on a grid of 0.5 s, and for 170,291 heads of five matches on a grid of 0.1 s: the same journeys on the map, the same rows, positions within 0.005 px.
+- All 13,247 markers appear in the second of their first event, with the right count at every time.
+- On the canvas every head and every marker that has happened is painted at the predicted pixel, and none that is still to come; a path is painted up to its head and no further.
+- The slider's end equals the manifest's span: 523, 780 and 878. No match has a span under 13 s, and the shortest plays and stops cleanly at 60x.
+- The address is not rewritten while a match plays (0 calls in 3 s), once 302 ms after the pause, and `pushState` is never called. Links with `t` survive a reload; a time past the span, before the start or not a number is dropped.
+- The console of a fresh tab has no error and no warning.
+
+| Was | Now | Why |
+|---|---|---|
+| The rules of a drawn moment (which markers, which counts, how far a path can be pointed at) were lines of the canvas layer | One pure function, `momentAt` in `lib/playback.ts`, with tests; the layer draws what it says | Three one-line faults in the layer passed all tests |
+| A head between two rows, and the line just behind it, could not be pointed at or clicked, and a click there dropped the focus | Picking takes the heads: the stretch a head is on answers with the row the head has left | Over a whole match the head was further than the pointer's reach from the line that could be picked in 14% of the samples |
+| The slider and the time showed the clock's time, the map the time of the frame before | The map is drawn in the clock's own frame | At 60x the map was 0.96 s of the match behind the slider in every frame |
+| The slider's key help said "5 seconds" as a literal | It is built from the manifest's sample step, by `sliderKeysHelp` | Working rule 7: the app repeats nothing that the manifest holds |
+| A Space held down flipped play and pause with every key repeat | It plays or pauses once; held arrows go on stepping | It ended in whichever state the last repeat hit |
+| A pause from inside a frame left a frame waiting | The clock asks for the next frame only while it still plays | A trap for the next listener; nothing did it yet |
+| All marks stood on the track, a kill's over a death's of the same second | Deaths hang below the track; kills and loot stand on it | 77 of 716 death marks share their second with a kill mark |
+| What assistive technology is told about the time changed with every second of the match | It is written when the time comes to rest | At 10x a screen reader would be told ten times a second |
+| The track had the border colour: 1.3 to 1 against the bar | The colour of muted text: 6.7 to 1 | The track shows how far the slider reaches |
+| The heads of a draw list were tested on a match without a row after a death | Tested on `de7378ae`, where a kill is recorded 5 s after the death | Passing every row instead of the path went unnoticed |
+| Rule 4 of DATA_FORMAT.md did not say what two rows in one second do | It does: the later one counts | Both implementations did it; the contract did not say so |
+| No test for a clock that is started late, for a blank `t`, for a death exactly one step after the last sample | One each | Three of the reviewer's faults passed there |
+
+The tests had noticed one of the reviewer's twelve one-line faults. They notice eight now, and ten more of mine: 18 of 18 in the code that tests can reach. The four that still pass are lines of components that only a browser reaches: the layer drawing the moment it is given (two faults), a press on the slider pausing, and Space on one of the map's buttons. Each was checked in the preview, by the reviewer with real key presses and clicks.
+
+Left as it is:
+
+- Coming back to a map opens its match whole again: the paused time is not kept per map. The rule stays that a match starts whole, whichever way it is opened.
+- The frame-time reading at 60 Hz is still missing. The browser pane shows about 30 frames a second, and the reviewer found it slower still.
+- The reviewer's tool did not complete a real drag of the slider with the pointer. A real click on the track and a value set by script do what they should.
+- In the dev server only: after a hot update of the clock's modules the bar says "Open a match to play it back." until the page is reloaded.

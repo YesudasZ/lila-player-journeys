@@ -1,10 +1,10 @@
 # Progress Log
 
-Last updated: 2026-11-24 12:32 IST
+Last updated: 2026-11-24 13:21 IST
 
 ## Current phase
 
-Phase 6, Timeline and playback. Status: **IN PROGRESS** on the branch `phase-6-timeline` (plan approved; no pull request yet).
+Phase 6, Timeline and playback. Status: **DONE (awaiting my review)** on the branch `phase-6-timeline`, last code commit `f6d9424`. Not pushed yet: the push and the pull request wait for the user's yes.
 
 Phases 1 to 5 and step 9.1 are merged: pull requests [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) (Phase 3), [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) (step 9.1), [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3) (Phase 4) and [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4) (Phase 5) were reviewed and merged by the user, the last one on 23 Nov, 23:54 IST. The tool is live at https://lila-player-journeys-psi.vercel.app and shows Phase 5; production on Vercel follows `main`.
 
@@ -19,7 +19,7 @@ Repo: https://github.com/YesudasZ/lila-player-journeys (public).
 | 3 | App shell and map canvas (ends with the first deployment, step 9.1) | APPROVED (merged and hosted) | pull request [#1](https://github.com/YesudasZ/lila-player-journeys/pull/1) |
 | 4 | Journeys, humans versus bots, markers | APPROVED (merged) | pull request [#3](https://github.com/YesudasZ/lila-player-journeys/pull/3) |
 | 5 | Filters and URL state | APPROVED (merged) | pull request [#4](https://github.com/YesudasZ/lila-player-journeys/pull/4) |
-| 6 | Timeline and playback | IN PROGRESS | branch `phase-6-timeline` |
+| 6 | Timeline and playback | DONE (awaiting my review) | branch `phase-6-timeline`, `f6d9424`; pull request not opened yet |
 | 7 | Heatmaps | NOT STARTED | |
 | 8 | Polish | NOT STARTED | |
 | 9 | Deployment (9.1 after Phase 3, 9.2 on the last day) | 9.1 APPROVED (merged); 9.2 on the last day | pull request [#2](https://github.com/YesudasZ/lila-player-journeys/pull/2) |
@@ -57,17 +57,17 @@ Phase 6 deliverables and acceptance criteria are in PLAN.md, "Phase 6". The task
     | `d0a38c30` on Lockdown, which has the most rows | 15 | 0.2, 0.3 and 0.4 ms (161 draws) | none; one at Play, one at Pause | 33.3 and 34.3 ms |
 
     The app's work per frame is far under 16 ms, and React renders nothing while a match plays. The time between frames is the pane's and not the app's: the browser pane shows about 30 frames a second and stood still for up to a second several times (21 and 20 frames longer than 34 ms). So "frame time under 16 ms" is shown for the work and not for the pacing; a reading in a browser window at 60 Hz is still missing. The stalls showed the 100 ms limit at work: at 20x the matches reached 147 s and 110 s instead of 200 s, and neither jumped
-- [ ] 6.9 Independent review by two agents, each held to 40 tool calls: launched on 24 Nov at 12:32 (workflow `phase6-review`, run `wf_48d4439c-642`), one in the browser against the data, one on the code, the accessibility of the timeline and the strength of the tests. Its raw result goes to `.local/phase6-review-result.raw`; then the fixes
-- [ ] 6.10 Docs and phase-end checks; status "DONE (awaiting my review)"
+- [x] 6.9 Independent review by two agents, each held to 40 tool calls (49 used together; 24 Nov, 12:32 to 13:11). No blocker; 4 findings to fix and 12 small ones. In the browser the app's heads equal a computation written afresh from rule 4 for 1,094,028 heads of all 1,242 journeys, and all 13,247 markers appear in their second. Fixed in `f6d9424`; what changed and what was left is PLAN.md's last section. Raw result: `.local/phase6-review-result.raw`. The fixes were looked at in the preview (13:21): a head between two rows gives its tooltip and ring and takes the focus on a click; 12 marks stand on the track and 7 deaths hang below it; a held Space toggles once; what is spoken stays "0:17 of 8:43" while it plays and reads "0:19 of 8:43" after the pause; the console is empty. Not seen as pixels: the track's new colour
+- [x] 6.10 PLAN.md, BRIEF.md, DATA_FORMAT.md, ARCHITECTURE.md and the README describe Phase 6 as built. Phase-end checks pass (13:21): `npm run check` (410 tests), `npm run build` (87.91 kB of JavaScript gzipped), `make test` (253 tests)
 - [ ] 6.11 On the user's yes: push the branch, open the pull request, record it here, read the first CI run. Then stop for the review
 
 ## Exactly where I stopped
 
 - Branch `phase-6-timeline`, cut from `main` at `89dfde3`; local only, nothing pushed. `main` equals `origin/main`.
-- Steps 6.2 to 6.7 are committed on `phase-6-timeline` (local only, nothing pushed): everything of playback is built. At 00:48 on 24 Nov: `npm run check` (396 tests), `npm run build` (87.68 kB of JavaScript gzipped) and `make test` (252 tests) pass.
-- Step 6.8 is done: the preview checks and the frame-time reading are in its entry above. After it (00:58): a fault check of the new code (thirty one-line faults, 27 noticed, two tests added, the third unobservable), ARCHITECTURE.md's rows on playback, and PLAN.md's section "Changed while building Phase 6". The user said "Continue" at 00:50 with the 5-hour window at 88%; the review did not fit into what was left.
-- 24 Nov, 12:32: the user said "Continue" in a new usage window (13% used). The review of step 6.9 is running; while it runs, no file of the code is touched, because one reviewer puts temporary faults into the code to test the tests.
-- **NEXT:** when the review reports: save its result, reproduce each finding, fix what holds, re-run the checks, commit. Then 6.10: PLAN.md "Phase 6" as built with a section on what the review changed, BRIEF.md (R6, C6, R8), the README's status line, the status "DONE (awaiting my review)", and the short manual test script for the closing message. Then ask once to push and open the pull request, and stop.
+- Everything of Phase 6 is committed. At 13:21 on 24 Nov: `npm run check` (410 tests), `npm run build` and `make test` (253 tests) pass.
+- The branch `fix-phase-5-approved-changes` is parked (see "Known issues / TODO later"): it is not part of this phase.
+- Waiting for the user's yes to push the branch and open the pull request.
+- **NEXT:** on yes: `git push -u origin phase-6-timeline`; `gh pr create` into `main` (what the phase delivers, the evidence for each acceptance criterion, what differs from the plan, what was not verified, how to verify; no attribution line; no screenshots, and why); record the pull request here in one docs commit and push it; read the first CI run. Then stop. After the user's merge and go: `git switch main`, `git pull --ff-only`, look at the live site, then Phase 7 on a new branch, in a fresh session: this one holds over 700,000 tokens, and reading them again after an hour's pause cost 13% of a usage window.
 
 ## Decisions and assumptions made
 
@@ -186,6 +186,12 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 - The first frame after Play counts for no time: it only sets the moment to count from, so the clock needs no clock of its own to start.
 - The commits `5b2fb2a` and `fcbf93b` of this branch fail `make test`: a line of the new test file was longer than 140 characters, which the hygiene test saw only once the file was tracked. Fixed in `1b963f5`. From now on `make test` runs after `git add`.
 
+2026-11-24, from the Phase 6 review (each is in PLAN.md's last section and waits for the user's review):
+- What a moment shows is decided in `lib/playback.ts` (`momentAt`), not in the canvas layer; picking takes the heads, so a moving head can be pointed at and clicked.
+- The map is drawn in the clock's own frame, so the map and the slider show one time.
+- A held Space toggles once. Deaths are marked below the slider's track. What assistive technology is told about the time is written when the time comes to rest.
+- Left: the paused time is not kept per map; a match that is opened starts whole.
+
 ## Open questions for the user
 
 1. Should `docs/PROGRESS.md`, `CLAUDE.md` and `.claude/` stay in the repo at submission? They show how the work was run with Claude Code, which the brief allows; they are also working notes in a public repo.
@@ -201,9 +207,9 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 |---|---|---|
 | `unzip _inbox/player_data.zip -d data/raw` | restores the raw data | 2026-11-22 |
 | `make setup` | creates `.venv`, installs pinned dependencies | 2026-11-22, in a fresh clone |
-| `make test` | 252 tests, no raw data needed; creates `.venv` on first use. Run it after `git add`: the hygiene tests see tracked files only | 2026-11-24 00:58 |
-| `cd web && npm run check` | type check, ESLint with no warning allowed, 397 Vitest tests | 2026-11-24 00:58 |
-| `cd web && npm run build` | production build into `web/dist/` (not committed); JavaScript 87.68 kB gzipped | 2026-11-24 00:58 |
+| `make test` | 253 tests, no raw data needed; creates `.venv` on first use. Run it after `git add`: the hygiene tests see tracked files only | 2026-11-24 13:21 |
+| `cd web && npm run check` | type check, ESLint with no warning allowed, 410 Vitest tests | 2026-11-24 13:21 |
+| `cd web && npm run build` | production build into `web/dist/` (not committed); JavaScript 87.91 kB gzipped | 2026-11-24 13:21 |
 | `cd web && npm run dev` | the app on http://localhost:5173 | 2026-11-23 17:41 |
 | `make profile` | measures the raw data → `docs/profile/` (235 metrics) | 2026-11-23 13:10 |
 | `make data` | builds `web/public/data/` and the two test fixtures (projection, playback); writes nothing unless every check passes, the profile report included; 3 s | 2026-11-24 00:35 |
@@ -211,6 +217,8 @@ Data decisions are recorded with evidence in [DATA_NOTES.md](DATA_NOTES.md) (row
 
 ## Known issues / TODO later
 
+- **Usage, 24 Nov:** the weekly limit for this model stood at 74% at 13:12, with Phases 7 to 11 still to do before 26 Nov; it resets on 28 Nov. The review of Phase 6 used about 30% of a 5-hour window. Start each remaining phase in a fresh session, and keep reviews bounded.
+- In the dev server, after a hot update of `web/src/state/playback.ts` or of what imports it, the timeline bar can show "Open a match to play it back." although a match is open: reload the page before reading the preview. A build has no hot updates.
 - The frame-time reading of Phase 6 was taken in the browser pane, which shows about 30 frames a second and stalls now and then. It shows the work per frame (0.7 ms at most for a draw, no React commit while playing), not that frames come every 16 ms. A reading at 60 Hz, in Chrome's Performance panel as PLAN.md names it, is still to take: by the user, or in the user's Chrome if they ask for it.
 - **For Phase 8, set aside by the user on 24 Nov:** the six changes the Phase 5 plan was approved with. (1) `pushState` for discrete changes (map, match, focus, days, fates, switches), `replaceState` for moving, zooming and `t`. (2) A notice when a filter hides the open match. (3) A test that the 8-character match id prefixes are unique. (4) Filter chips as `<button>` with `aria-pressed` and focus styles, which they are since Phase 5. (5) The journey id's format ("-anon", "botNNNN") in a comment and in DATA_NOTES.md. (6) The folder-day assumption (`e325a53a` belongs to February_10) in DATA_NOTES.md. All but (4) were already built and tested when they were set aside: they wait on the local branch `fix-phase-5-approved-changes` (`9a2f0a4`, `8e13ce5`; not pushed). Phase 8 takes them from there. The branch is deleted only on the user's word.
 - Commits stay local until the user approves each push.
