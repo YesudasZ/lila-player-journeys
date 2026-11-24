@@ -1,6 +1,6 @@
 # Progress Log
 
-Last updated: 2026-11-24 21:30 IST
+Last updated: 2026-11-24 21:36 IST
 
 ## Current phase
 
@@ -38,13 +38,13 @@ The user's QA brief (24 Nov): Step 0 state; Step 1 Groups A to D on production; 
 - [x] Group C, the audit's open items: C2, C3, C5, C6 PASS; C4 PARTIAL (the window cannot be resized by the tool; in a frame 880 px passes, at 375 px the top-bar buttons are cut off); C1 NOT TESTABLE with the tool (its tabs never become hidden; unit-tested; manual). PageSpeed Insights: desktop 90 / 100 / 100 / 100, mobile 95 / 100 / 100 / 100. The unnamed Tab stop is the browser tool's own empty `<div>` outside `#root`
 - [x] Group D, repo and deliverables: 5 PASS, 1 PARTIAL (D4: `make insights` does not print 796 and 781), 3 FAIL (D2: the README's `unzip … -d data/raw` fails in a fresh clone; D5: BRIEF.md statuses; D6: the About description). The fresh clone's `make data` rebuilt every file byte for byte
 - [x] Step 2, the summary at the top of QA_REPORT.md: no blocker, six should-fix items, three nice-to-have items; shown to the user
-- [ ] Step 3, fixes on `qa-fixes`: every Blocker and Should-fix item; BRIEF.md statuses citing QA_REPORT.md; About description (ask before `gh repo edit`); the legend's first line follows the Humans and Bots switches; `make insights` prints 796 and 781; `t` written every few seconds while playing. Not created: `docs/media/walkthrough.mp4` (the user records it)
+- [x] Step 3, fixes on `qa-fixes`, a commit each, both suites green after each: the README's data step makes `data/raw` first (`6455ebd`); `make insights` prints the totals and a test holds every number of INSIGHTS.md (`869e324`); the legend's first line counts what is drawn (`a0660d9`); the moment is written every 2 s while a match plays (`bf4878e`, with a test for a stream of frames in `7fabb4f`); BRIEF.md statuses cite QA_REPORT.md. One-line faults: 3 of 3 noticed for the legend, 7 of 7 for the address after the second test. Waiting: the About description (`gh repo edit` needs the user's yes). Not created: `docs/media/walkthrough.mp4`
 - [ ] Step 4, re-test on the preview of `qa-fixes`; ask once to push and open the pull request; stop
 
 ## Exactly where I stopped
 
 - QA in progress on the local branch `qa-fixes` (cut from `main` at `abdaf02`); nothing pushed.
-- Groups A to D and the summary are done and committed. **NEXT:** Step 3 on `qa-fixes`, in this order, a commit each, `npm run check` and `make test` green after each: (1) `mkdir -p data/raw` in the README's data step; (2) `make insights` prints 796 and 781; (3) the legend's first line counts what is drawn; (4) `t` written every 2 s while playing; (5) BRIEF.md statuses citing QA_REPORT.md; (6) ask the user before `gh repo edit` for the About description.
+- Groups A to D, the summary and the fixes are done and committed. **NEXT:** ask the user once: (1) `gh repo edit --description` without "Work in progress."; (2) push `qa-fixes` and open its pull request, so that the re-test can run on its Vercel preview. Then Step 4: re-test the failed items (A6, B6b, D2, D4, D5, D6) and a smoke test of Groups A and B on the preview; record it in QA_REPORT.md; push that record; stop.
 - Usage rule of the QA brief: at a usage-limit warning, finish the step, write here "QA stopped at group X, test Y; next action: …", update QA_REPORT.md, commit and stop.
 
 ## Decisions and assumptions made

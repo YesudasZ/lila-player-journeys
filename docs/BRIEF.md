@@ -25,7 +25,7 @@ Status key: ☐ not started · ◐ in progress · ☑ done and verified.
 | R5 | Filter by map, date and/or match | All three, plus human/bot and event toggles | 5 | ☑ by map, by day (the UTC day folders) and by match, with a fate filter and switches for humans, bots and each event; the tabs, the match list and the legend follow the filters |
 | R6 | Timeline or playback to watch a match unfold | Play/pause, speeds, scrubber with an event-density strip | 6 | ☑ a timeline under the map plays one match: Play and Pause, speeds 1x to 60x, a slider with a mark for every kind and second in which something happened, keys for the slider and Space on the map, and the moment in the address (`t`). Not built: the density strip and all-matches playback |
 | R7 | Heatmap overlays for kill zones, death zones or high-traffic areas | All three, plus storm deaths and never-visited areas | 7 | ☑ four heat layers, one at a time: traffic, kills, deaths (storm deaths included, and counted in the legend) and loot. They follow the map, the days, the fates, the open match and the switches for humans and bots; the legend gives the real counts and says what is counted and at whose position. Not built: a layer for the areas nobody visits, which needs a mask of the playable area; the empty cells of the traffic layer show them |
-| R8 | Hosted and reachable through a shareable link | Static site on Vercel, deep links for every view | 9 | ◐ hosted at https://lila-player-journeys-psi.vercel.app, production follows `main`; every view has its own address (map, days, match, the time of playback, focused journey, switches, fates, heat layer, zoomed view) and a Copy link button; the browser's Back and Forward step through the views that were chosen |
+| R8 | Hosted and reachable through a shareable link | Static site on Vercel, deep links for every view | 9 | ☑ live at https://lila-player-journeys-psi.vercel.app, serving `main`; every view has its own address (map, days, match, time of playback, focused journey, switches, fates, heat layer, zoom), "Copy link" copies it, and Back and Forward step through the views chosen. [QA_REPORT.md](QA_REPORT.md): Step 0, A1, A9, B1 |
 
 ## Not prescribed (our choice, to be justified in ARCHITECTURE.md)
 
@@ -63,26 +63,26 @@ One GitHub repository link that contains everything. Links to documents or drive
 
 | # | Item | Detail | Status |
 |---|---|---|---|
-| S1 | Source code | All of it, in the repo | ◐ |
-| S2 | Working deployment | A deployed URL, written in the repo (top of the README), that the reviewers can open and use | ◐ live, and written at the top of the README; it shows each phase once it is merged |
-| S3 | README | Tech stack, setup steps, environment variables | ◐ rewritten in Phase 10: the live URL first, tech stack, setup for the app and for the data, "Env vars: none", tests, project structure, and a walkthrough of nine steps with links and screenshots; the recording `docs/media/walkthrough.mp4` is added by the author; awaiting review |
-| S4 | ARCHITECTURE.md, one page | (a) what it is built with and why; (b) data flow from parquet to screen; (c) how game coordinates are mapped to the minimap, walked through; (d) assumptions where the data was ambiguous; (e) major trade-offs, a simple table is fine | ◐ rewritten in Phase 10 to fit one page: stack, data flow, the coordinate mapping walked through, assumptions, trade-offs; the printed length is checked once the branch is pushed; awaiting review |
-| S5 | INSIGHTS.md, three things learned about the game, using the tool we built | For each: (a) what caught the eye; (b) evidence: a pattern or statistic; (c) is it actionable, which metrics move, what to do; (d) why a Level Designer should care | ◐ written in Phase 10: the storm on Lockdown, kills and loot, the quiet quarter of each map; every number is printed by `make insights` and pinned in a test, and each insight has deep links and a screenshot; awaiting review |
+| S1 | Source code | All of it, in the repo | ☑ all of it in the repo; a fresh clone installs, checks, builds, and rebuilds the data byte for byte. [QA_REPORT.md](QA_REPORT.md): D1, D9 |
+| S2 | Working deployment | A deployed URL, written in the repo (top of the README), that the reviewers can open and use | ☑ live, at the top of the README, serving `main`. [QA_REPORT.md](QA_REPORT.md): Step 0, A1 |
+| S3 | README | Tech stack, setup steps, environment variables | ☑ live URL first, tech stack, setup for the app and for the data, "Env vars: none", tests, project structure, a walkthrough of nine steps with links and screenshots; the data step was fixed after the QA. [QA_REPORT.md](QA_REPORT.md): D2. The recording `docs/media/walkthrough.mp4` is added by the author |
+| S4 | ARCHITECTURE.md, one page | (a) what it is built with and why; (b) data flow from parquet to screen; (c) how game coordinates are mapped to the minimap, walked through; (d) assumptions where the data was ambiguous; (e) major trade-offs, a simple table is fine | ☑ stack and why, data flow, the coordinate mapping walked through, assumptions, trade-offs. It prints on three pages, a length the author chose to keep. [QA_REPORT.md](QA_REPORT.md): D3 |
+| S5 | INSIGHTS.md, three things learned about the game, using the tool we built | For each: (a) what caught the eye; (b) evidence: a pattern or statistic; (c) is it actionable, which metrics move, what to do; (d) why a Level Designer should care | ☑ three insights, each with the four parts; every number printed by `make insights` and held by tests; every link opens its view. [QA_REPORT.md](QA_REPORT.md): D4 |
 
 ## Their pre-submission checklist
 
 | # | Check | Status |
 |---|---|---|
-| C1 | Tool is live at the hosted URL | ◐ live since 23 Nov with the first screen; checked again in step 9.2 |
-| C2 | Player paths render correctly on the minimap | ☐ |
-| C3 | Humans can be told apart from bots visually | ☐ |
-| C4 | Kill, death, loot and storm events are marked | ☐ |
-| C5 | Filtering by map/date/match works | ☐ |
-| C6 | Timeline or playback shows match progression | ☐ |
-| C7 | Heatmaps show kill zones, death zones and traffic | ☐ |
-| C8 | Architecture doc covers the coordinate mapping approach | ☐ |
-| C9 | Three insights with supporting evidence | ☐ |
-| C10 | Walkthrough covers all major features | ☐ |
+| C1 | Tool is live at the hosted URL | ☑ [QA_REPORT.md](QA_REPORT.md): Step 0, A1 |
+| C2 | Player paths render correctly on the minimap | ☑ [QA_REPORT.md](QA_REPORT.md): A3 |
+| C3 | Humans can be told apart from bots visually | ☑ [QA_REPORT.md](QA_REPORT.md): A4 |
+| C4 | Kill, death, loot and storm events are marked | ☑ [QA_REPORT.md](QA_REPORT.md): A5, C2 |
+| C5 | Filtering by map/date/match works | ☑ [QA_REPORT.md](QA_REPORT.md): A6 |
+| C6 | Timeline or playback shows match progression | ☑ [QA_REPORT.md](QA_REPORT.md): A7, C2, C6 |
+| C7 | Heatmaps show kill zones, death zones and traffic | ☑ [QA_REPORT.md](QA_REPORT.md): A8 |
+| C8 | Architecture doc covers the coordinate mapping approach | ☑ [QA_REPORT.md](QA_REPORT.md): D3 |
+| C9 | Three insights with supporting evidence | ☑ [QA_REPORT.md](QA_REPORT.md): D4 |
+| C10 | Walkthrough covers all major features | ☑ [QA_REPORT.md](QA_REPORT.md): D2; the video is added by the author |
 
 ## Inconsistencies in the brief and how we resolve them
 

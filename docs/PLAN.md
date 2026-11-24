@@ -638,3 +638,18 @@ Left as it is:
 - A move of the map that was not yet written when Back was pressed is dropped: it belonged to the entry that was left.
 - The panel needs 988 px at a window height of 800 and scrolls there, with the keys too.
 - Not verified in the session, as agreed: Lighthouse, the frame-time reading at 60 Hz, a real drag of the time slider, a click on "Copy link". Pinch zoom is not built, and the panel says so. No pass over every UI text was made.
+
+## Final QA (24 Nov 2026)
+
+The user's QA brief: test everything on production with Claude in Chrome, report in [QA_REPORT.md](QA_REPORT.md), fix on the branch `qa-fixes`, re-test on its preview. The report's summary has the brief's checklist and every finding. No blocker was found.
+
+Changed by the QA, for your review:
+
+| Before | Now | Why |
+|---|---|---|
+| While a match plays the address is left alone; the time is written when it comes to rest (Phase 6) | The moment is written in place every 2 s of real time while a match plays, and at once when it comes to rest | A reload during playback went back to the last pause or seek (QA B6b) |
+| The legend's first line counts the journeys the filters leave, whatever the switches for humans and bots say | It counts the matches and journeys that are drawn; the rows still say how much each switch would show | QA A6 |
+| README: `unzip _inbox/player_data.zip -d data/raw` | `mkdir -p data/raw` first | In a fresh clone `data/` does not exist and `unzip` makes one folder level only (QA D2) |
+| `make insights` prints the findings | It also prints the totals INSIGHTS.md quotes (796 matches, 781 journeys of humans with an account id), and a test holds every number of INSIGHTS.md to its output | QA D4 |
+| docs/BRIEF.md: the checklist open | Every row set, each citing the QA report | QA D5 |
+
