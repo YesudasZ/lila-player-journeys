@@ -13,6 +13,8 @@ interface Pressed {
   ctrlKey: boolean;
   metaKey: boolean;
   altKey: boolean;
+  /** True for the repeats of a key that is held down. */
+  repeat?: boolean;
 }
 
 /**
@@ -21,7 +23,7 @@ interface Pressed {
  * pauses the open match. With Ctrl, Cmd or
  * Alt held the key belongs to the browser: its own zoom and its shortcuts stay.
  */
-export function mapKeyAction({ key, ctrlKey, metaKey, altKey }: Pressed): MapKeyAction | null {
+export function mapKeyAction({ key, ctrlKey, metaKey, altKey, repeat }: Pressed): MapKeyAction | null {
   if (ctrlKey || metaKey || altKey) return null;
   switch (key) {
     case "ArrowLeft":
@@ -43,7 +45,7 @@ export function mapKeyAction({ key, ctrlKey, metaKey, altKey }: Pressed): MapKey
     case "Escape":
       return { kind: "clear" };
     case " ":
-      return { kind: "play" };
+      return repeat ? null : { kind: "play" }; // held down, it plays or pauses once
     default:
       return null;
   }

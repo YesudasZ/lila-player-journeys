@@ -4,16 +4,30 @@ import { useStore } from "zustand";
 import type { MarkerKind } from "../lib/drawList.ts";
 import { clock } from "../lib/labels.ts";
 import type { Manifest } from "../lib/manifest.ts";
-import { SPEEDS, sliderKeyAction, ticksOf } from "../lib/playback.ts";
-import { pause, playback, seek, seekBy, setSpeed, togglePlay, type PlaybackState } from "../state/playback.ts";
+import { SPEEDS, draggedTime, sliderKeyAction, sliderKeysHelp, ticksOf, timeAfter, type Tick } from "../lib/playback.ts";
+import { pause, playback, seek, setSpeed, togglePlay, type PlaybackState } from "../state/playback.ts";
 import { selectDrawList } from "../state/shown.ts";
 import { useAppStore } from "../state/store.ts";
 
 const KEYS_ID = "timeline-keys";
-const SLIDER_KEYS = "Left and right arrow: 5 seconds, with Shift 1 second. Page Up and Page Down: 60 seconds. Home and End: start and end. Space: play or pause.";
 
-/** A mark above the track, in the colour its kind has on the map. Loot, of which there is much, is shorter. */
+/** A mark at the track, in the colour its kind has on the map. Loot, of which there is much, is shorter. */
 const MARK: Record<MarkerKind, string> = { loot: "h-1.5 bg-loot", storm_death: "h-3 bg-storm", death: "h-3 bg-death", kill: "h-3 bg-kill" };
+/** Deaths hang below the track and everything else stands on it: a kill and the death it caused are mostly recorded in the same second, and one mark would cover the other. */
+const BELOW: ReadonlySet<MarkerKind> = new Set<MarkerKind>(["death", "storm_death"]);
+
+/** The marks of one side of the track. The thumb is 12 pixels wide, so its middle travels between 6 pixels from either end: the marks keep to the same stretch. */
+function Marks({ marks, end, below }: { marks: Tick[]; end: number; below: boolean }) {
+  return (
+    <div aria-hidden="true" className={`pointer-events-none absolute inset-x-1.5 h-3 ${below ? "top-1/2 mt-0.5" : "bottom-1/2 mb-0.5"}`}>
+      {marks
+        .filter(({ kind }) => BELOW.has(kind) === below)
+        .map(({ kind, time }) => (
+          <span key={`${kind} ${time}`} className={`absolute w-0.5 -translate-x-1/2 ${below ? "top-0" : "bottom-0"} ${MARK[kind]}`} style={{ left: `${(time / end) * 100}%` }} />
+        ))}
+    </div>
+  );
+}
 
 /** Where playback stands and where the match ends, as the bar says it. */
 const reading = (time: number, end: number): string => `${clock(Math.floor(time))} / ${clock(end)}`;
@@ -33,15 +47,17 @@ export function Timeline({ manifest }: { manifest: Manifest }) {
   const marks = useMemo(() => (list?.single ? ticksOf(list) : []), [list]);
   const slider = useRef<HTMLInputElement>(null);
   const said = useRef<HTMLSpanElement>(null);
+  const keysHelp = sliderKeysHelp(manifest.sample_step_seconds);
 
   useLayoutEffect(() => {
-    const write = ({ time, end: last }: PlaybackState) => {
+    const write = ({ time, end: last, playing: moving }: PlaybackState) => {
       if (last === null || !slider.current || !said.current) return;
       slider.current.value = String(time);
       const now = reading(time, last);
-      if (said.current.textContent === now) return; // the words change once a second
-      said.current.textContent = now;
-      slider.current.setAttribute("aria-valuetext", now.replace("/", "of"));
+      if (said.current.textContent !== now) said.current.textContent = now; // the words change once a second
+      // What assistive technology is told is written when the time has come to rest: while a match plays it would be told every second of the match.
+      const spoken = now.replace("/", "of");
+      if (!moving && slider.current.getAttribute("aria-valuetext") !== spoken) slider.current.setAttribute("aria-valuetext", spoken);
     };
     write(playback.getState());
     return playback.subscribe(write);
@@ -70,12 +86,8 @@ export function Timeline({ manifest }: { manifest: Manifest }) {
       </button>
       <span ref={said} className="w-28 shrink-0 font-mono text-xs text-text" />
       <div className="relative min-w-0 flex-1">
-        {/* The thumb is 12 pixels wide, so its middle travels between 6 pixels from either end: the marks keep to the same stretch. */}
-        <div aria-hidden="true" className="pointer-events-none absolute inset-x-1.5 bottom-1/2 mb-0.5 h-3">
-          {marks.map(({ kind, time }) => (
-            <span key={`${kind} ${time}`} className={`absolute bottom-0 w-0.5 -translate-x-1/2 ${MARK[kind]}`} style={{ left: `${(time / end) * 100}%` }} />
-          ))}
-        </div>
+        <Marks marks={marks} end={end} below={false} />
+        <Marks marks={marks} end={end} below />
         <input
           ref={slider}
           type="range"
@@ -84,24 +96,23 @@ export function Timeline({ manifest }: { manifest: Manifest }) {
           step="any"
           aria-label="Time in the match"
           aria-describedby={KEYS_ID}
-          title={SLIDER_KEYS}
+          title={keysHelp}
           onPointerDown={pause}
           onInput={(event) => {
-            seek(Math.round(event.currentTarget.valueAsNumber)); // a dragged time is a whole second
+            seek(draggedTime(event.currentTarget.valueAsNumber));
           }}
           onKeyDown={(event) => {
             const action = sliderKeyAction(event, manifest.sample_step_seconds);
             if (!action) return;
             event.preventDefault();
-            if (action.kind === "step") seekBy(action.seconds);
-            else if (action.kind === "start") seek(0);
-            else if (action.kind === "end") seek(end);
-            else togglePlay();
+            const next = timeAfter(action, playback.getState().time, end);
+            if (next === null) togglePlay();
+            else seek(next);
           }}
           className="time-slider relative block w-full"
         />
         <p id={KEYS_ID} className="sr-only">
-          {SLIDER_KEYS}
+          {keysHelp}
         </p>
       </div>
       <label className="flex shrink-0 items-center gap-1.5 text-xs text-text-muted">

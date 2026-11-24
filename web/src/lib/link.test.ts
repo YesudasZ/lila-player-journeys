@@ -190,6 +190,7 @@ describe("the time of playback in a link", () => {
     ["zero", "?t=0", 0],
     ["a word", "?t=soon", null],
     ["nothing", "?t=", null],
+    ["a blank", "?t=%20", null],
     ["a number without end", "?t=1e999", null],
   ])("reads %s", (_, query, time) => {
     expect(decodeLink(query).t).toBe(time);

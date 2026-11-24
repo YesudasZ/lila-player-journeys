@@ -58,4 +58,9 @@ describe("Space on the map", () => {
     expect(mapKeyAction({ key: " ", ctrlKey: true, metaKey: false, altKey: false })).toBeNull();
     expect(mapKeyAction({ key: " ", ctrlKey: false, metaKey: false, altKey: true })).toBeNull();
   });
+
+  it("plays or pauses once when it is held down, while a held arrow goes on moving the map", () => {
+    expect(mapKeyAction({ key: " ", ctrlKey: false, metaKey: false, altKey: false, repeat: true })).toBeNull();
+    expect(mapKeyAction({ key: "ArrowLeft", ctrlKey: false, metaKey: false, altKey: false, repeat: true })).toEqual({ kind: "pan", dx: 64, dy: 0 });
+  });
 });

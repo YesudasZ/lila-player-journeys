@@ -5,7 +5,7 @@ import { fetchManifest } from "../data/fetchManifest.ts";
 import { loadImage } from "../data/loadImage.ts";
 import { decodeLink } from "../lib/link.ts";
 import { journeysOf, manifest } from "../testing/committed.ts";
-import { linkTime, pause, play, playback, seek, seekBy, setSpeed, startPlayback, togglePlay } from "./playback.ts";
+import { linkTime, pause, play, playback, seek, setSpeed, startPlayback, togglePlay } from "./playback.ts";
 import { useAppStore } from "./store.ts";
 
 vi.mock("../data/fetchManifest.ts", () => ({ fetchManifest: vi.fn() }));
@@ -167,9 +167,7 @@ describe("the clock of playback", () => {
     expect(clock().time).toBe(0);
     seek(9999);
     expect(clock().time).toBe(523);
-    seek(100);
-    seekBy(5);
-    seekBy(-60);
+    seek(45.04);
     expect(clock().time).toBe(45);
     play();
     seek(200);
@@ -225,6 +223,28 @@ describe("the clock of playback", () => {
     expect(linkTime(clock())).toBe(120.8); // 120.83 while it plays
     app().selectMatch("AmbroseValley", null);
     expect(linkTime(clock())).toBeNull();
+  });
+
+  it("stops for good when something pauses it from inside a frame", async () => {
+    await open("?match=fbbc5d02");
+    const unsubscribe = playback.subscribe((state) => {
+      if (state.playing && state.time >= 0.5) pause();
+    });
+    play();
+    frame(16);
+    frame(50);
+    expect([clock().playing, clock().time, frames.length]).toEqual([false, 0.5, 0]);
+    frame(100);
+    expect(clock().time).toBe(0.5);
+    unsubscribe();
+  });
+
+  it("takes the open match and the time of the link also when it is started late", async () => {
+    stop();
+    await open("?match=fbbc5d02&t=120.46");
+    expect(clock().end).toBeNull(); // nothing follows the app yet
+    stop = startPlayback();
+    expect([clock().end, clock().time, clock().playing]).toEqual([523, 120.5, false]);
   });
 
   it("stands still and hears nothing after it was stopped", async () => {

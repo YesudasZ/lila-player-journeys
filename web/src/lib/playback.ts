@@ -45,6 +45,27 @@ export function happened(times: ArrayLike<number>, time: number): number {
   return count;
 }
 
+/**
+ * What a draw list shows at a moment of playback: the time, where the head of every journey is
+ * (null for one that is not on the map yet), and for every marker how many of its events have
+ * happened (none: it is not there yet). A path is drawn as far as its head, and that far it can be
+ * pointed at.
+ */
+export interface Moment {
+  time: number;
+  heads: (Head | null)[];
+  counts: number[];
+}
+
+/**
+ * The moment of a draw list that a clock shows; null when everything is shown: the whole match,
+ * which is where the clock rests, or all matches, which have no clock and so no `end`.
+ */
+export function momentAt(list: DrawList, time: number, end: number | null, step: number): Moment | null {
+  if (!list.single || end === null || time >= end) return null;
+  return { time, heads: headsAt(list, time, step), counts: list.markers.map((marker) => happened(marker.times, time)) };
+}
+
 /** A mark on the time slider: something of a kind happened in this second of the match. */
 export interface Tick {
   kind: MarkerKind;
@@ -91,6 +112,8 @@ interface Pressed {
   ctrlKey: boolean;
   metaKey: boolean;
   altKey: boolean;
+  /** True for the repeats of a key that is held down. */
+  repeat?: boolean;
 }
 
 /** Seconds that Page Up and Page Down move the time. */
@@ -98,10 +121,11 @@ const BIG_STEP = 60;
 
 /**
  * The action of a key press on the time slider, or null when the key is not the slider's. The
- * arrows move one recorded step, `step` seconds, and one second with Shift held. With Ctrl, Cmd or
- * Alt held the key belongs to the browser.
+ * arrows move one recorded step, `step` seconds, and one second with Shift held. A Space that is
+ * held down plays or pauses once, while held arrows go on stepping. With Ctrl, Cmd or Alt held the
+ * key belongs to the browser.
  */
-export function sliderKeyAction({ key, shiftKey, ctrlKey, metaKey, altKey }: Pressed, step: number): SliderKeyAction | null {
+export function sliderKeyAction({ key, shiftKey, ctrlKey, metaKey, altKey, repeat }: Pressed, step: number): SliderKeyAction | null {
   if (ctrlKey || metaKey || altKey) return null;
   const small = shiftKey ? 1 : step;
   switch (key) {
@@ -120,8 +144,26 @@ export function sliderKeyAction({ key, shiftKey, ctrlKey, metaKey, altKey }: Pre
     case "End":
       return { kind: "end" };
     case " ":
-      return { kind: "toggle" };
+      return repeat ? null : { kind: "toggle" };
     default:
       return null;
   }
+}
+
+/** The time an action of the slider's keys leads to, kept inside the match; null for the action that plays and pauses. */
+export function timeAfter(action: SliderKeyAction, time: number, end: number): number | null {
+  if (action.kind === "toggle") return null;
+  if (action.kind === "start") return 0;
+  if (action.kind === "end") return end;
+  return Math.min(Math.max(time + action.seconds, 0), end);
+}
+
+/** A time the slider was dragged to: a whole second, since events are recorded in whole seconds. */
+export function draggedTime(value: number): number {
+  return Math.round(value);
+}
+
+/** What the slider's keys do, in words, for its title and for assistive technology. The step is the one the keys use. */
+export function sliderKeysHelp(step: number): string {
+  return `Left and right arrow: ${step} seconds, with Shift 1 second. Page Up and Page Down: ${BIG_STEP} seconds. Home and End: start and end. Space: play or pause.`;
 }

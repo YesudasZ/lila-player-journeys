@@ -58,7 +58,8 @@ body {
 
 /*
  * The time slider: a thin track, and for the thumb a needle in the highlight colour. The thumb is
- * 12 pixels wide so that it can be caught, and shows 4 of them.
+ * 12 pixels wide so that it can be caught, and shows 4 of them. The track has the colour of muted
+ * text: the border colour is too faint against the bar to show how far the slider reaches.
  */
 .time-slider {
   appearance: none;
@@ -68,22 +69,22 @@ body {
 }
 
 .time-slider::-webkit-slider-runnable-track {
-  height: 4px;
-  border-radius: 2px;
-  background: var(--color-border);
+  height: 2px;
+  border-radius: 1px;
+  background: var(--color-text-muted);
 }
 
 .time-slider::-moz-range-track {
-  height: 4px;
-  border-radius: 2px;
-  background: var(--color-border);
+  height: 2px;
+  border-radius: 1px;
+  background: var(--color-text-muted);
 }
 
 .time-slider::-webkit-slider-thumb {
   appearance: none;
   width: 12px;
   height: 24px;
-  margin-top: -10px; /* a 24 pixel thumb centred on a 4 pixel track */
+  margin-top: -11px; /* a 24 pixel thumb centred on a 2 pixel track */
   background: linear-gradient(to right, transparent 4px, var(--color-highlight) 4px 8px, transparent 8px);
 }
 

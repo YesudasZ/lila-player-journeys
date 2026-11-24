@@ -109,3 +109,7 @@ def test_fixture_takes_the_shortest_journey_that_shows_each_case_and_adds_the_ma
 def test_a_case_that_no_journey_shows_is_left_out():
     fixture = playback_fixture(JOURNEYS[1:2], DEATH, STEP)
     assert [case["case"] for case in fixture["cases"]] == ["a 5 s step", ONE_ROW]
+
+
+def test_a_death_exactly_one_step_after_the_last_sample_is_a_step_and_not_a_late_death():
+    assert cases_shown(journey("m6-died", [0, 5, 10], [0, 1, 2], [0, 0, 3]), 3, True, STEP) == {"a 5 s step"}

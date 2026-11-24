@@ -51,7 +51,7 @@ export function MapView({ map, image, manifest }: { map: MapEntry; image: HTMLIm
       },
       onPlay: togglePlay,
     });
-    const stopWatching = drawn.watch(mapSurface.invalidate);
+    const stopWatching = drawn.watch(mapSurface.invalidate, mapSurface.drawNow);
     mounted.current = mapSurface;
     return () => {
       stopWatching();

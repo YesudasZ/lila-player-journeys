@@ -51,6 +51,8 @@ export interface MapSurface {
   fit: () => void;
   /** Draw a layer again on the next frame: what it shows has changed. */
   invalidate: (layer: Layer) => void;
+  /** Draw a layer again at once: for a change made inside an animation frame, as a playing clock's are, that has to show in that frame. */
+  drawNow: (layer: Layer) => void;
   /** Stop listening and drawing. */
   destroy: () => void;
 }
@@ -180,6 +182,13 @@ export function mountMapSurface({ area, surface, map, layers, readout, onLimits,
   function invalidate(layer: Layer) {
     stale.add(layer);
     schedule();
+  }
+
+  function drawNow(layer: Layer) {
+    stale.add(layer);
+    if (rendering) return; // the frame that is under way draws it
+    cancelAnimationFrame(pending);
+    render();
   }
 
   /** The canvases get one pixel per device pixel, so the map is sharp on any screen. */
@@ -338,6 +347,7 @@ export function mountMapSurface({ area, surface, map, layers, readout, onLimits,
     zoomBy,
     fit,
     invalidate,
+    drawNow,
     destroy() {
       observer.disconnect();
       stopWatchingRatio();

@@ -4,6 +4,7 @@
  * the reach means the same on screen at every zoom.
  */
 import type { DrawList } from "./drawList.ts";
+import type { Head } from "./playback.ts";
 import type { Point } from "./projection.ts";
 
 /**
@@ -34,32 +35,44 @@ export interface PickedRow {
   row: number;
 }
 
+/** How far a point is from the stretch between two points, squared, and how far along that stretch its nearest point lies, from 0 to 1. */
+function toStretch(at: Point, fromX: number, fromY: number, toX: number, toY: number): { squared: number; share: number } {
+  const alongX = toX - fromX;
+  const alongY = toY - fromY;
+  const length = alongX * alongX + alongY * alongY;
+  const share = length === 0 ? 0 : Math.min(Math.max(((at.x - fromX) * alongX + (at.y - fromY) * alongY) / length, 0), 1);
+  const dx = fromX + share * alongX - at.x;
+  const dy = fromY + share * alongY - at.y;
+  return { squared: dx * dx + dy * dy, share };
+}
+
 /**
  * The nearest path within `reach` of a point, or null: its journey, and the row at the nearer end
  * of the nearest stretch of the path, since only a row has a time and a place of its own. At a
- * moment of playback `rows` says for every journey how many rows of its path are drawn: none for a
- * journey that is not on the map yet.
+ * moment of playback `heads` says where every journey is: a path is there as far as its head, the
+ * stretch the head is on included, which answers with the row the head has left. A journey whose
+ * head is null is not on the map yet.
  */
-export function pickPath(at: Point, reach: number, list: DrawList, rows?: readonly number[]): PickedRow | null {
+export function pickPath(at: Point, reach: number, list: DrawList, heads?: readonly (Head | null)[]): PickedRow | null {
   let best: PickedRow | null = null;
   let nearest = reach * reach;
   for (const [index, { x, y, pathLength }] of list.journeys.entries()) {
-    const drawn = rows ? Math.min(rows[index], pathLength) : pathLength;
-    if (drawn === 0) continue;
-    const last = drawn - 1; // rows after it are not part of the line: kills recorded after a death, and what has not happened yet
+    const head = heads?.[index];
+    if (head === null) continue;
+    const last = head ? head.row : pathLength - 1; // rows after it are not part of the line: kills recorded after a death, and what has not happened yet
     for (let row = 0; row < Math.max(last, 1); row += 1) {
       const next = Math.min(row + 1, last); // a path of one row is a point
-      const alongX = x[next] - x[row];
-      const alongY = y[next] - y[row];
-      const length = alongX * alongX + alongY * alongY;
-      const share = length === 0 ? 0 : Math.min(Math.max(((at.x - x[row]) * alongX + (at.y - y[row]) * alongY) / length, 0), 1);
-      const dx = x[row] + share * alongX - at.x;
-      const dy = y[row] + share * alongY - at.y;
-      const squared = dx * dx + dy * dy;
+      const { squared, share } = toStretch(at, x[row], y[row], x[next], y[next]);
       if (squared <= nearest) {
         best = { journey: index, row: share < 0.5 ? row : next };
         nearest = squared;
       }
+    }
+    if (!head) continue;
+    const { squared } = toStretch(at, x[head.row], y[head.row], head.x, head.y);
+    if (squared <= nearest) {
+      best = { journey: index, row: head.row };
+      nearest = squared;
     }
   }
   return best;

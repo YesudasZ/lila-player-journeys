@@ -25,7 +25,7 @@ export const playback = createStore<PlaybackState>(() => ({ end: null, time: 0, 
 let frame = 0; // the animation frame that has been asked for, 0 while the clock stands
 let last: number | null = null; // when the frame before was, in milliseconds; null before the first frame of a run
 
-/** One frame of a running clock. The time is set before the next frame is asked for, so whatever draws on the change does so before the clock moves again. */
+/** One frame of a running clock. What listens to the time draws in this same frame (the map's layer does), so the map and the slider show one time. */
 function tick(now: number) {
   const { time, end, speed } = playback.getState();
   const elapsed = last === null ? 0 : now - last; // the first frame only sets the time to count from
@@ -37,7 +37,7 @@ function tick(now: number) {
     return;
   }
   playback.setState({ time: next });
-  frame = requestAnimationFrame(tick);
+  if (playback.getState().playing) frame = requestAnimationFrame(tick); // a listener may have paused in answer
 }
 
 function stand() {
@@ -49,9 +49,9 @@ function stand() {
 export function play(): void {
   const { end, time, playing } = playback.getState();
   if (end === null || playing) return;
-  playback.setState({ playing: true, time: time >= end ? 0 : time });
   last = null;
-  frame = requestAnimationFrame(tick);
+  playback.setState({ playing: true, time: time >= end ? 0 : time });
+  if (playback.getState().playing) frame = requestAnimationFrame(tick); // a listener may have paused in answer
 }
 
 /** Stop the clock where it is. The time is rounded to what a link can hold, so that the address shows this very moment. */
@@ -71,11 +71,6 @@ export function seek(time: number): void {
   const { end } = playback.getState();
   if (end === null) return;
   playback.setState({ time: Math.min(Math.max(roundedTime(time), 0), end) });
-}
-
-/** Go forward or back by some seconds. */
-export function seekBy(seconds: number): void {
-  seek(playback.getState().time + seconds);
 }
 
 export function setSpeed(speed: number): void {
