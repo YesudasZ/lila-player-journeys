@@ -12,7 +12,7 @@ const ROOM_BELOW = 100; // CSS pixels a tooltip needs below the thing; nearer to
  * the place in world units. It opens toward the middle of the map, so it is never cut off at an
  * edge, and it is drawn above the legend card and the journeys panel, which may float over the map. It is hidden from assistive technology: it can only be reached with a pointer, and what it
  * says about a single event has no other way in. A list of a journey's events as text was planned
- * and cut: tooltips cover it (ARCHITECTURE.md, trade-offs).
+ * and cut: tooltips cover it (docs/TRADEOFFS.md).
  */
 export function MapTooltip({ hover, map, manifest }: { hover: Hover | null; map: MapEntry; manifest: Manifest }) {
   if (!hover) return null;
