@@ -7,6 +7,7 @@ import { findMatches, journeysIn, matchesOfMap, noMatchNote } from "../lib/match
 import { selectMatchId } from "../state/shown.ts";
 import { useAppStore } from "../state/store.ts";
 import { moveInList } from "./listKeys.ts";
+import { ALL_MATCHES_ID } from "./tabIds.ts";
 
 const ROW =
   "flex w-full items-baseline gap-2 rounded-md px-2 py-1.5 text-left text-xs text-text-muted hover:bg-surface-2 hover:text-text focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent aria-pressed:bg-surface-2 aria-pressed:text-text aria-pressed:shadow-[inset_2px_0_0_var(--color-accent)]";
@@ -39,6 +40,7 @@ export function MatchList({ manifest, map }: { manifest: Manifest; map: MapEntry
           Matches
         </h2>
         <button
+          id={ALL_MATCHES_ID}
           type="button"
           aria-pressed={matchId === null}
           onClick={() => {
