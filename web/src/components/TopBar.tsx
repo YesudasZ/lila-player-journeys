@@ -11,7 +11,7 @@ import { MapTabs } from "./MapTabs.tsx";
 export function TopBar({ manifest, counts }: { manifest: Manifest | null; counts: ReadonlyMap<string, number> }) {
   return (
     <header className="col-span-full row-start-1 grid grid-cols-subgrid border-b border-border bg-surface">
-      <h1 className="col-start-1 flex items-baseline gap-2 self-center pl-4 whitespace-nowrap">
+      <h1 className="col-start-1 flex items-baseline gap-2 self-center pl-3 whitespace-nowrap">
         <span className="font-heading text-[15px] font-semibold tracking-[0.08em]">LILA BLACK</span>
         <span className="text-[13px] font-normal text-text-muted">Player Journeys</span>
       </h1>

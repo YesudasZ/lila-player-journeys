@@ -21,8 +21,8 @@ import { useAppStore } from "./state/store.ts";
  * right edge, since docking would leave the map too little room. The column width never animates:
  * every frame of a transition would redraw the map's canvases. Written out in full for Tailwind.
  */
-const COLUMNS = "grid-cols-[clamp(260px,21vw,300px)_minmax(0,1fr)_0px]";
-const COLUMNS_WITH_PANEL = "grid-cols-[clamp(260px,21vw,300px)_minmax(0,1fr)_0px] min-[1200px]:grid-cols-[clamp(260px,21vw,300px)_minmax(0,1fr)_clamp(260px,21vw,300px)]";
+const COLUMNS = "grid-cols-[clamp(260px,22vw,300px)_minmax(0,1fr)_0px]";
+const COLUMNS_WITH_PANEL = "grid-cols-[clamp(260px,22vw,300px)_minmax(0,1fr)_0px] min-[1200px]:grid-cols-[clamp(260px,22vw,300px)_minmax(0,1fr)_clamp(260px,22vw,300px)]";
 
 /**
  * The page grid. The top bar spans all columns. Below it: the left column, the map, and the

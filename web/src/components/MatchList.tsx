@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { countLabel, counted, dayLabel } from "../lib/labels.ts";
 import { matchesWithFates, onChosenDays } from "../lib/filters.ts";
+import { revealScrollTop, tabStopOf } from "../lib/lists.ts";
 import type { Manifest, MapEntry } from "../lib/manifest.ts";
 import { findMatches, journeysIn, matchesOfMap, noMatchNote } from "../lib/matches.ts";
 import { selectMatchId } from "../state/shown.ts";
@@ -10,18 +11,23 @@ import { moveInList } from "./listKeys.ts";
 import { ALL_MATCHES_ID } from "./tabIds.ts";
 
 const ROW =
-  "flex w-full items-baseline gap-2 rounded-md px-2 py-1.5 text-left text-xs text-text-muted hover:bg-surface-2 hover:text-text focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent aria-pressed:bg-surface-2 aria-pressed:text-text aria-pressed:shadow-[inset_2px_0_0_var(--color-accent)]";
+  "flex w-full items-baseline gap-2 rounded-md px-2 py-1.5 text-left text-xs text-text-muted hover:bg-surface-2 hover:text-text focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent aria-[current=true]:bg-surface-2 aria-[current=true]:text-text aria-[current=true]:shadow-[inset_2px_0_0_var(--color-accent)]";
 
 /**
- * The matches of the open map that the filters leave, busiest first. "All matches" shows them together; choosing one opens
- * it alone, and choosing it again goes back. The box narrows the list to the ids that contain what
- * was typed. The list is one stop for the Tab key; the arrow keys move inside it. An empty list says
- * why, in a status element that is always on the page, so that it is announced when it gets its text.
+ * The matches of the open map that the filters leave, busiest first, in all the height the column has
+ * left. "All matches" shows them together; choosing one opens it alone, with its journeys in the panel
+ * on the right. Choosing the open match again brings that panel back when it was closed; going back
+ * to all matches takes "All matches" or "Close match" in the panel. The open match stays in view.
+ * The box narrows the list to the ids that contain what was typed. The list is one stop for the Tab
+ * key; the arrow keys move inside it. An empty list says why, in a status element that is always on
+ * the page, so that it is announced when it gets its text.
  */
 export function MatchList({ manifest, map }: { manifest: Manifest; map: MapEntry }) {
   const matchId = useAppStore(selectMatchId);
   const selectMatch = useAppStore((state) => state.selectMatch);
+  const setJourneysPanel = useAppStore((state) => state.setJourneysPanel);
   const [typed, setTyped] = useState("");
+  const listRef = useRef<HTMLUListElement>(null);
   const chosenDays = useAppStore((state) => state.days);
   const fates = useAppStore((state) => state.fates);
   const loaded = useAppStore((state) => state.journeys[map.id]);
@@ -30,19 +36,31 @@ export function MatchList({ manifest, map }: { manifest: Manifest; map: MapEntry
     return matchesOfMap(manifest, map.id).filter((match) => onChosenDays(match, chosenDays) && (!withFates || withFates.has(match.id)));
   }, [manifest, map.id, chosenDays, fates, loaded]);
   const found = useMemo(() => findMatches(matches, typed), [matches, typed]);
-  const tabStop = found.some((match) => match.id === matchId) ? matchId : found.at(0)?.id;
+  const tabStop = tabStopOf(
+    found.map((match) => match.id),
+    matchId,
+  );
   const days = useMemo(() => new Map(manifest.days.map((day) => [day.id, dayLabel(day.date)])), [manifest.days]);
 
+  // The open match is brought into view when it changes, also when it came from a link, the map or
+  // Back. Only the list scrolls.
+  useLayoutEffect(() => {
+    const rows = listRef.current;
+    if (!rows || matchId === null) return;
+    const row = [...rows.querySelectorAll<HTMLElement>("[data-match]")].find((each) => each.dataset.match === matchId);
+    if (row) rows.scrollTop = revealScrollTop(row.offsetTop, row.offsetHeight, rows.scrollTop, rows.clientHeight);
+  }, [matchId]);
+
   return (
-    <section aria-labelledby="matches-heading" className="flex min-h-32 flex-1 flex-col">
-      <div className="px-4 pt-3 pb-2">
+    <section aria-labelledby="matches-heading" className="flex min-h-56 flex-1 flex-col">
+      <div className="px-3 pt-3 pb-2">
         <h2 id="matches-heading" className="font-heading text-[13px] font-semibold tracking-wide">
           Matches
         </h2>
         <button
           id={ALL_MATCHES_ID}
           type="button"
-          aria-pressed={matchId === null}
+          aria-current={matchId === null || undefined}
           onClick={() => {
             selectMatch(map.id, null);
           }}
@@ -62,19 +80,21 @@ export function MatchList({ manifest, map }: { manifest: Manifest; map: MapEntry
           className="mt-2 h-8 w-full rounded-md border border-border bg-surface-2 px-2.5 font-mono text-xs text-text placeholder:font-sans placeholder:text-text-muted focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-accent"
         />
       </div>
-      <p role="status" className={found.length === 0 ? "px-4 py-2 text-xs text-text-muted" : "sr-only"}>
+      <p role="status" className={found.length === 0 ? "px-3 py-2 text-xs text-text-muted" : "sr-only"}>
         {found.length === 0 && noMatchNote(map.name, matches.length, typed)}
       </p>
       {found.length > 0 && (
-        <ul onKeyDown={moveInList} className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
+        <ul ref={listRef} aria-label={`Matches of ${map.name}`} onKeyDown={moveInList} className="relative min-h-0 flex-1 overflow-y-auto px-1 pb-2">
           {found.map((match) => (
             <li key={match.id}>
               <button
                 type="button"
+                data-match={match.id}
                 tabIndex={match.id === tabStop ? 0 : -1}
-                aria-pressed={match.id === matchId}
+                aria-current={match.id === matchId || undefined}
                 onClick={() => {
-                  selectMatch(map.id, match.id === matchId ? null : match.id);
+                  if (match.id === matchId) setJourneysPanel(true);
+                  else selectMatch(map.id, match.id);
                 }}
                 className={ROW}
               >
