@@ -98,9 +98,9 @@ export function MatchList({ manifest, map }: { manifest: Manifest; map: MapEntry
                 }}
                 className={ROW}
               >
-                <span className="font-mono text-text">{match.id}</span>
-                <span>{days.get(match.day)}</span>
-                <span className="ml-auto">
+                <span className="shrink-0 font-mono text-text">{match.id}</span>
+                <span className="shrink-0 whitespace-nowrap">{days.get(match.day)}</span>
+                <span className="ml-auto min-w-0 truncate">
                   {counted(journeysIn(match), "journey", "journeys")}
                   {match.bots > 0 && `, ${counted(match.bots, "bot", "bots")}`}
                 </span>

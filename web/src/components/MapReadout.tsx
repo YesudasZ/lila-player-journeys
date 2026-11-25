@@ -8,15 +8,17 @@ interface ReadoutRefs {
 }
 
 /**
- * World coordinates under the pointer, and the scale bar. The map surface writes the values straight
- * into these elements, many times a second, so they are not React state. The panel has a fixed size:
- * nothing shifts while the numbers change. A pointer passes through it to the map.
+ * World coordinates under the pointer, and the scale bar, left of the zoom buttons. The map surface
+ * writes the values straight into these elements, many times a second, so they are not React state.
+ * The panel has a fixed size: nothing shifts while the numbers change. It shows while the pointer is
+ * over the map (the map surface marks the map area with `data-pointer`) or while the map has the
+ * keyboard focus, which still wants the scale. A pointer passes through it to the map.
  */
 export function MapReadout({ x, z, bar, label }: ReadoutRefs) {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute bottom-4 left-4 w-54 rounded-md border border-border bg-surface px-2.5 py-2 font-mono text-xs leading-4"
+      className="pointer-events-none absolute right-15 bottom-4 w-54 rounded-md border border-border bg-surface/90 px-2.5 py-2 font-mono text-xs leading-4 opacity-0 transition-opacity group-has-[#map-surface:focus-visible]/map:opacity-100 group-data-pointer/map:opacity-100 motion-reduce:transition-none"
     >
       <div className="flex gap-4">
         <span>

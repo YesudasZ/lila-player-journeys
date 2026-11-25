@@ -21,10 +21,12 @@ const BUTTON =
  * again clears the focus. The list is one Tab stop; the arrow keys move inside it.
  *
  * Closing the panel (× or Escape) keeps the match open; "Close match" goes back to all matches.
- * From 1200 px the panel has a column of its own; below that it floats over the map's right edge.
+ * From 1200 px the panel has a column of its own; below that it floats over the map's right edge,
+ * ending above the zoom buttons.
  */
 export function JourneyPanel({ manifest, map, matchId }: { manifest: Manifest; map: MapEntry; matchId: string }) {
   const list = useAppStore(selectDrawList);
+  const loaded = useAppStore((state) => state.journeys[map.id]);
   const focus = useAppStore((state) => state.focus);
   const setFocus = useAppStore((state) => state.setFocus);
   const selectMatch = useAppStore((state) => state.selectMatch);
@@ -85,9 +87,9 @@ export function JourneyPanel({ manifest, map, matchId }: { manifest: Manifest; m
       ref={panelRef}
       aria-labelledby={JOURNEYS_HEADING_ID}
       onKeyDown={onKeyDown}
-      className="relative z-20 col-start-2 row-start-2 flex min-h-0 w-[clamp(260px,26vw,300px)] flex-col justify-self-end border-l border-border bg-surface text-[13px] shadow-[-12px_0_24px_var(--color-bg)] min-[1200px]:col-start-3 min-[1200px]:row-span-2 min-[1200px]:w-auto min-[1200px]:justify-self-stretch min-[1200px]:shadow-none"
+      className="relative z-20 col-start-2 row-start-2 flex max-h-[calc(100%-8rem)] min-h-0 w-[clamp(260px,26vw,300px)] flex-col self-start justify-self-end rounded-bl-md border-b border-l border-border bg-surface text-[13px] shadow-[-12px_12px_24px_var(--color-bg)] min-[1200px]:col-start-3 min-[1200px]:row-span-2 min-[1200px]:max-h-none min-[1200px]:w-auto min-[1200px]:self-stretch min-[1200px]:justify-self-stretch min-[1200px]:rounded-none min-[1200px]:border-b-0 min-[1200px]:shadow-none"
     >
-      <div className="flex items-start gap-2 border-b border-border px-4 pt-3 pb-3">
+      <div className="flex items-start gap-2 border-b border-border px-3 pt-3 pb-3">
         <div className="min-w-0 flex-1">
           <h2
             id={JOURNEYS_HEADING_ID}
@@ -110,17 +112,21 @@ export function JourneyPanel({ manifest, map, matchId }: { manifest: Manifest; m
           ×
         </button>
       </div>
-      <div className="border-b border-border px-4 py-2">
+      <div className="border-b border-border px-3 py-2">
         <button type="button" onClick={closeMatch} title={`Back to all matches of ${map.name}`} className={`h-7 px-2.5 ${BUTTON}`}>
           Close match
         </button>
       </div>
       {journeys.length === 0 ? (
-        <p role="status" className="px-4 py-3 text-xs text-text-muted">
-          No journey of this match is drawn: Humans and Bots are switched off in the legend.
+        <p role="status" className="px-3 py-3 text-xs text-text-muted">
+          {list
+            ? "No journey of this match is drawn: Humans and Bots are switched off in the legend."
+            : loaded?.status === "error"
+              ? `The journeys of ${map.name} did not load. The legend on the map can try again.`
+              : `Loading the journeys of ${map.name}…`}
         </p>
       ) : (
-        <ul ref={listRef} aria-label={`Journeys of ${matchId}`} onKeyDown={moveInList} className="relative min-h-0 flex-1 overflow-y-auto px-2 py-2">
+        <ul ref={listRef} aria-label={`Journeys of ${matchId}`} onKeyDown={moveInList} className="relative min-h-0 flex-1 overflow-y-auto px-1 py-2">
           {journeys.map((journey) => (
             <li key={journey.id}>
               <button

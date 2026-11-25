@@ -4,10 +4,12 @@ import { BUTTON_ZOOM_STEP, MAP_HELP } from "../lib/mapKeys.ts";
 import type { Manifest, MapEntry } from "../lib/manifest.ts";
 import type { ZoomLimits } from "../lib/view.ts";
 import { togglePlay } from "../state/playback.ts";
+import { selectJourneysPanelShown } from "../state/shown.ts";
 import { useAppStore } from "../state/store.ts";
 import { createHeatLayer } from "./layers/heatLayer.ts";
 import { createJourneysLayer, type Hover } from "./layers/journeysLayer.ts";
 import { createMinimapLayer } from "./layers/minimapLayer.ts";
+import { Legend } from "./Legend.tsx";
 import { MapReadout } from "./MapReadout.tsx";
 import { mountMapSurface, type MapSurface } from "./mapSurface.ts";
 import { MapTooltip } from "./MapTooltip.tsx";
@@ -18,7 +20,12 @@ import { FilterNotice } from "./FilterNotice.tsx";
 
 const KEYS_ID = "map-keys";
 
-/** One map: the surface that is panned and zoomed, with its layers, the tooltip, the read-out and the zoom buttons. */
+/**
+ * One map: the surface that is panned and zoomed, with its layers and the tooltip; over it the notes
+ * of the filters at the top, the legend card at the bottom left, and the read-out and the zoom buttons
+ * at the bottom right. The read-out shows while the pointer is over the map or the map has the
+ * keyboard focus: the map surface marks the pointer on this element, so no React update is needed.
+ */
 export function MapView({ map, image, manifest }: { map: MapEntry; image: HTMLImageElement; manifest: Manifest }) {
   const areaRef = useRef<HTMLDivElement>(null);
   const surfaceRef = useRef<HTMLDivElement>(null);
@@ -33,6 +40,7 @@ export function MapView({ map, image, manifest }: { map: MapEntry; image: HTMLIm
   const mounted = useRef<MapSurface | null>(null);
   const [limits, setLimits] = useState<ZoomLimits>({ atFit: true, atClosest: false });
   const [hover, setHover] = useState<Hover | null>(null);
+  const panelShown = useAppStore(selectJourneysPanelShown);
 
   useEffect(() => {
     const [area, surface, minimap, heat, journeys, ring] = [areaRef.current, surfaceRef.current, minimapRef.current, heatRef.current, journeysRef.current, ringRef.current];
@@ -67,8 +75,8 @@ export function MapView({ map, image, manifest }: { map: MapEntry; image: HTMLIm
   }, [map, image]);
 
   return (
-    // The map's keys are heard here, so they also work while one of the buttons has the focus.
-    <div ref={areaRef} className="relative h-full">
+    // The map's keys are heard here, so they also work while one of the buttons or the legend has the focus.
+    <div ref={areaRef} data-panel={panelShown ? "" : undefined} className="group/map relative h-full">
       <div
         ref={surfaceRef}
         id={MAP_SURFACE_ID}
@@ -95,11 +103,16 @@ export function MapView({ map, image, manifest }: { map: MapEntry; image: HTMLIm
         {MAP_HELP}
       </p>
       <MapTooltip hover={hover} map={map} manifest={manifest} />
-      {/* What the filters did to the view, at the top of the map. The box itself lets the pointer through to the map. */}
-      <div className="pointer-events-none absolute top-4 left-1/2 z-10 flex w-max max-w-[80%] -translate-x-1/2 flex-col items-center gap-2">
+      {/*
+        What the filters did to the view, at the top of the map, clear of the button in the top right corner. Below
+        1200 px the journeys panel floats over the map's right edge, and the notes move into the part left visible.
+        The box itself lets the pointer through to the map.
+      */}
+      <div className="pointer-events-none absolute inset-x-32 top-4 z-10 flex flex-col items-center gap-2 max-[1200px]:group-data-panel/map:right-[calc(clamp(260px,26vw,300px)+1rem)] max-[1200px]:group-data-panel/map:left-4">
         <FilterNotice />
         <EmptyNote map={map} manifest={manifest} />
       </div>
+      <Legend map={map} />
       <MapReadout x={xRef} z={zRef} bar={barRef} label={labelRef} />
       <ZoomControls
         limits={limits}

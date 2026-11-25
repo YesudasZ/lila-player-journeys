@@ -58,7 +58,10 @@ export interface MapSurface {
 }
 
 interface Parts {
-  /** The element around the map and its buttons. A key pressed anywhere inside it acts on the map. */
+  /**
+   * The element around the map and its buttons. A key pressed anywhere inside it acts on the map. It
+   * carries `data-pointer` while a pointer is over the map, so that what only matters then can show.
+   */
   area: HTMLElement;
   /** The focusable element that receives pointer and wheel events and gives the viewport its size. */
   surface: HTMLElement;
@@ -233,9 +236,15 @@ export function mountMapSurface({ area, surface, map, layers, readout, onLimits,
   };
   const centre = (): Point => ({ x: viewport.width / 2, y: viewport.height / 2 });
 
+  /** The pointer is at this point of the map. The first point marks the map area, so that the read-out shows. */
+  function pointAt(at: Point) {
+    if (pointer === null) area.dataset.pointer = "";
+    pointer = at;
+  }
+
   /** The pointer is over the map: from here on the read-out has a position to show. */
   function onPointerSeen(event: PointerEvent) {
-    pointer = position(event);
+    pointAt(position(event));
     pointed = true;
     schedule();
   }
@@ -288,6 +297,7 @@ export function mountMapSurface({ area, surface, map, layers, readout, onLimits,
   }
 
   function onPointerLeave() {
+    delete area.dataset.pointer;
     pointer = null;
     pointed = true;
     schedule();
@@ -295,9 +305,10 @@ export function mountMapSurface({ area, surface, map, layers, readout, onLimits,
 
   function onWheel(event: WheelEvent) {
     event.preventDefault(); // neither scroll the page nor zoom the browser
-    pointer = position(event); // a wheel may turn before the pointer has moved
+    const at = position(event);
+    pointAt(at); // a wheel may turn before the pointer has moved
     pointed = true;
-    show(zoomAt(view(), wheelZoomFactor(event.deltaY, event.deltaMode, event.ctrlKey), pointer, stage()));
+    show(zoomAt(view(), wheelZoomFactor(event.deltaY, event.deltaMode, event.ctrlKey), at, stage()));
     schedule(); // at a zoom limit the view stays, the position under the pointer is still written
   }
 
@@ -353,6 +364,7 @@ export function mountMapSurface({ area, surface, map, layers, readout, onLimits,
       stopWatchingRatio();
       stopListening();
       cancelAnimationFrame(pending);
+      delete area.dataset.pointer;
       surface.removeEventListener("pointerenter", onPointerSeen);
       surface.removeEventListener("pointerdown", onPointerDown);
       surface.removeEventListener("pointermove", onPointerMove);
