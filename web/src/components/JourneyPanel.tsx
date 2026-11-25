@@ -88,7 +88,7 @@ export function JourneyPanel({ manifest, map, matchId }: { manifest: Manifest; m
           <h2
             id={JOURNEYS_HEADING_ID}
             tabIndex={-1}
-            className="rounded-sm font-heading text-[13px] font-semibold tracking-wide outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className="rounded-sm font-heading text-[13px] font-semibold tracking-wide focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
             Journeys of <span className="font-mono font-medium">{matchId}</span>
           </h2>
