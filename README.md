@@ -60,9 +60,23 @@ web/         the app: src/lib (pure logic with tests), src/state, src/components
 docs/        data notes and format, plan and progress, proof images, screenshots
 ```
 
+## Walkthrough video
+
+A silent 4:39 screen recording of the live tool: [docs/media/walkthrough.mp4](docs/media/walkthrough.mp4).
+
+| Time | Chapter |
+|---|---|
+| 0:00 | **Maps and legend.** Every journey on Ambrose Valley, the three map tabs, hovering and zooming, and the legend's switches |
+| 1:08 | **Filters.** Days, fates and "Clear filters" |
+| 1:41 | **Opening a match and the journeys panel.** Match `fbbc5d02` from the list, its summary and journeys, one journey in focus |
+| 2:01 | **Playback.** Play, the speed set to 20x, and journeys picked out while the match plays |
+| 3:05 | **Heatmaps.** Traffic, Kills, Deaths and Loot, on one match and on all matches, with the ⓘ details |
+| 3:58 | **Copy link.** The view of a Lockdown match copied, then opened from the link in a new tab |
+| 4:18 | **Data and keys.** Where the data differs from its README, what each heat layer counts, and the keys |
+
 ## Walkthrough
 
-Each step is a link into the live tool. A recording of the same steps: [docs/media/walkthrough.mp4](docs/media/walkthrough.mp4).
+Each step is a link into the live tool.
 
 1. **[Every journey of a map](https://lila-player-journeys-psi.vercel.app/).** Humans are solid blue lines with round heads, bots dashed orange lines with square heads. Triangles are kills, crosses deaths, diamonds deaths in the storm. The legend card at the bottom left switches each of them on and off. Drag to move, scroll to zoom; hover a path or a marker for who, when and where.
 
