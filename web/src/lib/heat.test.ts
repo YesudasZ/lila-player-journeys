@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { journeysOf, manifest, mapOf } from "../testing/committed.ts";
 import { buildDrawList, eventKinds, shownLayers, type DrawList } from "./drawList.ts";
-import { CELL_UNITS, HEAT_GROUPS, HEAT_KINDS, HEAT_LABELS, HEAT_TOKENS, buildHeat, cellOf, cellsAcross, heatEvents, heatSummary, rgbOf, smoothed, strength, type HeatKind } from "./heat.ts";
+import { CELL_UNITS, HEAT_GROUPS, HEAT_KINDS, HEAT_LABELS, HEAT_TOKENS, buildHeat, cellOf, cellsAcross, heatEvents, heatLine, heatSummary, rgbOf, smoothed, strength, type HeatKind } from "./heat.ts";
 
 const MAPS = ["AmbroseValley", "GrandRift", "Lockdown"];
 const steps = manifest.encoding.uv_steps;
@@ -169,5 +169,21 @@ describe("the legend of a heat layer", () => {
   it("lists the rows of each event by its name in the data", () => {
     expect(heatEvents(heatOf("AmbroseValley", "death", listOf("AmbroseValley", "5a081fe4")))).toBe("Killed 0 · BotKilled 0 · KilledByStorm 1");
     expect(heatEvents({ events: [{ name: "BotKill", count: 2406 }] })).toBe("BotKill 2,406");
+  });
+});
+
+describe("the line under the heat buttons", () => {
+  it("says how much the layer counts and how much its fullest cell holds; deaths say how many were in the storm", () => {
+    expect(heatLine(heatOf("AmbroseValley", "kill"), "kill", "Ambrose Valley")).toBe("1,789 kills · up to 29 per cell");
+    expect(heatLine(heatOf("AmbroseValley", "movement"), "movement", "Ambrose Valley")).toBe("48,436 movement samples · up to 330 per cell");
+    expect(heatLine(heatOf("AmbroseValley", "loot"), "loot", "Ambrose Valley")).toBe("9,902 loot events · up to 246 per cell");
+    expect(heatLine(heatOf("AmbroseValley", "death"), "death", "Ambrose Valley")).toMatch(/^504 deaths incl\. 17 storm · up to \d+ per cell$/);
+  });
+
+  it("is empty while no layer is on, a loading note before the journeys arrive, and says so when nothing is counted", () => {
+    expect(heatLine(null, null, "Lockdown")).toBe("");
+    expect(heatLine(null, "kill", "Lockdown")).toBe("Loading the journeys of Lockdown…");
+    expect(heatLine({ kind: "kill", total: 0, most: 0, storm: 0 }, "kill", "Lockdown")).toBe("The journeys that are drawn have no kills.");
+    expect(heatLine({ kind: "death", total: 1, most: 1, storm: 1 }, "death", "Lockdown")).toBe("1 death incl. 1 storm · up to 1 per cell");
   });
 });

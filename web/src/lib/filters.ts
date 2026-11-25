@@ -41,3 +41,6 @@ export function emptyNote(mapName: string, days: readonly string[], fates: reado
   const what = fates.length > 0 ? ` has the fate ${orList(fates.map((fate) => `“${fate}”`))}` : " is left";
   return `No journey on ${mapName}${when}${what}.`;
 }
+
+/** How many filter chips are chosen, days and fates together: "Filters · 2 active". */
+export const activeFilters = (days: readonly string[], fates: readonly string[]): number => days.length + fates.length;

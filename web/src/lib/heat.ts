@@ -165,6 +165,21 @@ export function heatSummary(heat: Pick<Heat, "kind" | "total" | "matches" | "mos
   return `${counted(heat.total, one, many)} of ${counted(heat.matches, "match", "matches")}${storm}; the fullest cell holds ${countLabel(heat.most)}. A cell is ${side} × ${side} units. ${HEAT_MEANING[heat.kind]}`;
 }
 
+/**
+ * The one line under the heat buttons: how much the layer counts and how much its fullest cell
+ * holds, "1,789 kills · up to 29 per cell". Deaths say how many were in the storm. Nothing while no
+ * layer is on; a loading note while the journeys of the map are on their way. The details are in
+ * `heatSummary` and `heatEvents`, behind the ⓘ button.
+ */
+export function heatLine(heat: Pick<Heat, "kind" | "total" | "most" | "storm"> | null, kind: HeatKind | null, mapName: string): string {
+  if (kind === null) return "";
+  if (heat === null) return `Loading the journeys of ${mapName}…`;
+  const [one, many] = NOUNS[heat.kind];
+  if (heat.total === 0) return `The journeys that are drawn have no ${many}.`;
+  const storm = heat.kind === "death" ? ` incl. ${countLabel(heat.storm)} storm` : "";
+  return `${counted(heat.total, one, many)}${storm} · up to ${countLabel(heat.most)} per cell`;
+}
+
 /** The rows counted of each event, by its name in the data: "Killed 3 · BotKilled 697 · KilledByStorm 39". */
 export function heatEvents(heat: Pick<Heat, "events">): string {
   return heat.events.map(({ name, count }) => `${name} ${countLabel(count)}`).join(" · ");

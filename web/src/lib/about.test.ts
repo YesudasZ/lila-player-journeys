@@ -43,7 +43,9 @@ describe("what the panel about the data and the keys says", () => {
   it("says of each heat layer what its legend says, in the order of the buttons, and names the ground plane", () => {
     const heat = sectionOf(sections, "The map and the heat layers");
     expect(heat?.entries).toEqual(HEAT_KINDS.map((kind) => ({ term: HEAT_LABELS[kind], text: HEAT_MEANING[kind] })));
-    expect(heat?.lead).toMatch(/^x and z are the ground plane .* y, is height, shown as elevation\. .* in cells of 10 × 10 world units\.$/);
+    expect(heat?.lead).toMatch(
+      /^x and z are the ground plane .* y, is height, shown as elevation\. .* in cells of 10 × 10 world units\. The ⓘ beside the heat buttons gives .* by event name\.$/,
+    );
     for (const kind of HEAT_KINDS) {
       expect(heatSummary({ kind, total: 5, matches: 1, most: 2, cells: 90, storm: 0 }, 900).endsWith(HEAT_MEANING[kind])).toBe(true);
     }

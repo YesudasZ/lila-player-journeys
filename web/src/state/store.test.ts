@@ -7,7 +7,7 @@ import type { Manifest, MapEntry } from "../lib/manifest.ts";
 import { DataError } from "../lib/reader.ts";
 import { journeysOf, manifest, mapOf } from "../testing/committed.ts";
 import { decodeLink, encodeLink } from "../lib/link.ts";
-import { selectDrawList, selectHeat, selectLink, selectMatchId } from "./shown.ts";
+import { selectDrawList, selectHeat, selectJourneysPanelShown, selectLink, selectMatchId } from "./shown.ts";
 import { useAppStore } from "./store.ts";
 
 // The store is tested with the real manifest and without a network: the two loaders are stand-ins.
@@ -686,5 +686,46 @@ describe("heat", () => {
   it("is nothing while the journeys of the map are on their way", () => {
     state().setHeat("movement");
     expect(selectHeat(state())).toBeNull();
+  });
+});
+
+describe("the journeys panel", () => {
+  const open = async () => {
+    fetched.mockResolvedValue(manifest);
+    loaded.mockResolvedValue(IMAGE);
+    await state().loadManifest();
+    await vi.waitFor(() => {
+      expect(state().journeys.AmbroseValley?.status).toBe("ready");
+    });
+  };
+  const address = () => encodeLink(selectLink(state()) ?? decodeLink(""));
+
+  it("is wanted at first, shows with an open match, and opening a match shows it again after it was closed", async () => {
+    await open();
+    expect([state().journeysPanel, selectJourneysPanelShown(state())]).toEqual([true, false]); // no match is open
+    state().selectMatch("AmbroseValley", "fbbc5d02");
+    expect(selectJourneysPanelShown(state())).toBe(true);
+    state().setJourneysPanel(false);
+    expect([selectMatchId(state()), selectJourneysPanelShown(state())]).toEqual(["fbbc5d02", false]); // the match stays open
+    state().selectMatch("AmbroseValley", "a476eb57");
+    expect(selectJourneysPanelShown(state())).toBe(true);
+  });
+
+  it("is no step and no part of the address; a refused match, a link from the history and closing the match leave it alone", async () => {
+    await open();
+    state().selectMatch("AmbroseValley", "fbbc5d02");
+    const [steps, link] = [state().steps, address()];
+    state().setJourneysPanel(false);
+    expect([state().steps, address()]).toEqual([steps, link]);
+    state().selectMatch("AmbroseValley", "zzzzzzzz"); // refused
+    state().applyLink(decodeLink("?match=a476eb57"));
+    state().selectMatch("AmbroseValley", null);
+    expect(state().journeysPanel).toBe(false);
+  });
+
+  it("is wanted again after the store is reset", () => {
+    state().setJourneysPanel(false);
+    useAppStore.setState(useAppStore.getInitialState(), true);
+    expect(state().journeysPanel).toBe(true);
   });
 });
