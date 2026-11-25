@@ -21,6 +21,11 @@ export function selectMatchId(state: AppState): string | null {
   return state.mapId === null ? null : (state.matches[state.mapId] ?? null);
 }
 
+/** Whether the journeys panel is on the page: a match is open and the panel is wanted. It decides the page's columns, the panel and its reopen button. */
+export function selectJourneysPanelShown(state: AppState): boolean {
+  return selectMatchId(state) !== null && state.journeysPanel;
+}
+
 let last: { from: readonly unknown[]; list: DrawList } | null = null;
 
 /** The draw list of the open map as the state stands; null until that map's journeys have arrived. */

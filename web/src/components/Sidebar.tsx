@@ -1,22 +1,18 @@
 import type { Manifest, MapEntry } from "../lib/manifest.ts";
-import { selectMatchId } from "../state/shown.ts";
-import { useAppStore } from "../state/store.ts";
 import { Filters } from "./Filters.tsx";
 import { HeatControl } from "./HeatControl.tsx";
-import { JourneyList } from "./JourneyList.tsx";
-import { Legend } from "./Legend.tsx";
 import { MatchList } from "./MatchList.tsx";
 
-/** The column beside the map: the filters, which matches are shown, the journeys of an open match, and the legend with its switches. */
+/**
+ * The column left of the map: what you choose to look at. The match list takes the height that is
+ * left. The legend sits on the map, and the journeys of an open match have a panel on the right.
+ */
 export function Sidebar({ manifest, map }: { manifest: Manifest; map: MapEntry }) {
-  const matchId = useAppStore(selectMatchId);
   return (
-    <aside aria-label="Filters, matches and legend" className="row-span-2 flex min-h-0 flex-col overflow-y-auto border-r border-border bg-surface text-[13px]">
+    <aside aria-label="Heat, filters and matches" className="col-start-1 row-span-2 row-start-2 flex min-h-0 flex-col overflow-y-auto border-r border-border bg-surface text-[13px]">
       <HeatControl map={map} />
       <Filters manifest={manifest} />
       <MatchList key={map.id} manifest={manifest} map={map} />
-      {matchId !== null && <JourneyList matchId={matchId} />}
-      <Legend map={map} />
     </aside>
   );
 }

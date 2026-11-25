@@ -48,6 +48,17 @@ export function counted(count: number, one: string, many: string): string {
   return `${countLabel(count)} ${count === 1 ? one : many}`;
 }
 
+/**
+ * Why the journeys panel of an open match lists no journey. The draw list counts the journeys that
+ * the filters leave whatever the switches say, so an actor with a count is one whose switch hides it;
+ * with no count at all, the filters left nothing. Only for a draw list that draws no journey.
+ */
+export function noJourneyNote(counts: Pick<DrawList["counts"], "humans" | "bots">): string {
+  const off = (["humans", "bots"] as const).filter((actor) => counts[actor] > 0).map((actor) => LAYER_LABELS[actor]);
+  if (off.length === 0) return "No journey of this match passes the filters.";
+  return `No journey of this match is drawn: the ${off.join(" and ")} ${off.length === 1 ? "switch is" : "switches are"} off in the legend.`;
+}
+
 /** The legend's first line: the matches and journeys that are drawn, after the filters and the switches for humans and bots. */
 export function drawnLine({ matches, journeys }: Pick<DrawList, "matches" | "journeys">): string {
   return `${counted(matches, "match", "matches")}, ${counted(journeys.length, "journey", "journeys")}`;

@@ -60,6 +60,12 @@ export interface AppState {
   steps: number;
   /** The id of the match that a filter has just closed, for the notice that says so; null once that is said or something else was chosen. */
   closedByFilters: string | null;
+  /**
+   * Whether the journeys panel is wanted while a match is open. Opening a match opens it; the viewer
+   * may close it and keep the match. It is no part of a link and no step: the address and the
+   * history stay about the view (see linkSync).
+   */
+  journeysPanel: boolean;
 
   /**
    * Fetch the manifest and open the view that a link asks for, as far as the data has it: the first
@@ -98,6 +104,8 @@ export interface AppState {
   restoreFocus: (journeyId: string | null) => void;
   /** The notice about the match that a filter closed has been shown long enough. */
   dismissNotice: () => void;
+  /** Show or hide the journeys panel of the open match. Not a step. */
+  setJourneysPanel: (shown: boolean) => void;
 }
 
 /** The fetch of the manifest that is under way, so that asking twice loads once. */
@@ -163,6 +171,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
   asked: DEFAULT_LINK,
   steps: 0,
   closedByFilters: null,
+  journeysPanel: true,
 
   loadManifest: (link) => {
     if (link) set({ asked: link });
@@ -246,6 +255,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
       matches: matchId === null ? without(state.matches, mapId) : { ...state.matches, [mapId]: matchId },
       focus: null,
       closedByFilters: null,
+      journeysPanel: matchId === null ? state.journeysPanel : true, // a match that is opened shows its journeys
       steps: state.steps + 1,
     }));
   },
@@ -332,6 +342,10 @@ export const useAppStore = create<AppState>()((set, get) => ({
 
   restoreFocus: (journeyId) => {
     set({ focus: journeyId });
+  },
+
+  setJourneysPanel: (shown) => {
+    set({ journeysPanel: shown });
   },
 
   dismissNotice: () => {

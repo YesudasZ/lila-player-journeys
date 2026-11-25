@@ -1,15 +1,28 @@
+import { useRef, useState } from "react";
+
 import { LAYER_KEYS, shownLayers } from "../lib/drawList.ts";
 import { LAYER_LABELS, countLabel, drawnLine } from "../lib/labels.ts";
+import { legendOpen } from "../lib/lists.ts";
 import type { MapEntry } from "../lib/manifest.ts";
+import { PREF_KEYS, browserStorage, readFlag, writeFlag } from "../lib/prefs.ts";
 import { selectDrawList, selectMatchId } from "../state/shown.ts";
 import { useAppStore } from "../state/store.ts";
+import { Chevron } from "./Chevron.tsx";
+import { focusMapIfFocusWasLost, useFocusRescue } from "./focusMap.ts";
 import { Sample } from "./Samples.tsx";
+import { LEGEND_WIDTH } from "./overlays.ts";
 import { LoadError } from "./StatusMessage.tsx";
 
+const BODY_ID = "legend-body";
+
 /**
- * What the map shows: how many matches and journeys are drawn, then one row per thing drawn with its
- * sample, its count and a switch. A hidden row keeps its count, so it still says how much it would show;
- * the first line follows the switches for humans and bots.
+ * What the map shows, on a card at the map's bottom left: how many matches and journeys are drawn,
+ * then one row per thing drawn with its sample, its count and a switch. A hidden row keeps its count,
+ * so it still says how much it would show; the first line follows the switches for humans and bots.
+ *
+ * The card folds down to its title, and the page remembers that where the browser lets it. Folded,
+ * its first line is still there for assistive technology. It stays open while the journeys failed to
+ * load, since it holds the message and the button that tries again.
  */
 export function Legend({ map }: { map: MapEntry }) {
   const list = useAppStore(selectDrawList);
@@ -18,33 +31,56 @@ export function Legend({ map }: { map: MapEntry }) {
   const single = useAppStore(selectMatchId) !== null;
   const setShown = useAppStore((state) => state.setShown);
   const loadJourneys = useAppStore((state) => state.loadJourneys);
+  const [folded, setFolded] = useState(() => readFlag(browserStorage, PREF_KEYS.legendCollapsed, false));
+  const card = useRef<HTMLElement>(null);
+  useFocusRescue(card); // the card goes with its map: Back to another map must not drop the focus to the top
+  const failed = loaded?.status === "error";
+  const open = legendOpen(folded, failed);
   const shown = shownLayers(choices, single);
 
   return (
-    <section aria-labelledby="legend-heading" className="border-t border-border px-4 pt-3 pb-4">
+    <section
+      ref={card}
+      aria-labelledby="legend-heading"
+      style={{ width: open ? LEGEND_WIDTH : undefined }}
+      className="absolute bottom-4 left-4 z-10 max-h-[calc(100%-2rem)] w-max overflow-y-auto rounded-md border border-border bg-surface/90 text-[13px] shadow-[0_8px_24px_var(--color-bg)]"
+    >
       <h2 id="legend-heading" className="font-heading text-[13px] font-semibold tracking-wide">
-        Legend
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls={BODY_ID}
+          aria-disabled={failed}
+          title={failed ? undefined : open ? "Fold the legend away" : "Show the legend"}
+          onClick={() => {
+            if (failed) return;
+            setFolded(!folded);
+            writeFlag(browserStorage, PREF_KEYS.legendCollapsed, !folded);
+          }}
+          className="group flex w-full items-center gap-1.5 rounded-md px-2.5 py-1.5 text-left not-aria-disabled:hover:text-text focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
+        >
+          <Chevron />
+          Legend
+        </button>
       </h2>
-      {loaded?.status === "error" ? (
-        <div className="py-4">
+      {failed ? (
+        <div id={BODY_ID} className="px-2.5 pt-1 pb-3">
           <LoadError
             title={`The journeys of ${map.name} did not load`}
             failure={loaded.failure}
             retrying={loaded.retrying}
-            onRetry={() => void loadJourneys(map)}
+            onRetry={() => void loadJourneys(map).then(focusMapIfFocusWasLost)}
           />
         </div>
       ) : (
         <>
-          <p role="status" className="mt-0.5 text-xs text-text-muted">
-            {list
-              ? drawnLine(list)
-              : `Loading the journeys of ${map.name}…`}
+          <p role="status" className={open ? "-mt-0.5 px-2.5 text-xs text-text-muted" : "sr-only"}>
+            {list ? drawnLine(list) : `Loading the journeys of ${map.name}…`}
           </p>
-          <ul className="mt-2">
+          <ul id={BODY_ID} hidden={!open} className="px-2.5 pt-1 pb-1.5">
             {LAYER_KEYS.map((layer) => (
               <li key={layer}>
-                <label className="flex cursor-pointer items-center gap-2.5 rounded-md py-1 text-text-muted hover:text-text has-checked:text-text has-focus-visible:outline-2 has-focus-visible:outline-accent">
+                <label className="flex cursor-pointer items-center gap-2 rounded-md py-1 text-xs text-text-muted hover:text-text has-checked:text-text has-focus-visible:outline-2 has-focus-visible:outline-accent">
                   <input
                     type="checkbox"
                     className="size-3.5 accent-accent outline-none"
@@ -55,7 +91,7 @@ export function Legend({ map }: { map: MapEntry }) {
                   />
                   <Sample layer={layer} />
                   <span>{LAYER_LABELS[layer]}</span>
-                  <span className="ml-auto font-mono text-xs text-text-muted">{list ? countLabel(list.counts[layer]) : "—"}</span>
+                  <span className="ml-auto font-mono text-text-muted">{list ? countLabel(list.counts[layer]) : "—"}</span>
                 </label>
               </li>
             ))}

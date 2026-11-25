@@ -192,6 +192,17 @@ describe("the view in the address", () => {
     stop();
   });
 
+  it("is not written when the journeys panel is hidden or shown", async () => {
+    await loadFrom("?match=fbbc5d02");
+    vi.useFakeTimers();
+    const stop = sync();
+    state().setJourneysPanel(false);
+    state().setJourneysPanel(true);
+    vi.advanceTimersByTime(1000);
+    expect(written).toEqual([]);
+    stop();
+  });
+
   it("gives the address of the view at once for the copy button, before the address bar has caught up", async () => {
     await loadFrom("");
     vi.useFakeTimers();

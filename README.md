@@ -64,19 +64,19 @@ docs/        data notes and format, plan and progress, proof images, screenshots
 
 Each step is a link into the live tool. A recording of the same steps: [docs/media/walkthrough.mp4](docs/media/walkthrough.mp4).
 
-1. **[Every journey of a map](https://lila-player-journeys-psi.vercel.app/).** Humans are solid blue lines with round heads, bots dashed orange lines with square heads. Triangles are kills, crosses deaths, diamonds deaths in the storm. Drag to move, scroll to zoom; hover a path or a marker for who, when and where.
+1. **[Every journey of a map](https://lila-player-journeys-psi.vercel.app/).** Humans are solid blue lines with round heads, bots dashed orange lines with square heads. Triangles are kills, crosses deaths, diamonds deaths in the storm. The legend card at the bottom left switches each of them on and off. Drag to move, scroll to zoom; hover a path or a marker for who, when and where.
 
    ![All journeys on Ambrose Valley](docs/img/walkthrough/01-all-matches.jpg)
 
-2. **[Filter by map and day](https://lila-player-journeys-psi.vercel.app/?map=Lockdown&days=February_10).** The tabs switch maps and show how many matches the filters leave on each. The chips filter by UTC day and by how a journey ended.
+2. **[Filter by map and day](https://lila-player-journeys-psi.vercel.app/?map=Lockdown&days=February_10).** The tabs switch maps and show how many matches the filters leave on each. The chips filter by UTC day and by how a journey ended; folded away, the Filters heading still says how many are on.
 
    ![Lockdown on 10 February](docs/img/walkthrough/02-map-and-day.jpg)
 
-3. **[Open one match](https://lila-player-journeys-psi.vercel.app/?match=fbbc5d02).** Search for a match id or choose from the list. This one has 2 humans and 14 bots. Loot appears as small rings, and the sidebar lists the journeys.
+3. **[Open one match](https://lila-player-journeys-psi.vercel.app/?match=fbbc5d02).** Search for a match id or choose from the list on the left. This one has 2 humans and 14 bots. Loot appears as small rings, and the panel on the right sums the match up and lists its journeys. Its × closes the panel and keeps the match open.
 
    ![Match fbbc5d02](docs/img/walkthrough/03-one-match.jpg)
 
-4. **[Focus a journey](https://lila-player-journeys-psi.vercel.app/?match=fbbc5d02&journey=fbbc5d02-5787de75).** Click a path, or choose the journey from the list, to pick it out from the others.
+4. **[Focus a journey](https://lila-player-journeys-psi.vercel.app/?match=fbbc5d02&journey=fbbc5d02-5787de75).** Click a path, or choose the journey in the panel, to pick it out from the others.
 
    ![One journey in focus](docs/img/walkthrough/04-focused-journey.jpg)
 
@@ -88,7 +88,7 @@ Each step is a link into the live tool. A recording of the same steps: [docs/med
 
    ![Journeys that ended in the storm](docs/img/walkthrough/06-fate-filter.jpg)
 
-7. **Heat layers:** [Traffic](https://lila-player-journeys-psi.vercel.app/?heat=movement), [Kills](https://lila-player-journeys-psi.vercel.app/?heat=kill), [Deaths](https://lila-player-journeys-psi.vercel.app/?map=Lockdown&heat=death) and [Loot](https://lila-player-journeys-psi.vercel.app/?heat=loot). The legend says what is counted, in how many matches, and at whose position. A layer follows every filter.
+7. **Heat layers:** [Traffic](https://lila-player-journeys-psi.vercel.app/?heat=movement), [Kills](https://lila-player-journeys-psi.vercel.app/?heat=kill), [Deaths](https://lila-player-journeys-psi.vercel.app/?map=Lockdown&heat=death) and [Loot](https://lila-player-journeys-psi.vercel.app/?heat=loot). The line under the heat buttons gives the count and the fullest cell; the ⓘ beside it says in how many matches, what is counted and at whose position. A layer follows every filter.
 
    ![Kills on Ambrose Valley](docs/img/walkthrough/07-heat-kills.jpg)
 

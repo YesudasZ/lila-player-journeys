@@ -49,7 +49,8 @@ export function aboutSections(manifest: Manifest): AboutSection[] {
       heading: "The map and the heat layers",
       lead:
         "x and z are the ground plane of the game's world, in world units; the third axis, y, is height, shown as elevation. " +
-        `A heat layer counts the journeys that are drawn, in cells of ${CELL_UNITS} × ${CELL_UNITS} world units.`,
+        `A heat layer counts the journeys that are drawn, in cells of ${CELL_UNITS} × ${CELL_UNITS} world units. ` +
+        "The ⓘ beside the heat buttons gives the numbers of the layer that is on: its matches, its fullest cell and its rows by event name.",
       entries: HEAT_KINDS.map((kind) => ({ term: HEAT_LABELS[kind], text: HEAT_MEANING[kind] })),
     },
     {
@@ -57,7 +58,7 @@ export function aboutSections(manifest: Manifest): AboutSection[] {
       entries: [
         { term: "Map", text: MAP_HELP },
         { term: "Time slider", text: sliderKeysHelp(step) },
-        { term: "Lists", text: "Tab goes from one list to the next. Inside a list the up and down arrows move, and Enter chooses." },
+        { term: "Lists", text: "Tab goes from one list to the next. Inside a list the up and down arrows move, and Enter chooses. Escape closes the journeys panel." },
         { term: "Back and Forward", text: "The browser's Back and Forward step through the views you chose." },
       ],
     },

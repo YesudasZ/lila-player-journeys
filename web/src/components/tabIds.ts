@@ -5,3 +5,8 @@ export const tabId = (mapId: string): string => `map-tab-${mapId}`;
 
 /** The id of the map itself, the element that is panned and zoomed. Only one map is on the page at a time. */
 export const MAP_SURFACE_ID = "map-surface";
+
+/** Where the keyboard focus goes when a panel or a button it was on goes away. */
+export const ALL_MATCHES_ID = "all-matches";
+export const JOURNEYS_HEADING_ID = "journeys-heading";
+export const JOURNEYS_BUTTON_ID = "journeys-reopen";

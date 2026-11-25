@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { manifest } from "../testing/committed.ts";
-import { LAYER_LABELS, clock, countLabel, counted, dayLabel, drawnLine, fateLabel, markerTitle, whoLabel } from "./labels.ts";
+import { journeysOf, manifest, mapOf } from "../testing/committed.ts";
+import { LAYER_LABELS, clock, countLabel, counted, dayLabel, drawnLine, fateLabel, markerTitle, noJourneyNote, whoLabel } from "./labels.ts";
 import { findMatches, journeysIn, matchesOfMap, noMatchNote } from "./matches.ts";
-import { LAYER_KEYS, MARKER_KINDS, type DrawnJourney } from "./drawList.ts";
+import { LAYER_KEYS, MARKER_KINDS, buildDrawList, eventKinds, shownLayers, type DrawnJourney } from "./drawList.ts";
 import { MARKER_SHAPES, shapePath } from "./markerShapes.ts";
 
 describe("who a journey belongs to", () => {
@@ -143,5 +143,29 @@ describe("the legend's first line", () => {
     expect(drawnLine({ matches: 566, journeys: new Array<DrawnJourney>(836) })).toBe("566 matches, 836 journeys");
     expect(drawnLine({ matches: 1, journeys: new Array<DrawnJourney>(1) })).toBe("1 match, 1 journey");
     expect(drawnLine({ matches: 0, journeys: [] })).toBe("0 matches, 0 journeys");
+  });
+});
+
+describe("why the journeys panel lists no journey", () => {
+  it("names only the switches that hide a journey the filters left", () => {
+    expect(noJourneyNote({ humans: 1, bots: 0 })).toBe("No journey of this match is drawn: the Humans switch is off in the legend.");
+    expect(noJourneyNote({ humans: 0, bots: 14 })).toBe("No journey of this match is drawn: the Bots switch is off in the legend.");
+    expect(noJourneyNote({ humans: 2, bots: 14 })).toBe("No journey of this match is drawn: the Humans and Bots switches are off in the legend.");
+  });
+
+  it("blames the filters when they leave no journey at all", () => {
+    expect(noJourneyNote({ humans: 0, bots: 0 })).toBe("No journey of this match passes the filters.");
+  });
+
+  it("names Humans alone for a match of one human with Humans off, though Bots is on", () => {
+    const map = mapOf("GrandRift");
+    const grid = { steps: manifest.encoding.uv_steps, image: { width: map.minimap.width, height: map.minimap.height } };
+    const kinds = eventKinds(manifest.event_groups);
+    const solo = buildDrawList(journeysOf(map.id), "62840366", shownLayers({ humans: false }, true), kinds, grid);
+    expect(solo.journeys).toHaveLength(0);
+    expect(noJourneyNote(solo.counts)).toBe("No journey of this match is drawn: the Humans switch is off in the legend.");
+    const mixed = buildDrawList(journeysOf(map.id), "7abc3541", shownLayers({ humans: false, bots: false }, true), kinds, grid);
+    expect(mixed.journeys).toHaveLength(0);
+    expect(noJourneyNote(mixed.counts)).toBe("No journey of this match is drawn: the Humans and Bots switches are off in the legend.");
   });
 });
