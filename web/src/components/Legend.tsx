@@ -10,6 +10,7 @@ import { useAppStore } from "../state/store.ts";
 import { Chevron } from "./Chevron.tsx";
 import { focusMapIfFocusWasLost, useFocusRescue } from "./focusMap.ts";
 import { Sample } from "./Samples.tsx";
+import { LEGEND_WIDTH } from "./overlays.ts";
 import { LoadError } from "./StatusMessage.tsx";
 
 const BODY_ID = "legend-body";
@@ -41,7 +42,8 @@ export function Legend({ map }: { map: MapEntry }) {
     <section
       ref={card}
       aria-labelledby="legend-heading"
-      className={`absolute bottom-4 left-4 z-10 max-h-[calc(100%-2rem)] overflow-y-auto rounded-md border border-border bg-surface/90 text-[13px] shadow-[0_8px_24px_var(--color-bg)] ${open ? "w-56" : "w-max"}`}
+      style={{ width: open ? LEGEND_WIDTH : undefined }}
+      className="absolute bottom-4 left-4 z-10 max-h-[calc(100%-2rem)] w-max overflow-y-auto rounded-md border border-border bg-surface/90 text-[13px] shadow-[0_8px_24px_var(--color-bg)]"
     >
       <h2 id="legend-heading" className="font-heading text-[13px] font-semibold tracking-wide">
         <button
@@ -55,14 +57,14 @@ export function Legend({ map }: { map: MapEntry }) {
             setFolded(!folded);
             writeFlag(browserStorage, PREF_KEYS.legendCollapsed, !folded);
           }}
-          className="group flex w-full items-center gap-1.5 rounded-md px-3 py-2 text-left not-aria-disabled:hover:text-text focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
+          className="group flex w-full items-center gap-1.5 rounded-md px-2.5 py-1.5 text-left not-aria-disabled:hover:text-text focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
         >
           <Chevron />
           Legend
         </button>
       </h2>
       {failed ? (
-        <div id={BODY_ID} className="px-3 pt-1 pb-3">
+        <div id={BODY_ID} className="px-2.5 pt-1 pb-3">
           <LoadError
             title={`The journeys of ${map.name} did not load`}
             failure={loaded.failure}
@@ -72,13 +74,13 @@ export function Legend({ map }: { map: MapEntry }) {
         </div>
       ) : (
         <>
-          <p role="status" className={open ? "-mt-1 px-3 text-xs text-text-muted" : "sr-only"}>
+          <p role="status" className={open ? "-mt-0.5 px-2.5 text-xs text-text-muted" : "sr-only"}>
             {list ? drawnLine(list) : `Loading the journeys of ${map.name}…`}
           </p>
-          <ul id={BODY_ID} hidden={!open} className="px-3 pt-1 pb-2">
+          <ul id={BODY_ID} hidden={!open} className="px-2.5 pt-1 pb-1.5">
             {LAYER_KEYS.map((layer) => (
               <li key={layer}>
-                <label className="flex cursor-pointer items-center gap-2.5 rounded-md py-1 text-xs text-text-muted hover:text-text has-checked:text-text has-focus-visible:outline-2 has-focus-visible:outline-accent">
+                <label className="flex cursor-pointer items-center gap-2 rounded-md py-1 text-xs text-text-muted hover:text-text has-checked:text-text has-focus-visible:outline-2 has-focus-visible:outline-accent">
                   <input
                     type="checkbox"
                     className="size-3.5 accent-accent outline-none"

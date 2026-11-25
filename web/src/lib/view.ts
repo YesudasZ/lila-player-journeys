@@ -4,6 +4,9 @@
  * A view names the image point at the centre of the viewport and a zoom relative to "fit".
  * It does not depend on the size of the window, so a resize keeps the framing and the view
  * can be shared in a link. Everything that needs pixels takes the stage as well.
+ *
+ * A stage may keep room free for controls drawn over the map (its insets). The artwork is then
+ * fitted into the rest, and "the centre" is the centre of the part the insets leave free.
  */
 import type { Point, Size } from "./projection.ts";
 
@@ -15,13 +18,25 @@ export interface Box {
   bottom: number;
 }
 
+/** CSS pixels kept free on each side of the viewport for controls drawn over the map. */
+export interface Insets {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+}
+
+export const NO_INSETS: Insets = { left: 0, top: 0, right: 0, bottom: 0 };
+
 /** What a view is looked at through: the viewport in CSS pixels and the artwork's box in image pixels. */
 export interface Stage {
   viewport: Size;
   artwork: Box;
+  /** Room kept free for controls over the map: the fitted artwork stays out of it. None when left out. */
+  insets?: Insets;
 }
 
-/** The image point at the centre of the viewport, and the zoom: 1 shows the whole artwork, 2 is twice as close. */
+/** The image point at the centre of the viewport's free part (`anchorOf`), and the zoom: 1 shows the whole artwork, 2 is twice as close. */
 export interface View {
   x: number;
   y: number;
@@ -35,11 +50,19 @@ export const CLOSEST_SCALE = 4;
 
 const clamp = (value: number, low: number, high: number): number => Math.min(Math.max(value, low), high);
 
-/** CSS pixels per image pixel at which the artwork fits the viewport with the margin free on every side. */
-export function fitScale({ viewport, artwork }: Stage): number {
-  const across = (viewport.width - 2 * FIT_MARGIN) / (artwork.right - artwork.left);
-  const down = (viewport.height - 2 * FIT_MARGIN) / (artwork.bottom - artwork.top);
+/**
+ * CSS pixels per image pixel at which the artwork fits the part of the viewport that the insets leave
+ * free, with the margin free on every side.
+ */
+export function fitScale({ viewport, artwork, insets = NO_INSETS }: Stage): number {
+  const across = (viewport.width - insets.left - insets.right - 2 * FIT_MARGIN) / (artwork.right - artwork.left);
+  const down = (viewport.height - insets.top - insets.bottom - 2 * FIT_MARGIN) / (artwork.bottom - artwork.top);
   return Math.max(Math.min(across, down), 1e-6); // a viewport smaller than its margins still gets a positive scale
+}
+
+/** The point of the viewport where a view's image point sits: the centre of the part that the insets leave free. */
+export function anchorOf({ viewport, insets = NO_INSETS }: Stage): Point {
+  return { x: (insets.left + viewport.width - insets.right) / 2, y: (insets.top + viewport.height - insets.bottom) / 2 };
 }
 
 /** The largest zoom allowed on this stage. */
@@ -60,18 +83,20 @@ export function scaleOf(view: View, stage: Stage): number {
 /** Where an image point lies in the viewport, in CSS pixels from its top left corner. */
 export function imageToScreen(point: Point, view: View, stage: Stage): Point {
   const scale = scaleOf(view, stage);
+  const anchor = anchorOf(stage);
   return {
-    x: (point.x - view.x) * scale + stage.viewport.width / 2,
-    y: (point.y - view.y) * scale + stage.viewport.height / 2,
+    x: (point.x - view.x) * scale + anchor.x,
+    y: (point.y - view.y) * scale + anchor.y,
   };
 }
 
 /** The inverse of `imageToScreen`: the image point under a point of the viewport. */
 export function screenToImage(point: Point, view: View, stage: Stage): Point {
   const scale = scaleOf(view, stage);
+  const anchor = anchorOf(stage);
   return {
-    x: (point.x - stage.viewport.width / 2) / scale + view.x,
-    y: (point.y - stage.viewport.height / 2) / scale + view.y,
+    x: (point.x - anchor.x) / scale + view.x,
+    y: (point.y - anchor.y) / scale + view.y,
   };
 }
 
@@ -119,10 +144,11 @@ export function zoomAt(view: View, factor: number, anchor: Point, stage: Stage):
   const under = screenToImage(anchor, view, stage);
   const zoom = clamp(view.zoom * factor, 1, closestZoom(stage));
   const scale = fitScale(stage) * zoom;
+  const centre = anchorOf(stage);
   return clampView(
     {
-      x: under.x - (anchor.x - stage.viewport.width / 2) / scale,
-      y: under.y - (anchor.y - stage.viewport.height / 2) / scale,
+      x: under.x - (anchor.x - centre.x) / scale,
+      y: under.y - (anchor.y - centre.y) / scale,
       zoom,
     },
     stage,

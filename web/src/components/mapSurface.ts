@@ -11,7 +11,7 @@ import { artworkInPixels, type MapEntry } from "../lib/manifest.ts";
 import type { Point, Size } from "../lib/projection.ts";
 import { unitsPerPixel, wholeUnits, worldUnder } from "../lib/readout.ts";
 import { scaleBar, scaleBarLabel } from "../lib/scaleBar.ts";
-import { clampView, fitView, panBy, wheelZoomFactor, zoomAt, zoomLimits, type Stage, type View, type ZoomLimits } from "../lib/view.ts";
+import { NO_INSETS, anchorOf, clampView, fitView, panBy, wheelZoomFactor, zoomAt, zoomLimits, type Insets, type Stage, type View, type ZoomLimits } from "../lib/view.ts";
 import { useAppStore } from "../state/store.ts";
 
 const DRAG_STARTS_AFTER = 3; // CSS pixels; a smaller movement is still a click
@@ -45,7 +45,9 @@ interface ReadoutParts {
 }
 
 export interface MapSurface {
-  /** Zoom by a factor about the centre of the viewport. */
+  /** Ask again how much room to keep free for controls over the map, after something other than the map's size changed it. */
+  refit: () => void;
+  /** Zoom by a factor about the centre of the map's free part: the viewport, less the room kept for controls over it. */
   zoomBy: (factor: number) => void;
   /** Show the whole artwork again. */
   fit: () => void;
@@ -80,6 +82,8 @@ interface Parts {
   onEscape?: () => void;
   /** Space was pressed while the map itself had the focus. */
   onPlay?: () => void;
+  /** The room to keep free for controls drawn over the map at this size of the viewport: the fitted map stays out of it. */
+  roomFor?: (viewport: Size) => Insets;
 }
 
 /** Call `changed` whenever the device pixel ratio changes, for browsers whose ResizeObserver does not say so. */
@@ -102,7 +106,7 @@ function onPixelRatioChange(changed: () => void): () => void {
   };
 }
 
-export function mountMapSurface({ area, surface, map, layers, readout, onLimits, onPointer, onClick, onDoubleClick, onEscape, onPlay }: Parts): MapSurface {
+export function mountMapSurface({ area, surface, map, layers, readout, onLimits, onPointer, onClick, onDoubleClick, onEscape, onPlay, roomFor }: Parts): MapSurface {
   const contexts = new Map(
     layers.map((layer) => {
       const context = layer.canvas.getContext("2d");
@@ -114,6 +118,7 @@ export function mountMapSurface({ area, surface, map, layers, readout, onLimits,
   const imageSize: Size = { width: map.minimap.width, height: map.minimap.height };
 
   let viewport: Size = { width: surface.clientWidth, height: surface.clientHeight };
+  let insets: Insets = roomFor?.(viewport) ?? NO_INSETS;
   let ratio = window.devicePixelRatio;
   let pending = 0; // the animation frame that has been asked for, 0 when there is none
   let rendering = false;
@@ -125,7 +130,7 @@ export function mountMapSurface({ area, surface, map, layers, readout, onLimits,
   let dragged = false; // the last release ended a drag, so the click event that follows it is not a click
   let limits: ZoomLimits | null = null;
 
-  const stage = (): Stage => ({ viewport, artwork });
+  const stage = (): Stage => ({ viewport, artwork, insets });
   /** The view in the store, brought inside the limits of the stage as it is now. */
   const view = (): View => clampView(useAppStore.getState().views[map.id] ?? fitView(artwork), stage());
   const frameOf = (current: View): Frame => ({ view: current, stage: stage(), image: imageSize, ratio });
@@ -197,6 +202,7 @@ export function mountMapSurface({ area, surface, map, layers, readout, onLimits,
   /** The canvases get one pixel per device pixel, so the map is sharp on any screen. */
   function resize(css: Size, device: Size) {
     viewport = css;
+    insets = roomFor?.(css) ?? NO_INSETS;
     ratio = device.width / Math.max(css.width, 1);
     for (const { canvas } of layers) {
       canvas.width = device.width;
@@ -234,7 +240,7 @@ export function mountMapSurface({ area, surface, map, layers, readout, onLimits,
     const box = surface.getBoundingClientRect();
     return { x: event.clientX - box.left, y: event.clientY - box.top };
   };
-  const centre = (): Point => ({ x: viewport.width / 2, y: viewport.height / 2 });
+  const centre = (): Point => anchorOf(stage());
 
   /** The pointer is at this point of the map. The first point marks the map area, so that the read-out shows. */
   function pointAt(at: Point) {
@@ -354,7 +360,14 @@ export function mountMapSurface({ area, surface, map, layers, readout, onLimits,
     schedule();
   });
 
+  function refit() {
+    insets = roomFor?.(viewport) ?? NO_INSETS;
+    moved = true;
+    schedule();
+  }
+
   return {
+    refit,
     zoomBy,
     fit,
     invalidate,

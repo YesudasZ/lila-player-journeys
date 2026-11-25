@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   CLOSEST_SCALE,
   FIT_MARGIN,
+  anchorOf,
   clampView,
   closestZoom,
   fitScale,
@@ -249,5 +250,52 @@ describe("wheel", () => {
   it("never zooms by more than a factor of two in one event", () => {
     expect(wheelZoomFactor(-1e6, 0, false)).toBe(2);
     expect(wheelZoomFactor(1e6, 0, true)).toBe(0.5);
+  });
+});
+
+describe("room kept free for controls over the map", () => {
+  const viewport = VIEWPORTS.square;
+  const insets = { left: 180, top: 30, right: 60, bottom: 40 };
+  const kept: Stage = { viewport, artwork: ARTWORK, insets };
+
+  it("fits the artwork into the part the insets leave free", () => {
+    const free = { width: viewport.width - 180 - 60, height: viewport.height - 30 - 40 };
+    expect(fitScale(kept)).toBeCloseTo(fitScale(stageOf(free)), 12);
+    expect(fitScale(kept)).toBeLessThan(fitScale(stageOf(viewport)));
+    // where the height decides the fit, the room at the top and at the bottom both count
+    const wide = VIEWPORTS.wide;
+    const heightLimited = { viewport: wide, artwork: ARTWORK, insets: { left: 0, top: 30, right: 0, bottom: 40 } };
+    expect(fitScale(heightLimited)).toBeCloseTo(fitScale(stageOf({ width: wide.width, height: wide.height - 70 })), 12);
+    expect(fitScale(heightLimited)).toBeLessThan(fitScale(stageOf(wide)));
+  });
+
+  it("puts a view's point at the centre of that part, and at the viewport's centre without insets", () => {
+    expect(anchorOf(kept)).toEqual({ x: 180 + (800 - 180 - 60) / 2, y: 30 + (800 - 30 - 40) / 2 });
+    expect(anchorOf(stageOf(viewport))).toEqual({ x: 400, y: 400 });
+    expect(anchorOf({ viewport, artwork: ARTWORK, insets: { left: 0, top: 0, right: 0, bottom: 0 } })).toEqual({ x: 400, y: 400 });
+  });
+
+  it("keeps the fitted artwork inside the free part, with the margin", () => {
+    const corner = imageToScreen({ x: ARTWORK.left, y: ARTWORK.top }, fitView(ARTWORK), kept);
+    const far = imageToScreen({ x: ARTWORK.right, y: ARTWORK.bottom }, fitView(ARTWORK), kept);
+    expect(corner.x).toBeGreaterThanOrEqual(180 + FIT_MARGIN - 1e-9);
+    expect(corner.y).toBeGreaterThanOrEqual(30 + FIT_MARGIN - 1e-9);
+    expect(far.x).toBeLessThanOrEqual(800 - 60 - FIT_MARGIN + 1e-9);
+    expect(far.y).toBeLessThanOrEqual(800 - 40 - FIT_MARGIN + 1e-9);
+    const spare = Math.max(far.x - corner.x - (800 - 180 - 60 - 2 * FIT_MARGIN), far.y - corner.y - (800 - 30 - 40 - 2 * FIT_MARGIN));
+    expect(spare).toBeCloseTo(0, 9); // the side that limits the fit fills the free part
+  });
+
+  it("maps screen and image both ways, and zooms about the point under the pointer", () => {
+    const view = { x: 900, y: 1100, zoom: 2.5 };
+    const point = { x: 333, y: 517 };
+    const back = imageToScreen(screenToImage(point, view, kept), view, kept);
+    expect(back.x).toBeCloseTo(point.x, 9);
+    expect(back.y).toBeCloseTo(point.y, 9);
+    const before = screenToImage(point, view, kept);
+    const zoomed = zoomAt(view, 1.5, point, kept);
+    const after = screenToImage(point, zoomed, kept);
+    expect(after.x).toBeCloseTo(before.x, 6);
+    expect(after.y).toBeCloseTo(before.y, 6);
   });
 });
