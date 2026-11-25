@@ -7,6 +7,7 @@ import type { Manifest, MapEntry } from "../lib/manifest.ts";
 import { findMatches, journeysIn, matchesOfMap, noMatchNote } from "../lib/matches.ts";
 import { selectMatchId } from "../state/shown.ts";
 import { useAppStore } from "../state/store.ts";
+import { useFocusRescue } from "./focusMap.ts";
 import { moveInList } from "./listKeys.ts";
 import { ALL_MATCHES_ID } from "./tabIds.ts";
 
@@ -28,6 +29,8 @@ export function MatchList({ manifest, map }: { manifest: Manifest; map: MapEntry
   const setJourneysPanel = useAppStore((state) => state.setJourneysPanel);
   const [typed, setTyped] = useState("");
   const listRef = useRef<HTMLUListElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  useFocusRescue(sectionRef); // the list is made anew for each map, so Back to another map removes a focused row
   const chosenDays = useAppStore((state) => state.days);
   const fates = useAppStore((state) => state.fates);
   const loaded = useAppStore((state) => state.journeys[map.id]);
@@ -52,7 +55,7 @@ export function MatchList({ manifest, map }: { manifest: Manifest; map: MapEntry
   }, [matchId]);
 
   return (
-    <section aria-labelledby="matches-heading" className="flex min-h-56 flex-1 flex-col">
+    <section ref={sectionRef} aria-labelledby="matches-heading" className="flex min-h-56 flex-1 flex-col">
       <div className="px-3 pt-3 pb-2">
         <h2 id="matches-heading" className="font-heading text-[13px] font-semibold tracking-wide">
           Matches

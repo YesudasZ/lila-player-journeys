@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { BUTTON_ZOOM_STEP, MAP_HELP } from "../lib/mapKeys.ts";
 import type { Manifest, MapEntry } from "../lib/manifest.ts";
@@ -9,7 +9,6 @@ import { useAppStore } from "../state/store.ts";
 import { createHeatLayer } from "./layers/heatLayer.ts";
 import { createJourneysLayer, type Hover } from "./layers/journeysLayer.ts";
 import { createMinimapLayer } from "./layers/minimapLayer.ts";
-import { Legend } from "./Legend.tsx";
 import { MapReadout } from "./MapReadout.tsx";
 import { mountMapSurface, type MapSurface } from "./mapSurface.ts";
 import { MapTooltip } from "./MapTooltip.tsx";
@@ -20,13 +19,21 @@ import { FilterNotice } from "./FilterNotice.tsx";
 
 const KEYS_ID = "map-keys";
 
+interface Props {
+  map: MapEntry;
+  image: HTMLImageElement;
+  manifest: Manifest;
+  /** The controls the map panel puts over the map, in Tab order after the notes: the button that brings the journeys back, the legend card. */
+  children?: ReactNode;
+}
+
 /**
  * One map: the surface that is panned and zoomed, with its layers and the tooltip; over it the notes
- * of the filters at the top, the legend card at the bottom left, and the read-out and the zoom buttons
- * at the bottom right. The read-out shows while the pointer is over the map or the map has the
+ * of the filters at the top, the controls handed in by the map panel, and the read-out and the zoom
+ * buttons at the bottom right. The read-out shows while the pointer is over the map or the map has the
  * keyboard focus: the map surface marks the pointer on this element, so no React update is needed.
  */
-export function MapView({ map, image, manifest }: { map: MapEntry; image: HTMLImageElement; manifest: Manifest }) {
+export function MapView({ map, image, manifest, children }: Props) {
   const areaRef = useRef<HTMLDivElement>(null);
   const surfaceRef = useRef<HTMLDivElement>(null);
   const minimapRef = useRef<HTMLCanvasElement>(null);
@@ -102,7 +109,6 @@ export function MapView({ map, image, manifest }: { map: MapEntry; image: HTMLIm
       <p id={KEYS_ID} className="sr-only">
         {MAP_HELP}
       </p>
-      <MapTooltip hover={hover} map={map} manifest={manifest} />
       {/*
         What the filters did to the view, at the top of the map, clear of the button in the top right corner. Below
         1200 px the journeys panel floats over the map's right edge, and the notes move into the part left visible.
@@ -112,7 +118,7 @@ export function MapView({ map, image, manifest }: { map: MapEntry; image: HTMLIm
         <FilterNotice />
         <EmptyNote map={map} manifest={manifest} />
       </div>
-      <Legend map={map} />
+      {children}
       <MapReadout x={xRef} z={zRef} bar={barRef} label={labelRef} />
       <ZoomControls
         limits={limits}
@@ -120,6 +126,7 @@ export function MapView({ map, image, manifest }: { map: MapEntry; image: HTMLIm
         onZoomOut={() => mounted.current?.zoomBy(1 / BUTTON_ZOOM_STEP)}
         onFit={() => mounted.current?.fit()}
       />
+      <MapTooltip hover={hover} map={map} manifest={manifest} />
     </div>
   );
 }

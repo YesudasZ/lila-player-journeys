@@ -7,14 +7,14 @@ import { PREF_KEYS, browserStorage, readFlag, writeFlag } from "../lib/prefs.ts"
 import { useAppStore } from "../state/store.ts";
 import { Chevron } from "./Chevron.tsx";
 
-/** One choice of a filter or of a layer: pressed when it is chosen. */
-export function Chip({ pressed, onPress, children }: { pressed: boolean; onPress: () => void; children: ReactNode }) {
+/** One choice of a filter or of a layer: pressed when it is chosen. A wide chip takes two cells of a grid. */
+export function Chip({ pressed, onPress, wide = false, children }: { pressed: boolean; onPress: () => void; wide?: boolean; children: ReactNode }) {
   return (
     <button
       type="button"
       aria-pressed={pressed}
       onClick={onPress}
-      className="rounded-full border border-border px-1.5 py-0.5 text-[11px] leading-4 whitespace-nowrap text-text-muted hover:bg-surface-2 hover:text-text focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent aria-pressed:border-accent aria-pressed:bg-surface-2 aria-pressed:text-text"
+      className={`rounded-full border border-border px-1.5 py-0.5 text-[11px] leading-4 whitespace-nowrap text-text-muted hover:bg-surface-2 hover:text-text focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent aria-pressed:border-accent aria-pressed:bg-surface-2 aria-pressed:text-text ${wide ? "col-span-2" : ""}`}
     >
       {children}
     </button>
@@ -82,6 +82,7 @@ export function Filters({ manifest }: { manifest: Manifest }) {
             {manifest.days.map((day) => (
               <Chip
                 key={day.id}
+                wide={day.partial}
                 pressed={days.includes(day.id)}
                 onPress={() => {
                   toggleDay(day.id);

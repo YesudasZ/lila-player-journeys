@@ -1,13 +1,13 @@
 import { useLayoutEffect, useRef, type KeyboardEvent } from "react";
 import { flushSync } from "react-dom";
 
-import { fateLabel, whoLabel } from "../lib/labels.ts";
+import { fateLabel, noJourneyNote, whoLabel } from "../lib/labels.ts";
 import { revealScrollTop, tabStopOf } from "../lib/lists.ts";
 import type { Manifest, MapEntry } from "../lib/manifest.ts";
 import { matchSummary } from "../lib/matches.ts";
 import { selectDrawList } from "../state/shown.ts";
 import { useAppStore } from "../state/store.ts";
-import { focusMapIfFocusWasLost } from "./focusMap.ts";
+import { useFocusRescue } from "./focusMap.ts";
 import { moveInList } from "./listKeys.ts";
 import { Sample } from "./Samples.tsx";
 import { ALL_MATCHES_ID, JOURNEYS_BUTTON_ID, JOURNEYS_HEADING_ID } from "./tabIds.ts";
@@ -51,14 +51,8 @@ export function JourneyPanel({ manifest, map, matchId }: { manifest: Manifest; m
   }, [focus]);
 
   // When the panel goes away while it holds the keyboard focus (Back, another map, a filter that
-  // closes the match), the focus goes on to the map instead of falling back to the top of the page.
-  // An explicit close moves it on itself, before this looks.
-  useLayoutEffect(() => {
-    const panel = panelRef.current;
-    return () => {
-      if (panel?.contains(document.activeElement)) focusMapIfFocusWasLost();
-    };
-  }, []);
+  // closes the match), the focus goes on to the map. An explicit close moves it on itself.
+  useFocusRescue(panelRef);
 
   /** Close the panel and keep the match: the focus goes to the button that brings the panel back. */
   function close() {
@@ -120,9 +114,9 @@ export function JourneyPanel({ manifest, map, matchId }: { manifest: Manifest; m
       {journeys.length === 0 ? (
         <p role="status" className="px-3 py-3 text-xs text-text-muted">
           {list
-            ? "No journey of this match is drawn: Humans and Bots are switched off in the legend."
+            ? noJourneyNote(list.counts)
             : loaded?.status === "error"
-              ? `The journeys of ${map.name} did not load. The legend on the map can try again.`
+              ? `The journeys of ${map.name} did not load. The legend's "Try again" loads them again.`
               : `Loading the journeys of ${map.name}…`}
         </p>
       ) : (
@@ -137,11 +131,11 @@ export function JourneyPanel({ manifest, map, matchId }: { manifest: Manifest; m
                 onClick={() => {
                   setFocus(journey.id === focus ? null : journey.id);
                 }}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-text-muted hover:bg-surface-2 hover:text-text focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent aria-pressed:bg-surface-2 aria-pressed:text-text aria-pressed:shadow-[inset_2px_0_0_var(--color-highlight)]"
+                className="flex w-full flex-wrap items-center gap-x-2 gap-y-0.5 rounded-md px-2 py-1.5 text-left text-xs text-text-muted hover:bg-surface-2 hover:text-text focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent aria-pressed:bg-surface-2 aria-pressed:text-text aria-pressed:shadow-[inset_2px_0_0_var(--color-highlight)]"
               >
                 <Sample layer={journey.actor === "human" ? "humans" : "bots"} />
-                <span className="truncate text-text">{whoLabel(journey)}</span>
-                <span className="ml-auto shrink-0">{fateLabel(journey.fate)}</span>
+                <span className="text-text">{whoLabel(journey)}</span>
+                <span className="ml-auto">{fateLabel(journey.fate)}</span>
               </button>
             </li>
           ))}

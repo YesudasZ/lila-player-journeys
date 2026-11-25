@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { HEAT_KINDS, HEAT_LABELS, HEAT_TOKENS, heatEvents, heatLine, heatSummary } from "../lib/heat.ts";
 import { countLabel } from "../lib/labels.ts";
@@ -6,8 +6,29 @@ import type { MapEntry } from "../lib/manifest.ts";
 import { selectHeat } from "../state/shown.ts";
 import { useAppStore } from "../state/store.ts";
 import { Chip } from "./Filters.tsx";
+import { useFocusRescue } from "./focusMap.ts";
 
 const DETAILS_ID = "heat-details";
+
+/** The ⓘ button that opens the details of the heat layer. It goes with the layer, so Back may remove it while it has the focus. */
+function DetailsButton({ open, onToggle }: { open: boolean; onToggle: () => void }) {
+  const button = useRef<HTMLButtonElement>(null);
+  useFocusRescue(button);
+  return (
+    <button
+      ref={button}
+      type="button"
+      aria-expanded={open}
+      aria-controls={DETAILS_ID}
+      aria-label="Heat layer details"
+      title="Heat layer details"
+      onClick={onToggle}
+      className="grid size-5 shrink-0 place-items-center rounded-full border border-border font-heading text-[11px] leading-none font-semibold text-text-muted hover:bg-surface-2 hover:text-text focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent aria-expanded:border-accent-2 aria-expanded:text-accent-2"
+    >
+      i
+    </button>
+  );
+}
 
 /**
  * The heat layers, at the top of the left column: at most one is on, and pressing the one that is on
@@ -49,19 +70,12 @@ export function HeatControl({ map }: { map: MapEntry }) {
           {line}
         </p>
         {heat && heat.total > 0 && (
-          <button
-            type="button"
-            aria-expanded={details}
-            aria-controls={DETAILS_ID}
-            aria-label="Heat layer details"
-            title="Heat layer details"
-            onClick={() => {
+          <DetailsButton
+            open={details}
+            onToggle={() => {
               setDetails(!details);
             }}
-            className="grid size-5 shrink-0 place-items-center rounded-full border border-border font-heading text-[11px] leading-none font-semibold text-text-muted hover:bg-surface-2 hover:text-text focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent aria-expanded:border-accent-2 aria-expanded:text-accent-2"
-          >
-            i
-          </button>
+          />
         )}
       </div>
       {heat && heat.total > 0 && (

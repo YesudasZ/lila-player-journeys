@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { LAYER_KEYS, shownLayers } from "../lib/drawList.ts";
 import { LAYER_LABELS, countLabel, drawnLine } from "../lib/labels.ts";
@@ -8,7 +8,7 @@ import { PREF_KEYS, browserStorage, readFlag, writeFlag } from "../lib/prefs.ts"
 import { selectDrawList, selectMatchId } from "../state/shown.ts";
 import { useAppStore } from "../state/store.ts";
 import { Chevron } from "./Chevron.tsx";
-import { focusMapIfFocusWasLost } from "./focusMap.ts";
+import { focusMapIfFocusWasLost, useFocusRescue } from "./focusMap.ts";
 import { Sample } from "./Samples.tsx";
 import { LoadError } from "./StatusMessage.tsx";
 
@@ -31,12 +31,15 @@ export function Legend({ map }: { map: MapEntry }) {
   const setShown = useAppStore((state) => state.setShown);
   const loadJourneys = useAppStore((state) => state.loadJourneys);
   const [folded, setFolded] = useState(() => readFlag(browserStorage, PREF_KEYS.legendCollapsed, false));
+  const card = useRef<HTMLElement>(null);
+  useFocusRescue(card); // the card goes with its map: Back to another map must not drop the focus to the top
   const failed = loaded?.status === "error";
   const open = legendOpen(folded, failed);
   const shown = shownLayers(choices, single);
 
   return (
     <section
+      ref={card}
       aria-labelledby="legend-heading"
       className={`absolute bottom-4 left-4 z-10 max-h-[calc(100%-2rem)] overflow-y-auto rounded-md border border-border bg-surface/90 text-[13px] shadow-[0_8px_24px_var(--color-bg)] ${open ? "w-56" : "w-max"}`}
     >
@@ -75,7 +78,7 @@ export function Legend({ map }: { map: MapEntry }) {
           <ul id={BODY_ID} hidden={!open} className="px-3 pt-1 pb-2">
             {LAYER_KEYS.map((layer) => (
               <li key={layer}>
-                <label className="flex cursor-pointer items-center gap-2.5 rounded-md py-0.5 text-xs text-text-muted hover:text-text has-checked:text-text has-focus-visible:outline-2 has-focus-visible:outline-accent">
+                <label className="flex cursor-pointer items-center gap-2.5 rounded-md py-1 text-xs text-text-muted hover:text-text has-checked:text-text has-focus-visible:outline-2 has-focus-visible:outline-accent">
                   <input
                     type="checkbox"
                     className="size-3.5 accent-accent outline-none"
