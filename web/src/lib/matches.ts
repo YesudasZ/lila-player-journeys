@@ -32,8 +32,11 @@ export interface MatchSummary {
   when: string;
   /** "2 humans · 14 bots". */
   who: string;
-  /** "5 kills · 8 deaths · 0 storm deaths · 7 loot events": every marker of the match, of humans and of bots. */
-  events: string;
+  /**
+   * ["5 kills", "8 deaths", "0 storm deaths", "7 loot events"]: every marker of the match, of humans and of bots.
+   * Apart, so that a narrow panel can break the line between two counts and never inside one.
+   */
+  events: string[];
 }
 
 export function matchSummary(match: MatchEntry, days: readonly DayEntry[]): MatchSummary {
@@ -46,6 +49,6 @@ export function matchSummary(match: MatchEntry, days: readonly DayEntry[]): Matc
       counted(match.deaths + match.bot_deaths, "death", "deaths"),
       counted(match.storm_deaths, "storm death", "storm deaths"),
       counted(match.loot, "loot event", "loot events"),
-    ].join(" · "),
+    ],
   };
 }

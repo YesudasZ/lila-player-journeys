@@ -16,7 +16,7 @@ describe("what the journeys panel says about a match", () => {
     expect(matchSummary(entryOf("fbbc5d02"), manifest.days)).toEqual({
       when: "12 Feb · 8:43 recorded",
       who: "2 humans · 14 bots",
-      events: "5 kills · 8 deaths · 0 storm deaths · 7 loot events",
+      events: ["5 kills", "8 deaths", "0 storm deaths", "7 loot events"],
     });
   });
 
@@ -32,9 +32,12 @@ describe("what the journeys panel says about a match", () => {
       const { counts } = buildDrawList(journeysOf(map.id), match.id, shownLayers({}, true), eventKinds(manifest.event_groups), grid);
       const summary = matchSummary(match, manifest.days);
       expect(summary.who).toBe(`${counted(counts.humans, "human", "humans")} · ${counted(counts.bots, "bot", "bots")}`);
-      expect(summary.events).toBe(
-        [counted(counts.kill, "kill", "kills"), counted(counts.death, "death", "deaths"), counted(counts.storm_death, "storm death", "storm deaths"), counted(counts.loot, "loot event", "loot events")].join(" · "),
-      );
+      expect(summary.events).toEqual([
+        counted(counts.kill, "kill", "kills"),
+        counted(counts.death, "death", "deaths"),
+        counted(counts.storm_death, "storm death", "storm deaths"),
+        counted(counts.loot, "loot event", "loot events"),
+      ]);
     }
     expect(matches).toHaveLength(59);
   });

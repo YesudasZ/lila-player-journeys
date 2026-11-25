@@ -98,7 +98,12 @@ export function JourneyPanel({ manifest, map, matchId }: { manifest: Manifest; m
               <br />
               {summary.who}
               <br />
-              {summary.events}
+              {summary.events.map((count, index) => (
+                <span key={count}>
+                  {index > 0 && " · "}
+                  <span className="whitespace-nowrap">{count}</span>
+                </span>
+              ))}
             </p>
           )}
         </div>
